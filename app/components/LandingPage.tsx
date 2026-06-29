@@ -61,7 +61,7 @@ export default function LandingPage() {
                 className="absolute inset-0 w-full h-screen z-0 overflow-hidden pointer-events-none"
             >
                 {/* Full-bleed Red Green Blue liquid base matrix shader */}
-                <GalleryShader className="absolute inset-0 w-full h-full" />
+                <GalleryShader/>
                 
                 {/* Fine structural mesh container with screen mixing to preserve bright spectrum values */}
                 <div className="absolute inset-0 w-full h-full mix-blend-screen opacity-90">
