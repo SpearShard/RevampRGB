@@ -2,12 +2,7 @@
 
 import Link from "next/link";
 
-const links = [
-  { label: "Home", href: "/" },
-  { label: "About", href: "/about" },
-  { label: "Works", href: "/project" },
-  { label: "Contact", href: "/contact" },
-];
+
 
 export default function Footer() {
   return (
@@ -23,17 +18,7 @@ export default function Footer() {
 
       <div className="relative z-10">
         {/* Navigation */}
-        <div className=" flex items-center justify-center gap-8 px-6 md:gap-14">
-          {links.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="text-[11px] uppercase tracking-[0.3em] text-white/30 transition-all duration-300 hover:text-white"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </div>
+        
 
         {/* Huge Text */}
         <div className="relative overflow-hidden">

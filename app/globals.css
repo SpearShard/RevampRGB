@@ -19,6 +19,17 @@
   }
 }
 
+/* For Firefox */
+html {
+  scrollbar-width: none;
+}
+
+/* For Chrome, Safari, Edge */
+html::-webkit-scrollbar {
+  display: none;
+}
+
+
 body {
   background: var(--background);
   color: var(--foreground);

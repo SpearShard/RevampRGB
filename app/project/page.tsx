@@ -203,7 +203,7 @@
 
 "use client";
 
-import PB from "../components/bgwebglshaders/ProjectsBackground";
+import React, { useEffect, useRef } from "react";
 import projectsData from "../data/projects.json";
 import { projectSlug } from "../utils/projectSlugs";
 import Image from "next/image";
@@ -239,12 +239,203 @@ const categories = Object.entries(projectsData)
     ];
   });
 
+const vertexShaderSource = `
+    attribute vec2 position;
+    void main() {
+        gl_Position = vec4(position, 0.0, 1.0);
+    }
+`;
+
+const fragmentShaderSource = `
+    precision mediump float;
+    uniform float u_time;
+    uniform vec2 u_resolution;
+    uniform vec3 u_tint;
+
+    float fbm(vec2 p) {
+        float v = 0.0;
+        float a = 0.5;
+        vec2 shift = vec2(100.0);
+        mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
+        for (int i = 0; i < 4; ++i) {
+            v += a * (sin(p.x) * cos(p.y));
+            p = rot * p * 2.0 + shift;
+            a *= 0.5;
+        }
+        return v;
+    }
+
+    void main() {
+        vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / u_resolution.y;
+        float r = length(uv);
+        float angle = atan(uv.y, uv.x);
+
+        float speed = u_time * 0.4;
+        vec2 uvR = vec2(angle * 3.0, log(r) - speed);
+        vec2 uvG = vec2(angle * 3.0, log(r) - (speed * 1.03));
+        vec2 uvB = vec2(angle * 3.0, log(r) - (speed * 0.97));
+
+        float nR = fbm(uvR * 2.0) * 0.5 + 0.5;
+        float nG = fbm(uvG * 2.0) * 0.5 + 0.5;
+        float nB = fbm(uvB * 2.0) * 0.5 + 0.5;
+
+        float centerMask = smoothstep(0.04, 0.25, r);
+        float vignette = smoothstep(1.3, 0.4, r);
+
+        vec3 aura = vec3(
+            pow(nR, 2.5) * 1.3,
+            pow(nG, 2.5) * 0.9,
+            pow(nB, 2.5) * 1.6
+        );
+
+        aura += vec3(sin(u_time + angle) * 0.03, cos(u_time - angle) * 0.03, sin(u_time) * 0.03);
+        
+        vec3 finalColor = aura * centerMask * vignette * 0.22 * u_tint;
+        gl_FragColor = vec4(finalColor, 1.0);
+    }
+`;
+
 export default function WorksGallery() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  const targetTintRef = useRef<[number, number, number]>([1.0, 1.0, 1.0]);
+  const currentTintRef = useRef<[number, number, number]>([1.0, 1.0, 1.0]);
+  const isLockedRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    isLockedRef.current = false;
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const gl = canvas.getContext('webgl', { alpha: false, preserveDrawingBuffer: false });
+    if (!gl) return;
+
+    const createShader = (gl: WebGLRenderingContext, type: number, source: string) => {
+      const shader = gl.createShader(type);
+      if (!shader) return null;
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error('Shader compilation error:', gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return null;
+      }
+      return shader;
+    };
+
+    const vs = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fs = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    const program = gl.createProgram();
+    if (!vs || !fs || !program) return;
+
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error('Program linking error:', gl.getProgramInfoLog(program));
+      return;
+    }
+
+    const vertices = new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]);
+    const buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+    const positionLocation = gl.getAttribLocation(program, 'position');
+    gl.enableVertexAttribArray(positionLocation);
+    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+    gl.useProgram(program);
+    const timeLocation = gl.getUniformLocation(program, 'u_time');
+    const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
+    const tintLocation = gl.getUniformLocation(program, 'u_tint');
+
+    const resize = () => {
+      const displayWidth = window.innerWidth;
+      const displayHeight = window.innerHeight;
+
+      if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+        canvas.width = displayWidth;
+        canvas.height = displayHeight;
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+      }
+    };
+    
+    window.addEventListener('resize', resize);
+    resize();
+
+    let animationFrameId: number;
+    const startTime = performance.now();
+
+    const render = () => {
+      const currentTime = (performance.now() - startTime) * 0.001;
+
+      // Smooth color interpolation (Lerp)
+      currentTintRef.current[0] += (targetTintRef.current[0] - currentTintRef.current[0]) * 0.08;
+      currentTintRef.current[1] += (targetTintRef.current[1] - currentTintRef.current[1]) * 0.08;
+      currentTintRef.current[2] += (targetTintRef.current[2] - currentTintRef.current[2]) * 0.08;
+
+      if (timeLocation) gl.uniform1f(timeLocation, currentTime);
+      if (resolutionLocation) gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+      if (tintLocation) {
+        gl.uniform3f(
+          tintLocation, 
+          currentTintRef.current[0], 
+          currentTintRef.current[1], 
+          currentTintRef.current[2]
+        );
+      }
+
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      animationFrameId = requestAnimationFrame(render);
+    };
+    
+    render();
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', resize);
+      gl.deleteBuffer(buffer);
+      gl.deleteProgram(program);
+      gl.deleteShader(vs);
+      gl.deleteShader(fs);
+    };
+  }, []);
+
+  const handleMouseEnterProject = (categoryIndex: number) => {
+    if (isLockedRef.current) return;
+    
+    if (categoryIndex === 0 || categoryIndex === 1) {
+      targetTintRef.current = [2.4, 0.4, 0.3]; // Red
+    } else if (categoryIndex === 2 || categoryIndex === 3) {
+      targetTintRef.current = [0.3, 2.2, 0.7]; // Green
+    } else {
+      targetTintRef.current = [0.3, 0.9, 2.5]; // Blue
+    }
+  };
+
+  const handleMouseLeaveProject = () => {
+    if (isLockedRef.current) return;
+    targetTintRef.current = [1.0, 1.0, 1.0]; // Reset to balanced
+  };
+
+  const handleProjectClick = () => {
+    isLockedRef.current = true;
+  };
+
   return (
-    <main className=" text-white min-h-screen">
-      <PB/>
+    <main className="text-white min-h-screen relative">
+      <canvas 
+        ref={canvasRef} 
+        className="fixed inset-0 w-full h-full pointer-events-none" 
+        style={{ backgroundColor: '#09090b', zIndex: -1 }} 
+      />
       
-      <div className="max-w-[1800px] mx-auto px-8 md:px-16 py-24">
+      <div className="max-w-[1800px] mx-auto px-8 md:px-16 py-24 relative z-10">
         <div className="mb-24">
           <p className="uppercase tracking-[0.3em] text-white/40 text-xs mb-4">
             Selected Works
@@ -287,6 +478,9 @@ export default function WorksGallery() {
                     <div className="md:col-span-7">
                       <Link 
                         href={`/project/${category.slug}/${projectSlug(project.dir)}`}
+                        onMouseEnter={() => handleMouseEnterProject(categoryIndex)}
+                        onMouseLeave={handleMouseLeaveProject}
+                        onClick={handleProjectClick}
                         className="
                           group
                           relative
