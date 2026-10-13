@@ -139,13 +139,30 @@ export default function AutonomousAuraShader() {
         window.addEventListener('resize', handleResize);
 
         const clock = new THREE.Clock();
-        renderer.setAnimationLoop(() => {
-            uniforms.u_time.value = clock.getElapsedTime();
+        const hasLoader = Boolean(document.querySelector("[data-home-loader]"));
+        let isLooping = false;
+
+        const startAnimationLoop = () => {
+            if (isLooping) return;
+            isLooping = true;
+            clock.start();
+            renderer.setAnimationLoop(() => {
+                uniforms.u_time.value = clock.getElapsedTime();
+                renderer.render(scene, camera);
+            });
+        };
+
+        if (hasLoader) {
+            // Render a single static frame to warm up shader compiler, without churning GPU cycles
             renderer.render(scene, camera);
-        });
+            window.addEventListener('home-loader:reveal', startAnimationLoop, { once: true });
+        } else {
+            startAnimationLoop();
+        }
 
         return () => {
             window.removeEventListener('resize', handleResize);
+            window.removeEventListener('home-loader:reveal', startAnimationLoop);
             renderer.setAnimationLoop(null);
             geometry.dispose();
             material.dispose();

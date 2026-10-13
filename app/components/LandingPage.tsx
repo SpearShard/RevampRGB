@@ -10,8 +10,10 @@ export default function LandingPage() {
     const textGroupRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        const isWaitingForLoader = Boolean(document.querySelector("[data-home-loader]"));
         const tl = gsap.timeline({
-            defaults: { ease: "expo.out" }
+            defaults: { ease: "expo.out" },
+            paused: isWaitingForLoader,
         });
 
         // 1. Smoothly fade in the background engine layer
@@ -40,7 +42,15 @@ export default function LandingPage() {
             );
         }
 
+        const playReveal = () => tl.play(0);
+        if (isWaitingForLoader) {
+            window.addEventListener("home-loader:reveal", playReveal, { once: true });
+        } else {
+            playReveal();
+        }
+
         return () => {
+            window.removeEventListener("home-loader:reveal", playReveal);
             tl.kill();
         };
     }, []);

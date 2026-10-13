@@ -418,8 +418,28 @@ export default function SDFAnimation(props) {
     };
 
     useEffect(() => {
+        let isStarted = false;
+        const hasLoader = Boolean(document.querySelector("[data-home-loader]"));
+
+        const startAnimation = () => {
+            if (isStarted) return;
+            isStarted = true;
+            compile();
+            if (renderer) {
+                renderer.setAnimationLoop(animate);
+            }
+        };
+
         init();
+
+        if (hasLoader) {
+            window.addEventListener('home-loader:reveal', startAnimation, { once: true });
+        } else {
+            startAnimation();
+        }
+
         return () => {
+            window.removeEventListener('home-loader:reveal', startAnimation);
             if (renderer) {
                 renderer.setAnimationLoop(null);
                 renderer.dispose();
@@ -464,7 +484,6 @@ export default function SDFAnimation(props) {
 
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setSize(w, h);
-        renderer.setAnimationLoop(animate);
 
         if (containerRef.current) {
             containerRef.current.appendChild(renderer.domElement);
@@ -482,7 +501,6 @@ export default function SDFAnimation(props) {
         controls.rotateSpeed = 0.4;
 
         window.addEventListener('resize', onWindowResize);
-        compile();
     }
 
     function compile() {
