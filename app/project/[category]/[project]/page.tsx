@@ -1,365 +1,460 @@
 "use client";
 
-import { useState, useEffect, useCallback, use } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
+import { ArrowDownRight, ArrowLeft, ArrowRight, X } from "lucide-react";
 import projectsData from "@/app/data/projects.json";
 import { projectSlug } from "@/app/utils/projectSlugs";
 import ProjectsBackground from "@/app/components/bgwebglshaders/ProjectsBackground";
 
+type Project = {
+  title: string;
+  subtitle?: string;
+  dir: string;
+  cover: string;
+  images: string[];
+  description: string[];
+  video?: string;
+};
+
 type ProjectCategory = {
   title: string;
-  projects: {
-    title: string;
-    subtitle?: string;
-    dir: string;
-    cover: string;
-    images: string[];
-    description: string[];
-    video?: string;
-  }[];
+  projects: Project[];
 };
 
 type PageProps = {
-  params: Promise<{
-    category: string;
-    project: string;
-  }>;
+  params: Promise<{ category: string; project: string }>;
 };
 
 export default function ProjectPage({ params }: PageProps) {
-  // Safely unwrap the async route parameters using React.use()
   const { category: categorySlug, project: selectedProjectSlug } = use(params);
-
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  // Locate current portfolio manifest matches
   const category = projectsData[
     categorySlug as keyof typeof projectsData
   ] as ProjectCategory | undefined;
 
-  if (!category || !("projects" in category)) return notFound();
-
-  const project = category.projects.find(
-    (p) => projectSlug(p.dir) === selectedProjectSlug
+  const project = category?.projects?.find(
+    (item) => projectSlug(item.dir) === selectedProjectSlug
   );
 
-  if (!project) return notFound();
-
-  // Parse narrative and data parameters out of descriptions array
+  // Keep every hook above the notFound branches so route changes remain hook-safe.
+  const descriptionItems = project?.description ?? [];
   const metadata: Record<string, string> = {};
   const mainDescription: string[] = [];
 
-  project.description.forEach((item) => {
-    if (item.includes(" : ")) {
-      const [key, value] = item.split(" : ");
-      metadata[key] = value;
+  descriptionItems.forEach((item) => {
+    const match = item.match(/^\s*([^:]+?)\s*:\s*(.+)$/);
+    if (match) {
+      metadata[match[1].trim()] = match[2].trim();
     } else {
       mainDescription.push(item);
     }
   });
 
-  // Group all media assets for chronological indexing inside the lightbox slider
-  const allMediaImages = project.images;
-
-  // Chunking remaining images into pairs to significantly compress vertical scrolling space
-  const secondaryImages = project.images.slice(1);
+  const allMediaImages = project?.images ?? [];
+  const secondaryImages = allMediaImages.slice(1);
   const imagePairs: string[][] = [];
-  for (let i = 0; i < secondaryImages.length; i += 2) {
-    imagePairs.push(secondaryImages.slice(i, i + 2));
+
+  for (let index = 0; index < secondaryImages.length; index += 2) {
+    imagePairs.push(secondaryImages.slice(index, index + 2));
   }
 
-  // Navigation loop controllers for arrow interactions
+  const currentProjectIndex = category?.projects.findIndex(
+    (item) => item.title === project?.title
+  ) ?? -1;
+  const previousProject = currentProjectIndex > 0
+    ? category?.projects[currentProjectIndex - 1] ?? null
+    : null;
+  const nextProject = category && currentProjectIndex >= 0
+    ? category.projects[currentProjectIndex + 1] ?? null
+    : null;
+
   const showNext = useCallback(() => {
-    if (lightboxIndex === null) return;
-    setLightboxIndex((prev) => (prev !== null && prev < allMediaImages.length - 1 ? prev + 1 : 0));
+    if (lightboxIndex === null || allMediaImages.length === 0) return;
+    setLightboxIndex((current) =>
+      current === null ? null : (current + 1) % allMediaImages.length
+    );
   }, [lightboxIndex, allMediaImages.length]);
 
   const showPrev = useCallback(() => {
-    if (lightboxIndex === null) return;
-    setLightboxIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : allMediaImages.length - 1));
+    if (lightboxIndex === null || allMediaImages.length === 0) return;
+    setLightboxIndex((current) =>
+      current === null
+        ? null
+        : (current - 1 + allMediaImages.length) % allMediaImages.length
+    );
   }, [lightboxIndex, allMediaImages.length]);
 
-  const closeLightbox = () => setLightboxIndex(null);
+  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
 
-  // Monitor physical hardware keyboard events
   useEffect(() => {
     if (lightboxIndex === null) return;
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") showNext();
-      if (e.key === "ArrowLeft") showPrev();
-      if (e.key === "Escape") closeLightbox();
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "ArrowRight") showNext();
+      if (event.key === "ArrowLeft") showPrev();
+      if (event.key === "Escape") closeLightbox();
     };
 
+    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [lightboxIndex, showNext, showPrev]);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [lightboxIndex, showNext, showPrev, closeLightbox]);
+
+  if (!category || !("projects" in category) || !project) return notFound();
+
+  const plateNumber = String(currentProjectIndex + 1).padStart(2, "0");
 
   return (
-    <main className="text-[#e2e4eb] min-h-screen selection:bg-white selection:text-black antialiased font-sans px-3  py-4 relative">
+    <main className="relative isolate min-h-screen overflow-hidden bg-[#0b0c0a] px-3 pb-8 pt-3 text-[#e9e5d9] selection:bg-[#d8c9a9] selection:text-[#171713] sm:px-5 sm:pt-5">
       <ProjectsBackground />
-      
-      {/* 01. COMPACT LAYERED HERO CONTAINER */}
-      <section className="relative w-full h-screen flex flex-col justify-between p-6 md:p-10 lg:p-12 bg-[#101116] rounded-[20px]  overflow-hidden shadow-2xl border border-white/[0.03]">
-        <div className="absolute inset-0 z-0 overflow-hidden ">
-          <Image
-            src={project.cover}
-            alt={project.title}
-            fill
-            priority
-            className="object-cover scale-100 brightness-[0.45] contrast-[1.02] transition-transform duration-[2s] hover:scale-102"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-[#0b0c10]" />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_50%_0%,rgba(151,139,110,0.13),transparent_52%)]"
+      />
+
+      {/* Cover study */}
+      <section className="relative mx-auto min-h-[78svh] max-w-[1800px] overflow-hidden border border-[#d8c9a9]/15 bg-[#171914]">
+        <Image
+          src={project.cover}
+          alt={project.title}
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover opacity-[0.72]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#090b08]/80 via-[#090b08]/25 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#090b08] via-transparent to-black/15" />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 opacity-[0.14] [background-image:linear-gradient(rgba(235,228,210,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(235,228,210,0.2)_1px,transparent_1px)] [background-size:84px_84px] mix-blend-soft-light"
+        />
+
+        <div className="absolute left-5 top-6 flex items-center gap-3 sm:left-9 sm:top-9">
+          <Link
+            href="/project"
+            className="inline-flex items-center gap-2 text-[9px] uppercase tracking-[0.23em] text-[#e9e5d9]/65 transition-colors hover:text-white"
+          >
+            <ArrowLeft size={13} strokeWidth={1.4} />
+            Work
+          </Link>
+          <span className="h-px w-8 bg-[#e9e5d9]/30" />
+          <span className="text-[9px] uppercase tracking-[0.23em] text-[#e9e5d9]/50">
+            {category.title}
+          </span>
         </div>
 
-        
+        <div className="absolute right-5 top-6 text-right font-mono text-[8px] leading-5 tracking-[0.18em] text-[#e9e5d9]/50 sm:right-9 sm:top-9">
+          <div>RGB / PROJECT ARCHIVE</div>
+          <div>PLATE — {plateNumber}</div>
+        </div>
 
-        <div className="relative z-10 mt-auto max-w-2xl">
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight uppercase leading-[1.05] text-white">
+        {/* Pencil-like construction drawing */}
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 480 480"
+          className="pointer-events-none absolute bottom-10 right-10 hidden h-[min(42vw,440px)] w-[min(42vw,440px)] text-[#e9e2d2]/40 lg:block"
+          fill="none"
+        >
+          <circle cx="240" cy="240" r="184" stroke="currentColor" strokeWidth=".7" strokeDasharray="2 7" />
+          <circle cx="240" cy="240" r="143" stroke="currentColor" strokeWidth=".55" />
+          <circle cx="240" cy="240" r="91" stroke="currentColor" strokeWidth=".5" strokeDasharray="5 5" />
+          <path d="M240 18V462M18 240H462M83 83L397 397M397 83L83 397" stroke="currentColor" strokeWidth=".55" />
+          <path d="M240 56C342 56 424 138 424 240M240 82C327 82 398 153 398 240" stroke="currentColor" strokeWidth="1.1" />
+          <path d="M240 240L354 129M240 240L119 326M240 240L306 408" stroke="currentColor" strokeWidth=".75" strokeDasharray="3 5" />
+          <path d="M230 240h20m-10-10v20" stroke="currentColor" strokeWidth="1" />
+          <circle cx="240" cy="240" r="6" stroke="currentColor" strokeWidth=".8" />
+          <text x="240" y="225" fill="currentColor" fontSize="8" textAnchor="middle" letterSpacing="2">RGB / {plateNumber}</text>
+          <text x="240" y="454" fill="currentColor" fontSize="7" textAnchor="middle" letterSpacing="2">STUDY / DRAWING FIELD</text>
+        </svg>
+
+        <div className="absolute bottom-7 left-5 right-5 sm:bottom-12 sm:left-9 sm:right-9 lg:bottom-16 lg:left-14">
+          <div className="mb-5 flex items-center gap-3 text-[9px] uppercase tracking-[0.28em] text-[#e9e5d9]/55">
+            <span className="h-px w-8 bg-[#d8c9a9]/80" />
+            Selected work
+          </div>
+          <h1 className="max-w-[1100px] text-[clamp(3.2rem,9.5vw,9.5rem)] font-light uppercase leading-[0.82] tracking-[-0.075em] text-[#f0ede4]">
             {project.title}
           </h1>
           {project.subtitle && (
-            <p className="mt-3 text-xs font-light text-white/50 max-w-sm leading-relaxed font-mono tracking-wide">
+            <p className="mt-6 max-w-xl text-xs font-light tracking-[0.08em] text-[#e9e5d9]/70 sm:text-sm">
               {project.subtitle}
             </p>
           )}
         </div>
+
+        <div className="absolute bottom-8 right-8 hidden items-center gap-2 font-mono text-[8px] uppercase tracking-[0.2em] text-[#e9e5d9]/45 md:flex">
+          <span>Scroll to explore</span>
+          <ArrowDownRight size={13} />
+        </div>
       </section>
 
-      {/* 02. MINIMALIST OVERVIEW & MICRO METADATA PANEL */}
-      <section className="max-w-[1500px] mx-auto px-4 md:px-8 py-14 md:py-20 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-        <div className="lg:col-span-4 bg-[#121318]/90 backdrop-blur-md border border-white/[0.06] rounded-[28px] p-5 space-y-5 lg:sticky lg:top-8 shadow-xl">
-          <div className="flex items-center justify-between border-b border-white/[0.05] pb-3">
-            <span className="font-mono text-[9px] tracking-[0.3em] uppercase text-white/40 block">01 / Specifications</span>
-            
-          </div>
+      {/* Project note and credits */}
+      <section className="relative mx-auto grid max-w-[1500px] grid-cols-1 gap-10 border-b border-[#d8c9a9]/20 px-2 py-16 sm:px-5 md:py-24 lg:grid-cols-12 lg:gap-16">
+        <div className="lg:col-span-3">
+          <p className="font-mono text-[8px] uppercase tracking-[0.25em] text-[#c8bda6]/55">
+            Project / {plateNumber}
+          </p>
+          <div className="mt-4 h-px w-12 bg-[#c8bda6]/50" />
+        </div>
 
-          {Object.keys(metadata).length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1.5 font-mono">
-              {Object.entries(metadata).map(([key, value]) => (
-                <div key={key} className="bg-white/[0.01] hover:bg-white/[0.03] border border-white/[0.07] rounded-xl px-3.5 py-2 flex items-center justify-between gap-4 transition-colors duration-200">
-                  <span className="text-[9px] uppercase tracking-wider text-white/40">{key}</span>
-                  <span className="text-[11px] text-white/80 font-light truncate max-w-[65%]">{value}</span>
-                </div>
-              ))}
-            </div>
+        <div className="lg:col-span-6">
+          {mainDescription[0] && (
+            <p className="max-w-3xl text-lg font-light leading-[1.65] tracking-[-0.02em] text-[#e8e4d9]/85 sm:text-xl md:text-2xl">
+              {mainDescription[0]}
+            </p>
           )}
         </div>
 
-        <div className="lg:col-span-8 lg:pt-1 lg:pl-4">
-          <span className="font-mono text-[9px] tracking-[0.3em] text-white/30 block mb-3">
-            [ Summary Narrative ]
-          </span>
-          <p className="text-base md:text-lg font-light leading-relaxed text-white/80 tracking-wide max-w-2xl">
-            {mainDescription[0]}
-          </p>
+        <div className="lg:col-span-3">
+          {Object.keys(metadata).length > 0 && (
+            <dl className="grid grid-cols-1 gap-y-4 border-t border-[#d8c9a9]/20 pt-4">
+              {Object.entries(metadata).map(([key, value]) => (
+                <div key={key} className="grid grid-cols-[90px_1fr] gap-3">
+                  <dt className="font-mono text-[8px] uppercase tracking-[0.17em] text-[#c8bda6]/50">
+                    {key}
+                  </dt>
+                  <dd className="text-[11px] leading-relaxed text-[#e8e4d9]/75">
+                    {value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          )}
         </div>
       </section>
 
-      {/* 03. COMPACT SHOWREEL / MAIN IMAGE CAPTURE WINDOW */}
-      <section className="w-full max-w-[1500px] mx-auto px-2 md:px-4 mb-14 md:mb-20">
+      {/* Primary visual */}
+      <section className="mx-auto max-w-[1800px] py-8 sm:py-12">
+        <div className="mb-4 flex items-end justify-between px-1">
+          <span className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#c8bda6]/50">
+            01 / Primary view
+          </span>
+          <span className="font-mono text-[8px] uppercase tracking-[0.18em] text-[#c8bda6]/35">
+            {project.video ? "Motion" : "Still"}
+          </span>
+        </div>
+
         {project.video ? (
-          <div className="w-full aspect-[21/9] relative rounded-[28px] overflow-hidden bg-black/40 border border-white/10 shadow-2xl">
-            <video autoPlay muted loop controls playsInline className="w-full h-full object-cover opacity-90">
+          <div className="relative aspect-[16/9] overflow-hidden bg-[#151812] sm:aspect-[21/9]">
+            <video autoPlay muted loop playsInline controls className="h-full w-full object-cover">
               <source src={project.video} />
             </video>
+            <div className="pointer-events-none absolute inset-0 border border-[#d8c9a9]/15" />
           </div>
-        ) : (
-          project.images[0] && (
-            <div 
-              onClick={() => setLightboxIndex(0)}
-              className="relative h-[50vh] w-full rounded-[28px] overflow-hidden border border-white/10 shadow-2xl cursor-zoom-in group bg-[#121318]"
-            >
+        ) : project.images[0] ? (
+          <button
+            type="button"
+            onClick={() => setLightboxIndex(0)}
+            className="group relative block w-full cursor-zoom-in overflow-hidden bg-[#151812] text-left"
+          >
+            <div className="relative aspect-[16/9] sm:aspect-[21/9]">
               <Image
                 src={project.images[0]}
-                alt="Primary dynamic module core capture"
+                alt={`${project.title} — primary view`}
                 fill
-                sizes="92vw"
-                className="object-cover transition-transform duration-700 group-hover:scale-[1.015]"
+                priority
+                sizes="100vw"
+                className="object-cover transition-transform duration-1000 group-hover:scale-[1.015]"
               />
             </div>
-          )
-        )}
+            <span className="absolute bottom-4 right-4 font-mono text-[8px] uppercase tracking-[0.2em] text-white/60">
+              Open image ↗
+            </span>
+          </button>
+        ) : null}
       </section>
 
-      {/* 04. DENSE MULTI-COLUMN CONDENSED MATRIX */}
-      <section className="max-w-[1500px] mx-auto px-4 md:px-8 pb-16 md:pb-28">
-        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-4 mb-10 lg:mb-14 items-baseline border-b border-white/[0.06] pb-4">
-          <div className="lg:col-span-4">
-            <span className="font-mono text-[9px] tracking-[0.3em] uppercase text-white/30">02 / System Index</span>
-          </div>
-          <div className="lg:col-span-8">
-            <h3 className="text-lg md:text-xl font-medium tracking-tight uppercase mb-1.5 text-white/90">
-              {project.subtitle || project.title}
-            </h3>
-            {mainDescription[1] && (
-              <p className="text-[11px] font-mono text-white/40 leading-relaxed max-w-lg">
-                {mainDescription[1]}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Compressed Side-by-Side Image Matrix Grid */}
-        <div className="space-y-5 md:space-y-6">
-          {imagePairs.map((pair, rowIndex) => (
-            <div key={rowIndex} className="grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-6">
-              {pair.map((img, imgIndex) => {
-                const globalIndex = rowIndex * 2 + imgIndex + 1;
-                const behaviorFlag = (rowIndex + imgIndex) % 2 === 0;
-                const colSpanClass = pair.length === 1 
-                  ? "md:col-span-12" 
-                  : behaviorFlag ? "md:col-span-7" : "md:col-span-5";
-
-                return (
-                  <div key={imgIndex} className={`${colSpanClass} space-y-1.5`}>
-                    <div 
-                      onClick={() => setLightboxIndex(globalIndex)}
-                      className="relative overflow-hidden bg-[#121318] rounded-[24px] border border-white/[0.05] shadow-md group aspect-[4/3] md:aspect-auto cursor-zoom-in"
-                    >
-                      <Image
-                        src={img}
-                        alt={`${project.title} dynamic layout reference`}
-                        width={1100}
-                        height={800}
-                        className="w-full h-full object-cover transform duration-[0.8s] ease-out group-hover:scale-[1.02]"
-                      />
-                    </div>
-                    <div className="flex justify-between items-center font-mono text-[8px] tracking-widest text-white/20 uppercase px-1.5">
-                      <span>REF_PLATE // 0{globalIndex}</span>
-                      <span>READY STATE</span>
-                    </div>
-                  </div>
-                );
-              })}
+      {/* Asymmetric image studies */}
+      {imagePairs.length > 0 && (
+        <section className="mx-auto max-w-[1500px] px-1 pb-20 pt-12 sm:px-5 md:pb-28 md:pt-20">
+          <div className="mb-8 flex items-end justify-between border-b border-[#d8c9a9]/20 pb-4">
+            <div>
+              <span className="font-mono text-[8px] uppercase tracking-[0.25em] text-[#c8bda6]/50">
+                02 / Image studies
+              </span>
+              <h2 className="mt-2 text-2xl font-light tracking-[-0.05em] text-[#ece8de] sm:text-3xl">
+                Details
+              </h2>
             </div>
-          ))}
-        </div>
-      </section>
+            <span className="font-mono text-[9px] text-[#c8bda6]/45">
+              {String(project.images.length).padStart(2, "0")} PLATES
+            </span>
+          </div>
 
-      {/* 05. SCALE-OPTIMIZED FINALE BACKPANEL CONTAINER */}
+          <div className="space-y-12 md:space-y-20">
+            {imagePairs.map((pair, rowIndex) => (
+              <div key={rowIndex} className="grid grid-cols-1 items-start gap-5 md:grid-cols-12 md:gap-8">
+                {pair.map((image, imageIndex) => {
+                  const globalIndex = rowIndex * 2 + imageIndex + 1;
+                  const wide = pair.length === 1 || (rowIndex + imageIndex) % 2 === 0;
+                  const span = pair.length === 1
+                    ? "md:col-span-10 md:col-start-2"
+                    : wide
+                      ? "md:col-span-7"
+                      : "md:col-span-5 md:pt-20";
+
+                  return (
+                    <button
+                      key={image}
+                      type="button"
+                      onClick={() => setLightboxIndex(globalIndex)}
+                      className={`${span} group relative block w-full cursor-zoom-in text-left`}
+                    >
+                      <div className="relative aspect-[4/3] overflow-hidden bg-[#151812]">
+                        <Image
+                          src={image}
+                          alt={`${project.title} — image ${String(globalIndex + 1).padStart(2, "0")}`}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 70vw"
+                          className="object-cover transition-transform duration-1000 group-hover:scale-[1.025]"
+                        />
+                        <div className="pointer-events-none absolute inset-0 border border-[#d8c9a9]/10" />
+                      </div>
+                      <div className="mt-2 flex items-center justify-between font-mono text-[8px] uppercase tracking-[0.18em] text-[#c8bda6]/45">
+                        <span>Plate {String(globalIndex + 1).padStart(2, "0")}</span>
+                        <span className="opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                          Expand ↗
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Closing image */}
       {project.images.length > 2 && (
-        <section className="relative w-full h-[55vh] flex flex-col justify-between p-6 md:p-8 overflow-hidden rounded-[40px] md:rounded-[52px] shadow-2xl border border-white/[0.04]">
-          <div className="absolute inset-0 z-0 rounded-[40px] md:rounded-[52px] overflow-hidden">
-            <Image
-              src={project.images[project.images.length - 1]}
-              alt="Terminal presentation back panel asset"
-              fill
-              sizes="92vw"
-              className="object-cover brightness-[0.22] contrast-[1.05]"
-            />
-          </div>
-
-          <div className="w-full flex justify-between items-center font-mono text-[9px] tracking-[0.3em] uppercase text-white/30 z-10">
-            <span>[ Execution Cycle Concluded ]</span>
-            <span>EOF Verified</span>
-          </div>
-
-          <div className="z-10 max-w-md">
-            <h4 className="text-lg md:text-xl tracking-tight uppercase font-medium text-white/70 mb-1.5">
+        <section className="relative mx-auto h-[36vh] max-w-[1800px] overflow-hidden bg-[#151812] sm:h-[52vh]">
+          <Image
+            src={project.images[project.images.length - 1]}
+            alt={`${project.title} — final view`}
+            fill
+            sizes="100vw"
+            className="object-cover opacity-60"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#090b08]/70 via-transparent to-[#090b08]/25" />
+          <div className="absolute bottom-6 left-6 sm:bottom-10 sm:left-10">
+            <span className="font-mono text-[8px] uppercase tracking-[0.25em] text-white/55">
+              End
+            </span>
+            <p className="mt-2 text-3xl font-light uppercase tracking-[-0.06em] text-white sm:text-5xl">
               {project.title}
-            </h4>
-            <p className="text-[10px] font-mono text-white/20 leading-relaxed max-w-xs">
-              Layout arrays structurally checked and outputted securely to active instance client frames.
             </p>
           </div>
         </section>
       )}
 
-      {/* ========================================================= */}
-      {/* 06. LIGHTBOX INTERACTIVE SLIDER MODAL                      */}
-      {/* ========================================================= */}
-      {lightboxIndex !== null && (
-        <div 
-          onClick={closeLightbox}
-          className="fixed inset-0 z-[100] flex flex-col justify-between p-4 md:p-6 bg-black/95 backdrop-blur-xl transition-all duration-300 select-none animate-[fadeIn_0.15s_ease-out]"
+      {/* Project navigation */}
+      <nav
+        aria-label="Project navigation"
+        className="mx-auto flex max-w-[1500px] items-center justify-between border-t border-[#d8c9a9]/20 px-1 py-8 sm:px-5 md:py-12"
+      >
+        {previousProject ? (
+          <Link href={`/project/${categorySlug}/${projectSlug(previousProject.dir)}`} className="group max-w-[45%]">
+            <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-[#c8bda6]/45">Previous</span>
+            <span className="mt-2 block text-sm font-light text-[#e7e1d3]/70 transition-colors group-hover:text-white sm:text-lg">
+              {previousProject.title}
+            </span>
+          </Link>
+        ) : <span />}
+
+        <Link
+          href="/project"
+          className="font-mono text-[8px] uppercase tracking-[0.2em] text-[#c8bda6]/55 transition-colors hover:text-white"
         >
-          {/* Top Control Bar Panel */}
-          <div className="w-full flex justify-between items-center font-mono text-[9px] tracking-widest text-white/40 z-10">
-            <span>VIEWPORT SYSTEM // FRAME {lightboxIndex + 1} OF {allMediaImages.length}</span>
-            <button 
-              onClick={(e) => { e.stopPropagation(); closeLightbox(); }}
-              className="px-3.5 py-1.5 rounded-full border border-white/10 bg-white/5 text-white/80 hover:bg-white hover:text-black hover:border-white transition-all duration-300 uppercase tracking-[0.15em] text-[9px]"
+          All work
+        </Link>
+
+        {nextProject ? (
+          <Link href={`/project/${categorySlug}/${projectSlug(nextProject.dir)}`} className="group max-w-[45%] text-right">
+            <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-[#c8bda6]/45">Next</span>
+            <span className="mt-2 block text-sm font-light text-[#e7e1d3]/70 transition-colors group-hover:text-white sm:text-lg">
+              {nextProject.title}
+            </span>
+          </Link>
+        ) : <span />}
+      </nav>
+
+      {/* Full-screen image viewer */}
+      {lightboxIndex !== null && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image viewer"
+          onClick={closeLightbox}
+          className="fixed inset-0 z-[100] flex flex-col justify-between bg-[#080907]/[0.97] p-4 backdrop-blur-xl sm:p-7"
+        >
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/45">
+              {project.title} / {String(lightboxIndex + 1).padStart(2, "0")} — {String(allMediaImages.length).padStart(2, "0")}
+            </span>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                closeLightbox();
+              }}
+              aria-label="Close image viewer"
+              className="flex h-10 w-10 items-center justify-center border border-white/15 text-white/80 transition-colors hover:bg-white hover:text-black"
             >
-              Exit [Esc]
+              <X size={17} />
             </button>
           </div>
 
-          {/* Central Main Image Content Box Layout */}
-          <div className="relative flex-1 w-full max-w-4xl mx-auto my-2 flex items-center justify-center">
-            {/* Arrow Nav: Previous item pointer */}
-            <button 
-  onClick={(e) => { e.stopPropagation(); showPrev(); }}
-  className="absolute left-4 lg:-left-20 p-0 text-white/40 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] active:scale-95 hover:scale-105 rounded-full border border-white/[0.08] hover:border-white/20 w-12 h-12 flex items-center justify-center transition-all duration-300 ease-out z-20 backdrop-blur-md group shadow-xl"
-  aria-label="Load previous media component"
->
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    fill="none" 
-    viewBox="0 0 24 24" 
-    strokeWidth="1.5" 
-    stroke="currentColor" 
-    className="w-5 h-5 transform transition-transform duration-300 group-hover:-translate-x-0.5"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-  </svg>
-</button>
-
-            {/* Main Picture Frame Rendering Shell */}
-            <div 
-              onClick={(e) => e.stopPropagation()} 
-              className="relative w-full h-full max-h-[70vh] aspect-[4/3] sm:aspect-[16/10] overflow-hidden rounded-[20px] border border-white/10"
+          <div className="relative mx-auto flex w-full max-w-[1500px] flex-1 items-center justify-center py-5">
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                showPrev();
+              }}
+              aria-label="Previous image"
+              className="absolute left-0 z-10 flex h-10 w-10 items-center justify-center border border-white/15 bg-black/30 text-white/75 hover:bg-white hover:text-black sm:left-3"
             >
+              <ArrowLeft size={16} />
+            </button>
+
+            <div onClick={(event) => event.stopPropagation()} className="relative h-full max-h-[78vh] w-[calc(100%-5rem)]">
               <Image
                 src={allMediaImages[lightboxIndex]}
-                alt="Active high resolution component document item"
+                alt={`${project.title} — full size image`}
                 fill
                 priority
+                sizes="90vw"
                 className="object-contain"
               />
             </div>
 
-            {/* Arrow Nav: Next item pointer */}
-           <button 
-  onClick={(e) => { e.stopPropagation(); showNext(); }}
-  className="absolute right-4 lg:-right-20 p-0 text-white/40 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] active:scale-95 hover:scale-105 rounded-full border border-white/[0.08] hover:border-white/20 w-12 h-12 flex items-center justify-center transition-all duration-300 ease-out z-20 backdrop-blur-md group shadow-xl"
-  aria-label="Load next media component"
->
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    fill="none" 
-    viewBox="0 0 24 24" 
-    strokeWidth="1.5" 
-    stroke="currentColor" 
-    className="w-5 h-5 transform transition-transform duration-300 group-hover:translate-x-0.5"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-  </svg>
-</button>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                showNext();
+              }}
+              aria-label="Next image"
+              className="absolute right-0 z-10 flex h-10 w-10 items-center justify-center border border-white/15 bg-black/30 text-white/75 hover:bg-white hover:text-black sm:right-3"
+            >
+              <ArrowRight size={16} />
+            </button>
           </div>
 
-          {/* Bottom Panel Micro Step Nav Index Dots Loop */}
-          <div className="w-full flex flex-col items-center gap-3 z-10">
-            <div className="flex items-center gap-1.5 bg-white/[0.03] px-3 py-1.5 rounded-full border border-white/[0.05]" onClick={(e) => e.stopPropagation()}>
-              {allMediaImages.map((_, dotIdx) => (
-                <button
-                  key={dotIdx}
-                  onClick={() => setLightboxIndex(dotIdx)}
-                  className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                    dotIdx === lightboxIndex ? "bg-white scale-125" : "bg-white/20 hover:bg-white/40"
-                  }`}
-                  aria-label={`Jump directly to visual asset item frame element ${dotIdx + 1}`}
-                />
-              ))}
-            </div>
-            <div className="font-mono text-[8px] text-white/20 tracking-[0.3em] uppercase">
-              Swipe/pointer tap or strike physical hardware keyboard arrows to cycle assets
-            </div>
+          <div className="text-center font-mono text-[8px] uppercase tracking-[0.2em] text-white/35">
+            Arrow keys to navigate · Escape to close
           </div>
         </div>
       )}
-
     </main>
   );
 }
