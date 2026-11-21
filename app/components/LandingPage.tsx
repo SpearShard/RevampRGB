@@ -2,7 +2,6 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import GalleryShader from "./BgShader";
-import SDFAnimation from "./SDFAnimation";
 
 export default function LandingPage() {
     const sectionRef = useRef<HTMLDivElement>(null);
@@ -18,7 +17,7 @@ export default function LandingPage() {
 
         // 1. Smoothly fade in the background engine layer
         if (canvasContainerRef.current) {
-            tl.fromTo(canvasContainerRef.current, 
+            tl.fromTo(canvasContainerRef.current,
                 { opacity: 0 },
                 { opacity: 1, duration: 2.5 }
             );
@@ -49,8 +48,30 @@ export default function LandingPage() {
             playReveal();
         }
 
+        const handleEnterProject = () => {
+            tl.kill();
+            if (textGroupRef.current) {
+                gsap.to(textGroupRef.current, {
+                    opacity: 0,
+                    y: -16,
+                    duration: 0.4,
+                    ease: "power2.inOut",
+                });
+            }
+            if (canvasContainerRef.current) {
+                gsap.to(canvasContainerRef.current, {
+                    opacity: 0,
+                    duration: 0.45,
+                    ease: "power2.inOut",
+                });
+            }
+        };
+
+        window.addEventListener("rgb:enter-project", handleEnterProject);
+
         return () => {
             window.removeEventListener("home-loader:reveal", playReveal);
+            window.removeEventListener("rgb:enter-project", handleEnterProject);
             tl.kill();
         };
     }, []);
@@ -65,18 +86,13 @@ export default function LandingPage() {
             <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
             <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Space+Mono:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
 
-            {/* ABSOLUTE VIEWPORT RENDER ENGINE LAYER (UNTOUCHED) */}
+            {/* ABSOLUTE VIEWPORT RENDER ENGINE LAYER (FRACTAL IS MOUNTED PERSISTENTLY IN LAYOUT) */}
             <div 
                 ref={canvasContainerRef} 
                 className="absolute inset-0 w-full h-screen z-0 overflow-hidden pointer-events-none"
             >
                 {/* Full-bleed Red Green Blue liquid base matrix shader */}
                 <GalleryShader/>
-                
-                {/* Fine structural mesh container with screen mixing to preserve bright spectrum values */}
-                <div className="absolute inset-0 w-full h-full mix-blend-screen opacity-90">
-                    <SDFAnimation />
-                </div>
             </div>
 
             {/* HIGH-END INDUSTRIAL ARCHITECTURE LAYOUT */}

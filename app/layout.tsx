@@ -4,7 +4,7 @@ import "./globals.css";
 import Footer from "./components/Footer";
 import HomeLoader from "./components/HomeLoader";
 import Navbar from "./components/Navbar";
-
+import PersistentFractal from "./components/PersistentFractal";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +34,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <Navbar />
         <HomeLoader />
+        <PersistentFractal />
         {children}
         <Footer />
       </body>

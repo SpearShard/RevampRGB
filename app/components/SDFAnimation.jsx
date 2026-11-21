@@ -1,332 +1,8 @@
-// import { useEffect, useRef, useState } from 'react';
-// import * as THREE from 'three';
-// import {SDFGeometryGenerator} from './SDFGeometryGenerator';
-// import {
-//     OrthographicCamera,
-//     Scene,
-//     Clock,
-//     WebGLRenderer,
-//     Mesh,
-//     MeshBasicMaterial,
-//     MeshDepthMaterial,
-//     MeshNormalMaterial,
-//     Color
-// } from 'three';
-// import Stats from 'three/examples/jsm/libs/stats.module';
-// import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
-// import gsap from 'gsap';
-
-// export default function SDFAnimation(props) {
-//     const [isMobile, setIsMobile] = useState(false);
-//     const containerRef = useRef(null);
-
-//     // Check if mobile on client side
-//     useEffect(() => {
-//         setIsMobile(window.innerWidth <= 480);
-
-//         const handleResize = () => {
-//             setIsMobile(window.innerWidth <= 480);
-//         };
-
-//         window.addEventListener('resize', handleResize);
-//         return () => window.removeEventListener('resize', handleResize);
-//     }, []);
-
-//     let renderer, stats, meshFromSDF, scene, camera, clock, controls;
-
-//     const settings = {
-//         res: 3,
-//         bounds: 1,
-//         autoRotate: true,
-//         wireframe: true,
-//         material: 'normal',
-//         vertexCount: '0'
-//     };
-
-//     const shader = /* glsl */`
-//         float dist(vec3 p) {
-//             p.xyz = p.xzy;
-//             p *= 1.2;
-//             vec3 z = p;
-//             vec3 dz=vec3(0.0);
-//             float power = 8.0;
-//             float r, theta, phi;
-//             float dr = 1.0;
-
-//             float t0 = 1.0;
-//             for(int i = 0; i < 7; ++i) {
-//                 r = length(z);
-//                 if(r > 2.0) continue;
-//                 theta = atan(z.y / z.x);
-//                 #ifdef phase_shift_on
-//                 phi = asin(z.z / r) ;
-//                 #else
-//                 phi = asin(z.z / r);
-//                 #endif
-
-//                 dr = pow(r, power - 1.0) * dr * power + 1.0;
-
-//                 r = pow(r, power);
-//                 theta = theta * power;
-//                 phi = phi * power;
-
-//                 z = r * vec3(cos(theta)*cos(phi), sin(theta)*cos(phi), sin(phi)) + p;
-
-//                 t0 = min(t0, r);
-//             }
-
-//             return 0.5 * log(r) * r / dr;
-//         }
-//     `;
-
-//     useEffect(() => {
-//         init();
-//         // animate() is now called by the renderer's animation loop
-
-//         // Clean up function
-//         return () => {
-//             if (renderer) {
-//                 renderer.setAnimationLoop(null); // Stop the animation loop
-//                 renderer.dispose(); // Dispose of the renderer
-//             }
-
-//             if (meshFromSDF) {
-//                 if (meshFromSDF.geometry) meshFromSDF.geometry.dispose();
-//                 if (meshFromSDF.material) meshFromSDF.material.dispose();
-//             }
-
-//             if (scene) {
-//                 scene.clear(); // Clear all objects from the scene
-//             }
-//         };
-//     }, [])
-
-//     function init() {
-//         const w = window.innerWidth;
-//         const h = window.innerHeight;
-
-//         camera = new OrthographicCamera( w / - 2, w / 2, h / 2, h / - 2, 0.01, 1600 )
-//         camera.position.z = 1100;
-
-//         scene = new Scene();
-//         scene.background = new Color('#000');
-//         clock = new Clock();
-
-//         renderer = new WebGLRenderer({
-//             antialias: true,
-//             powerPreference: 'high-performance',
-//             alpha: true
-//         });
-
-//         // Use a lower pixel ratio during scrolling for better performance
-//         const pixelRatio = Math.min(window.devicePixelRatio, 2); // Cap at 2x for performance
-//         renderer.setPixelRatio(pixelRatio);
-//         renderer.setSize(window.innerWidth, window.innerHeight);
-
-//         // Enable optimizations
-//         renderer.setAnimationLoop(animate); // More efficient than requestAnimationFrame
-
-//         // Add the canvas to the DOM
-//         if (containerRef.current) {
-//             containerRef.current.appendChild(renderer.domElement);
-
-//             // Add hardware acceleration styles to the canvas
-//             const canvas = renderer.domElement;
-//             canvas.style.willChange = 'transform';
-//             canvas.style.transform = 'translateZ(0)';
-//             canvas.style.backfaceVisibility = 'hidden';
-//         }
-
-//         controls = new OrbitControls( camera, renderer.domElement );
-//         controls.enableDamping = true;
-//         controls.enableZoom = false;
-//         controls.enablePan = false;
-//         controls.enableRotate = true;
-//         controls.rotateSpeed = 0.5; // Make rotation more sensitive
-
-//         // Don't add any event listeners that might interfere with touch/mouse events
-
-//         window.addEventListener( 'resize', onWindowResize );
-
-//         compile();
-//     }
-
-//     function compile() {
-//         const generator = new SDFGeometryGenerator( renderer );
-//         const geometry = generator.generate( Math.pow( 2, settings.res + 2 ), shader, settings.bounds );
-//         geometry.computeVertexNormals();
-
-//         if ( meshFromSDF ) { // updates mesh
-//             meshFromSDF.geometry.dispose();
-//             meshFromSDF.geometry = geometry;
-//         } else { // inits meshFromSDF : THREE.Mesh
-//             meshFromSDF = new Mesh(geometry, new MeshBasicMaterial());
-//             scene.add(meshFromSDF);
-
-//             const scale = Math.min( window.innerWidth, window.innerHeight ) / 2 * 1.06;
-//             meshFromSDF.scale.set( scale, scale, scale );
-
-//             setMaterial();
-
-//             // if (window.innerWidth <= 480) {
-//             //     meshFromSDF.position.y += 5.5;
-//             // }
-
-//             // Apply GSAP animation for zoom-in and slight rotation
-//             gsap.from(meshFromSDF.scale, { duration: 1.5, x: 0.1, y: 0.1, z: 0.1, ease: "power2.out" });
-//             gsap.from(meshFromSDF.rotation, { duration: 1.5, y: Math.PI * 2, ease: "power2.out" });
-//         }
-//         settings.vertexCount = geometry.attributes.position.count;
-//     }
-
-//     function setMaterial() {
-//         meshFromSDF.material.dispose();
-
-//         if ( settings.material == 'depth' ) {
-//             meshFromSDF.material = new MeshDepthMaterial();
-//         } else if ( settings.material == 'normal' ) {
-//             meshFromSDF.material = new MeshNormalMaterial();
-//         }
-
-//         meshFromSDF.material.wireframe = settings.wireframe;
-//     }
-
-//     function onWindowResize() {
-//         const w = window.innerWidth;
-//         const h = window.innerHeight;
-
-//         renderer.setSize( w, h );
-
-//         camera.left = w / - 2;
-//         camera.right = w / 2;
-//         camera.top = h / 2;
-//         camera.bottom = h / - 2;
-
-//         camera.updateProjectionMatrix();
-
-//         if (meshFromSDF) {
-//             const scale = Math.min(w, h) / 2 * 1.06;
-//             meshFromSDF.scale.set(scale, scale, scale);
-//         }
-//     }
-
-//     function render() {
-//         renderer.render( scene, camera );
-//     }
-
-//     // Track if the page is being scrolled
-//     const [isScrolling, setIsScrolling] = useState(false);
-//     const scrollTimeout = useRef(null);
-
-//     // Add scroll detection
-//     useEffect(() => {
-//         const handleScroll = () => {
-//             setIsScrolling(true);
-
-//             // Clear previous timeout
-//             if (scrollTimeout.current) {
-//                 clearTimeout(scrollTimeout.current);
-//             }
-
-//             // Set a timeout to detect when scrolling stops
-//             scrollTimeout.current = setTimeout(() => {
-//                 setIsScrolling(false);
-//             }, 100);
-//         };
-
-//         window.addEventListener('scroll', handleScroll, { passive: true });
-//         return () => {
-//             window.removeEventListener('scroll', handleScroll);
-//             if (scrollTimeout.current) {
-//                 clearTimeout(scrollTimeout.current);
-//             }
-//         };
-//     }, []);
-
-//     function animate() {
-//         // No need for requestAnimationFrame as we're using setAnimationLoop
-
-//         controls.update();
-
-//         // Reduce animation complexity during scrolling
-//         if (settings.autoRotate && meshFromSDF) {
-//             // If scrolling, use a smaller rotation increment
-//             const rotationSpeed = isScrolling ? Math.PI * 0.01 : Math.PI * 0.05;
-//             meshFromSDF.rotation.y += rotationSpeed * clock.getDelta();
-//         }
-
-//         render();
-//     }
-
-//     return (
-//         <div style={{
-//             position: 'absolute',
-//             width: '100%',
-//             height: '100%',
-//             display: 'flex',
-//             justifyContent: 'center',
-//             alignItems: 'center',
-//             willChange: 'transform', // Hint to browser to optimize
-//             transform: 'translateZ(0)', // Force GPU acceleration
-//         }}>
-//             {/* Background element for the fractal */}
-//             <div style={{
-//                 position: 'absolute',
-//                 width: '80vmin',
-//                 height: '80vmin',
-//                 borderRadius: '50%',
-//                 background: 'radial-gradient(circle, rgba(110,137,215,0.15) 0%, rgba(205,233,193,0.1) 50%, rgba(255,82,82,0.05) 100%)',
-//                 filter: 'blur(20px)',
-//                 opacity: 0.8,
-//                 zIndex: 0,
-//                 animation: 'pulse 8s ease-in-out infinite alternate',
-//                 top: isMobile ? '-20%' : '0', // Match the fractal position
-//                 transform: isMobile ? 'translateY(0)' : 'none',
-//                 willChange: 'transform, opacity', // Hint to browser to optimize
-//                 backfaceVisibility: 'hidden', // Force GPU acceleration
-//             }}></div>
-
-//             {/* Fractal container */}
-//             <div ref={containerRef} style={{
-//                 position: 'absolute',
-//                 width: '100%',
-//                 height: '100%',
-//                 display: 'flex',
-//                 justifyContent: 'center',
-//                 alignItems: 'center',
-//                 touchAction: 'none', // Important for touch devices
-//                 zIndex: 1,
-//                 top: isMobile ? '-20%' : '0', // Position higher on mobile
-//                 willChange: 'transform', // Hint to browser to optimize
-//                 transform: 'translateZ(0)', // Force GPU acceleration
-//                 backfaceVisibility: 'hidden', // Force GPU acceleration
-//             }}></div>
-//         </div>
-//     )
-// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import * as THREE from 'three';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { SDFGeometryGenerator } from './SDFGeometryGenerator';
 import {
     OrthographicCamera,
@@ -335,25 +11,63 @@ import {
     WebGLRenderer,
     Mesh,
     Color,
-    ShaderMaterial
+    ShaderMaterial,
+    Vector2,
+    Vector3,
+    Group,
+    BufferGeometry,
+    BufferAttribute,
+    Raycaster
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import gsap from 'gsap';
 
-export default function SDFAnimation(props) {
-    const [isMobile, setIsMobile] = useState(false);
+const RGB_ACCENTS = [
+    { vec: new Vector3(1.0, 0.14, 0.2), hex: '#ff2433' },  // Red
+    { vec: new Vector3(0.12, 0.95, 0.38), hex: '#1ff261' }, // Green
+    { vec: new Vector3(0.18, 0.48, 1.0), hex: '#2e7aff' },  // Blue
+];
+
+/** @param {{ centered?: boolean; projects?: import('./PersistentFractal').FractalProjectItem[] }} props */
+export default function SDFAnimation({ centered = false, projects = [] }) {
+    const router = useRouter();
+    const [isCenterTarget, setIsCenterTarget] = useState(centered);
+    const [hoveredInfo, setHoveredInfo] = useState(null);
     const containerRef = useRef(null);
-    const scrollTimeout = useRef(null);
-    const [isScrolling, setIsScrolling] = useState(false);
+    const previewRef = useRef(null);
+
+    const fractalGroupRef = useRef(null);
+    const chunksRef = useRef([]);
+    const chunkMeshesRef = useRef([]);
+    const rendererRef = useRef(null);
+    const sceneRef = useRef(null);
+    const cameraRef = useRef(null);
+    const clockRef = useRef(null);
+    const controlsRef = useRef(null);
+    const projectsRef = useRef(projects);
+
+    const centeredRef = useRef(centered);
+    const expandRef = useRef({ value: centered ? 1 : 0 });
+    const hoveredIdxRef = useRef(null);
+    const pointerDownPosRef = useRef({ x: 0, y: 0 });
+    const raycasterRef = useRef(new Raycaster());
+    const pointerNdcRef = useRef(new Vector2(-99, -99));
+    const pointerDirtyRef = useRef(false);
+
+    const cursorWorldTargetRef = useRef(new Vector3(0, 0, 0));
+    const cursorWorldCurrentRef = useRef(new Vector3(0, 0, 0));
+    const cursorRayDirRef = useRef(new Vector3(0, 0, -1));
+    const cursorActiveTargetRef = useRef(0);
+    const cursorActiveCurrentRef = useRef(0);
+
+    // Pre-allocated scratch vectors (zero per-frame allocations)
+    const scratchWorldDir = useRef(new Vector3());
+    const scratchChunkPos = useRef(new Vector3());
+    const scratchToChunk = useRef(new Vector3());
 
     useEffect(() => {
-        setIsMobile(window.innerWidth <= 480);
-        const handleResize = () => setIsMobile(window.innerWidth <= 480);
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
-
-    let renderer, meshFromSDF, scene, camera, clock, controls;
+        projectsRef.current = projects;
+    }, [projects]);
 
     const settings = {
         res: 3,
@@ -389,44 +103,249 @@ export default function SDFAnimation(props) {
         }
     `;
 
-    // Premium Muted Normal Shader to replace the blinding stock material
-    const mutedNormalShader = {
-        vertexShader: /* glsl */`
-            varying vec3 vNormal;
-            void main() {
-                vNormal = normalize(normalMatrix * normal);
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-        `,
-        fragmentShader: /* glsl */`
-            varying vec3 vNormal;
-            uniform float uWireframe;
-            void main() {
-                // Map coordinates to standard color vector layout
-                vec3 normalColor = vNormal * 0.5 + 0.5;
-                
-                // Dim the overall output to match luxury aesthetic profiles (Scale down to 35% brightness)
-                vec3 mutedTone = normalColor * 0.35;
-                
-                // Add a deep vignette bias based on the angle facing away from view direction
-                float edgeFalloff = pow(1.0 - max(dot(vNormal, vec3(0.0, 0.0, 1.0)), 0.0), 2.0);
-                mutedTone += vec3(0.02, 0.03, 0.05) * edgeFalloff;
+    const chunkVertexShader = /* glsl */`
+        varying vec3 vNormal;
+        void main() {
+            vNormal = normalize(normalMatrix * normal);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    `;
 
-                gl_FragColor = vec4(mutedTone, 1.0);
+    const chunkFragmentShader = /* glsl */`
+        varying vec3 vNormal;
+        uniform vec3 uHoverColor;
+        uniform float uHoverMix;
+
+        void main() {
+            vec3 normalColor = vNormal * 0.5 + 0.5;
+            vec3 mutedTone = normalColor * 0.35;
+
+            float edgeFalloff = pow(1.0 - max(dot(vNormal, vec3(0.0, 0.0, 1.0)), 0.0), 2.0);
+            mutedTone += vec3(0.02, 0.03, 0.05) * edgeFalloff;
+
+            vec3 finalColor = mix(mutedTone, uHoverColor, uHoverMix);
+            gl_FragColor = vec4(finalColor, 1.0);
+        }
+    `;
+
+    function getTargetLayout(isCentered) {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const mobile = w <= 480;
+        const baseDimension = Math.min(w, h);
+        const homeScale = mobile ? baseDimension * 0.9 : baseDimension * 0.85;
+
+        if (isCentered) {
+            return {
+                scale: homeScale * 0.58,
+                x: 0,
+                y: 0,
+                rotationZ: Math.PI / 2,
+            };
+        }
+
+        const horizontalShift = mobile ? w * 0.45 : w * 0.5;
+        const verticalShift = mobile ? h * 0.15 : 0;
+        return {
+            scale: homeScale,
+            x: horizontalShift,
+            y: -verticalShift,
+            rotationZ: 0,
+        };
+    }
+
+    function animateGroupToTarget(isCentered, immediate = false) {
+        const group = fractalGroupRef.current;
+        const camera = cameraRef.current;
+        const controls = controlsRef.current;
+        if (!group) return;
+
+        const { scale, x, y, rotationZ } = getTargetLayout(isCentered);
+
+        gsap.killTweensOf(group.position);
+        gsap.killTweensOf(group.scale);
+        gsap.killTweensOf(group.rotation);
+        gsap.killTweensOf(expandRef.current);
+
+        if (controls) {
+            controls.enabled = isCentered;
+            controls.autoRotate = isCentered;
+            controls.autoRotateSpeed = 0.4;
+        }
+
+        if (immediate) {
+            group.position.set(x, y, 0);
+            group.scale.set(scale, scale, scale);
+            group.rotation.z = rotationZ;
+            expandRef.current.value = isCentered ? 1 : 0;
+            if (!isCentered && camera) {
+                camera.position.set(0, 0, 1100);
+                camera.lookAt(0, 0, 0);
             }
-        `
-    };
+        } else {
+            gsap.to(group.position, {
+                x,
+                y,
+                duration: 1.05,
+                ease: 'power3.out',
+            });
+            gsap.to(group.scale, {
+                x: scale,
+                y: scale,
+                z: scale,
+                duration: 1.05,
+                ease: 'power3.out',
+            });
+            gsap.to(group.rotation, {
+                z: rotationZ,
+                duration: 1.05,
+                ease: 'power3.out',
+            });
+            gsap.to(expandRef.current, {
+                value: isCentered ? 1 : 0,
+                duration: isCentered ? 1.0 : 0.55,
+                delay: isCentered ? 0.15 : 0,
+                ease: isCentered ? 'power3.out' : 'power2.out',
+            });
+
+            if (!isCentered && camera) {
+                gsap.killTweensOf(camera.position);
+                gsap.to(camera.position, {
+                    x: 0,
+                    y: 0,
+                    z: 1100,
+                    duration: 0.9,
+                    ease: 'power3.out',
+                    onUpdate: () => camera.lookAt(0, 0, 0),
+                });
+            }
+        }
+    }
+
+    function getSphereDirections(count) {
+        const dirs = [];
+        const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+        for (let i = 0; i < count; i++) {
+            const yNorm = 1 - (i / Math.max(1, count - 1)) * 2;
+            const radiusAtY = Math.sqrt(Math.max(0, 1 - yNorm * yNorm));
+            const theta = goldenAngle * i;
+            dirs.push(
+                new Vector3(
+                    Math.cos(theta) * radiusAtY,
+                    yNorm * 0.85,
+                    Math.sin(theta) * radiusAtY
+                ).normalize()
+            );
+        }
+        return dirs;
+    }
+
+    useEffect(() => {
+        centeredRef.current = centered;
+        setIsCenterTarget(centered);
+        if (!centered) {
+            hoveredIdxRef.current = null;
+            setHoveredInfo(null);
+            pointerNdcRef.current.set(-99, -99);
+            cursorActiveTargetRef.current = 0;
+        }
+        animateGroupToTarget(centered, false);
+    }, [centered]);
+
+    useEffect(() => {
+        const handleEnterProject = () => {
+            centeredRef.current = true;
+            setIsCenterTarget(true);
+            animateGroupToTarget(true, false);
+        };
+
+        window.addEventListener('rgb:enter-project', handleEnterProject);
+        return () => window.removeEventListener('rgb:enter-project', handleEnterProject);
+    }, []);
+
+    useEffect(() => {
+        const clearPointerHover = () => {
+            cursorActiveTargetRef.current = 0;
+            pointerNdcRef.current.set(-99, -99);
+            pointerDirtyRef.current = true;
+        };
+
+        const handlePointerMove = (e) => {
+            if (!centeredRef.current || !cameraRef.current || !rendererRef.current) return;
+
+            // Ignore pointer events over Navbar or other UI overlays above the canvas
+            if (e.target !== rendererRef.current.domElement) {
+                clearPointerHover();
+                return;
+            }
+
+            const nx = (e.clientX / window.innerWidth) * 2 - 1;
+            const ny = -((e.clientY / window.innerHeight) * 2 - 1);
+            pointerNdcRef.current.set(nx, ny);
+            pointerDirtyRef.current = true;
+            cursorActiveTargetRef.current = 1;
+
+            raycasterRef.current.setFromCamera(pointerNdcRef.current, cameraRef.current);
+            cursorRayDirRef.current.copy(raycasterRef.current.ray.direction).normalize();
+            cursorWorldTargetRef.current.copy(raycasterRef.current.ray.origin);
+
+            if (previewRef.current) {
+                const offsetX = e.clientX > window.innerWidth - 260 ? -244 : 22;
+                const offsetY = e.clientY > window.innerHeight - 230 ? -200 : 22;
+                previewRef.current.style.transform = `translate3d(${e.clientX + offsetX}px, ${e.clientY + offsetY}px, 0)`;
+            }
+        };
+
+        const handlePointerDown = (e) => {
+            if (!centeredRef.current || !rendererRef.current) return;
+            if (e.target !== rendererRef.current.domElement) return;
+            pointerDownPosRef.current = { x: e.clientX, y: e.clientY };
+        };
+
+        const handlePointerUp = (e) => {
+            if (!centeredRef.current || !cameraRef.current || !rendererRef.current) return;
+            if (e.target !== rendererRef.current.domElement) return;
+
+            const distMoved = Math.hypot(
+                e.clientX - pointerDownPosRef.current.x,
+                e.clientY - pointerDownPosRef.current.y
+            );
+            if (distMoved > 6) return;
+
+            const nx = (e.clientX / window.innerWidth) * 2 - 1;
+            const ny = -((e.clientY / window.innerHeight) * 2 - 1);
+            raycasterRef.current.setFromCamera(new Vector2(nx, ny), cameraRef.current);
+            const hits = raycasterRef.current.intersectObjects(chunkMeshesRef.current, false);
+            if (hits.length > 0) {
+                const hitProject = hits[0].object.userData?.project;
+                if (hitProject?.href) {
+                    router.push(hitProject.href);
+                }
+            }
+        };
+
+        window.addEventListener('pointermove', handlePointerMove, { passive: true });
+        window.addEventListener('pointerleave', clearPointerHover);
+        window.addEventListener('pointerdown', handlePointerDown, { passive: true });
+        window.addEventListener('pointerup', handlePointerUp);
+        return () => {
+            window.removeEventListener('pointermove', handlePointerMove);
+            window.removeEventListener('pointerleave', clearPointerHover);
+            window.removeEventListener('pointerdown', handlePointerDown);
+            window.removeEventListener('pointerup', handlePointerUp);
+        };
+    }, [router]);
 
     useEffect(() => {
         let isStarted = false;
-        const hasLoader = Boolean(document.querySelector("[data-home-loader]"));
+        const hasLoader = Boolean(document.querySelector('[data-home-loader]'));
 
         const startAnimation = () => {
             if (isStarted) return;
             isStarted = true;
             compile();
-            if (renderer) {
-                renderer.setAnimationLoop(animate);
+            if (rendererRef.current) {
+                rendererRef.current.setAnimationLoop(animate);
             }
         };
 
@@ -440,28 +359,21 @@ export default function SDFAnimation(props) {
 
         return () => {
             window.removeEventListener('home-loader:reveal', startAnimation);
-            if (renderer) {
-                renderer.setAnimationLoop(null);
-                renderer.dispose();
+            window.removeEventListener('resize', onWindowResize);
+            if (rendererRef.current) {
+                rendererRef.current.setAnimationLoop(null);
+                rendererRef.current.dispose();
             }
-            if (meshFromSDF) {
-                if (meshFromSDF.geometry) meshFromSDF.geometry.dispose();
-                if (meshFromSDF.material) meshFromSDF.material.dispose();
+            if (fractalGroupRef.current) {
+                gsap.killTweensOf(fractalGroupRef.current.position);
+                gsap.killTweensOf(fractalGroupRef.current.scale);
+                gsap.killTweensOf(fractalGroupRef.current.rotation);
             }
-            if (scene) scene.clear();
-        };
-    }, []);
-
-    useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolling(true);
-            if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
-            scrollTimeout.current = setTimeout(() => setIsScrolling(false), 100);
-        };
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-            if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+            chunksRef.current.forEach((chunk) => {
+                chunk.mesh.geometry.dispose();
+                chunk.material.dispose();
+            });
+            if (sceneRef.current) sceneRef.current.clear();
         };
     }, []);
 
@@ -469,23 +381,27 @@ export default function SDFAnimation(props) {
         const w = window.innerWidth;
         const h = window.innerHeight;
 
-        camera = new OrthographicCamera(w / -2, w / 2, h / 2, h / -2, 0.01, 1600);
+        const camera = new OrthographicCamera(w / -2, w / 2, h / 2, h / -2, 0.01, 2600);
         camera.position.z = 1100;
+        cameraRef.current = camera;
 
-        scene = new Scene();
+        const scene = new Scene();
         scene.background = new Color('#000');
-        clock = new Clock();
+        sceneRef.current = scene;
 
-        renderer = new WebGLRenderer({
+        clockRef.current = new Clock();
+
+        const renderer = new WebGLRenderer({
             antialias: true,
             powerPreference: 'high-performance',
             alpha: true
         });
-
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setSize(w, h);
+        rendererRef.current = renderer;
 
         if (containerRef.current) {
+            containerRef.current.innerHTML = '';
             containerRef.current.appendChild(renderer.domElement);
             const canvas = renderer.domElement;
             canvas.style.willChange = 'transform';
@@ -493,62 +409,131 @@ export default function SDFAnimation(props) {
             canvas.style.backfaceVisibility = 'hidden';
         }
 
-        controls = new OrbitControls(camera, renderer.domElement);
+        const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
+        controls.dampingFactor = 0.06;
         controls.enableZoom = false;
         controls.enablePan = false;
         controls.enableRotate = true;
-        controls.rotateSpeed = 0.4;
+        controls.rotateSpeed = 0.55;
+        controls.enabled = centeredRef.current;
+        controls.autoRotate = centeredRef.current;
+        controls.autoRotateSpeed = 0.4;
+        controlsRef.current = controls;
 
         window.addEventListener('resize', onWindowResize);
     }
 
     function compile() {
+        const renderer = rendererRef.current;
+        const scene = sceneRef.current;
+        if (!renderer || !scene) return;
+
         const generator = new SDFGeometryGenerator(renderer);
-        const geometry = generator.generate(Math.pow(2, settings.res + 2), shader, settings.bounds);
-        geometry.computeVertexNormals();
+        const rawGeometry = generator.generate(Math.pow(2, settings.res + 2), shader, settings.bounds);
+        rawGeometry.computeVertexNormals();
 
-        const customMaterial = new ShaderMaterial({
-            vertexShader: mutedNormalShader.vertexShader,
-            fragmentShader: mutedNormalShader.fragmentShader,
-            wireframe: settings.wireframe
-        });
+        const geometry = rawGeometry.index ? rawGeometry.toNonIndexed() : rawGeometry;
+        if (rawGeometry.index) rawGeometry.dispose();
 
-        if (meshFromSDF) {
-            meshFromSDF.geometry.dispose();
-            meshFromSDF.geometry = geometry;
-        } else {
-            meshFromSDF = new Mesh(geometry, customMaterial);
-            scene.add(meshFromSDF);
+        const list = projectsRef.current;
+        const chunkCount = Math.max(1, list.length || 14);
+        const chunkDirs = getSphereDirections(chunkCount);
 
-            // Re-map scale & positioning properties for asymmetric framing layout
-            updateMeshLayout();
+        const posAttr = geometry.getAttribute('position');
+        const normAttr = geometry.getAttribute('normal');
 
-            // Luxury intro reveal animations
-            gsap.from(meshFromSDF.scale, { duration: 1.8, x: 0.1, y: 0.1, z: 0.1, ease: "power3.out" });
-            gsap.from(meshFromSDF.rotation, { duration: 1.8, y: Math.PI, ease: "power3.out" });
+        const buckets = Array.from({ length: chunkCount }, () => ({
+            positions: [],
+            normals: [],
+        }));
+        const triCenter = new Vector3();
+
+        for (let i = 0; i < posAttr.count; i += 3) {
+            triCenter.set(
+                (posAttr.getX(i) + posAttr.getX(i + 1) + posAttr.getX(i + 2)) / 3,
+                (posAttr.getY(i) + posAttr.getY(i + 1) + posAttr.getY(i + 2)) / 3,
+                (posAttr.getZ(i) + posAttr.getZ(i + 1) + posAttr.getZ(i + 2)) / 3
+            );
+            if (triCenter.lengthSq() > 0.000001) triCenter.normalize();
+
+            let bestIdx = 0;
+            let bestDot = -Infinity;
+            for (let c = 0; c < chunkCount; c++) {
+                const d = triCenter.dot(chunkDirs[c]);
+                if (d > bestDot) {
+                    bestDot = d;
+                    bestIdx = c;
+                }
+            }
+
+            const bucket = buckets[bestIdx];
+            for (let k = 0; k < 3; k++) {
+                const v = i + k;
+                bucket.positions.push(posAttr.getX(v), posAttr.getY(v), posAttr.getZ(v));
+                bucket.normals.push(normAttr.getX(v), normAttr.getY(v), normAttr.getZ(v));
+            }
         }
-    }
+        geometry.dispose();
 
-    function updateMeshLayout() {
-        if (!meshFromSDF) return;
+        const group = new Group();
+        fractalGroupRef.current = group;
+        scene.add(group);
 
-        const w = window.innerWidth;
-        const h = window.innerHeight;
+        const createdChunks = [];
+        const chunkMeshes = [];
 
-        // Massive Awwwards layout scaling modifier
-        const baseDimension = Math.min(w, h);
-        const targetScale = isMobile ? baseDimension * 0.9 : baseDimension * 0.85; 
-        meshFromSDF.scale.set(targetScale, targetScale, targetScale);
+        for (let c = 0; c < chunkCount; c++) {
+            const bucket = buckets[c];
+            if (bucket.positions.length === 0) continue;
 
-        // Position alignment: Shifts the geometric core precisely to the right screen layout threshold
-        const horizontalShift = isMobile ? w * 0.45 : w * 0.5;
-        const verticalShift = isMobile ? h * 0.15 : 0; 
-        
-        meshFromSDF.position.set(horizontalShift, -verticalShift, 0);
+            const chunkGeom = new BufferGeometry();
+            chunkGeom.setAttribute('position', new BufferAttribute(new Float32Array(bucket.positions), 3));
+            chunkGeom.setAttribute('normal', new BufferAttribute(new Float32Array(bucket.normals), 3));
+
+            const accent = RGB_ACCENTS[c % RGB_ACCENTS.length];
+            const mat = new ShaderMaterial({
+                vertexShader: chunkVertexShader,
+                fragmentShader: chunkFragmentShader,
+                wireframe: settings.wireframe,
+                uniforms: {
+                    uHoverColor: { value: accent.vec.clone() },
+                    uHoverMix: { value: 0 },
+                },
+            });
+
+            const project = list[c] || null;
+            const chunkMesh = new Mesh(chunkGeom, mat);
+            chunkMesh.userData = { chunkIndex: c, project, accentHex: accent.hex };
+            group.add(chunkMesh);
+
+            createdChunks.push({
+                index: c,
+                dir: chunkDirs[c],
+                mesh: chunkMesh,
+                material: mat,
+                project,
+                accentHex: accent.hex,
+                openVal: 0,
+                hoverMix: 0,
+            });
+            chunkMeshes.push(chunkMesh);
+        }
+
+        chunksRef.current = createdChunks;
+        chunkMeshesRef.current = chunkMeshes;
+
+        animateGroupToTarget(centeredRef.current, true);
+
+        gsap.from(group.scale, { duration: 1.8, x: 0.1, y: 0.1, z: 0.1, ease: 'power3.out' });
+        gsap.from(group.rotation, { duration: 1.8, y: Math.PI, ease: 'power3.out' });
     }
 
     function onWindowResize() {
+        const renderer = rendererRef.current;
+        const camera = cameraRef.current;
+        if (!renderer || !camera) return;
+
         const w = window.innerWidth;
         const h = window.innerHeight;
 
@@ -560,33 +545,129 @@ export default function SDFAnimation(props) {
         camera.bottom = h / -2;
         camera.updateProjectionMatrix();
 
-        updateMeshLayout();
+        animateGroupToTarget(centeredRef.current, true);
+    }
+
+    function updateSplitChunks() {
+        const group = fractalGroupRef.current;
+        const camera = cameraRef.current;
+        const chunks = chunksRef.current;
+        if (!group || !camera || !chunks.length) return;
+
+        const expand = expandRef.current.value;
+
+        if (pointerDirtyRef.current && centeredRef.current && expand > 0.65) {
+            pointerDirtyRef.current = false;
+            let nextHoveredIdx = null;
+
+            if (pointerNdcRef.current.x > -2) {
+                raycasterRef.current.setFromCamera(pointerNdcRef.current, camera);
+                const hits = raycasterRef.current.intersectObjects(chunkMeshesRef.current, false);
+                if (hits.length > 0) {
+                    nextHoveredIdx = hits[0].object.userData?.chunkIndex ?? null;
+                }
+            }
+
+            if (nextHoveredIdx !== hoveredIdxRef.current) {
+                hoveredIdxRef.current = nextHoveredIdx;
+                if (nextHoveredIdx !== null) {
+                    const hitChunk = chunks.find((c) => c.index === nextHoveredIdx);
+                    setHoveredInfo(
+                        hitChunk?.project
+                            ? {
+                                  index: hitChunk.index,
+                                  project: hitChunk.project,
+                                  accentHex: hitChunk.accentHex,
+                              }
+                            : null
+                    );
+                } else {
+                    setHoveredInfo(null);
+                }
+                if (controlsRef.current) {
+                    controlsRef.current.autoRotate = centeredRef.current && nextHoveredIdx === null;
+                }
+            }
+        }
+
+        const openRadius = Math.min(window.innerWidth, window.innerHeight) * 0.34;
+        const baseSplit = 0.28;
+
+        for (let i = 0; i < chunks.length; i++) {
+            const chunk = chunks[i];
+            const isHovered = hoveredIdxRef.current === chunk.index;
+
+            if (expand < 0.01) {
+                chunk.openVal = 0;
+                chunk.hoverMix = 0;
+                chunk.mesh.position.set(0, 0, 0);
+                chunk.mesh.scale.setScalar(1);
+                chunk.material.uniforms.uHoverMix.value = 0;
+                continue;
+            }
+
+            scratchWorldDir.current.copy(chunk.dir).applyQuaternion(group.quaternion).normalize();
+            scratchChunkPos.current
+                .copy(scratchWorldDir.current)
+                .multiplyScalar(group.scale.x * 0.34)
+                .add(group.position);
+
+            scratchToChunk.current.copy(scratchChunkPos.current).sub(cursorWorldCurrentRef.current);
+            const along = scratchToChunk.current.dot(cursorRayDirRef.current);
+            const perpDist = scratchToChunk.current.addScaledVector(cursorRayDirRef.current, -along).length();
+
+            const cursorBoost = cursorActiveCurrentRef.current * Math.max(0, 1 - perpDist / openRadius) * 0.25;
+            const targetOpen = (baseSplit + cursorBoost) * expand;
+
+            chunk.openVal += (targetOpen - chunk.openVal) * 0.12;
+            chunk.mesh.position.copy(chunk.dir).multiplyScalar(chunk.openVal * 0.72);
+
+            const targetHover = isHovered ? 0.92 : 0.0;
+            chunk.hoverMix += (targetHover - chunk.hoverMix) * 0.16;
+            chunk.mesh.scale.setScalar(1 + chunk.hoverMix * 0.08);
+            chunk.material.uniforms.uHoverMix.value = chunk.hoverMix;
+        }
     }
 
     function animate() {
-        controls.update();
+        if (controlsRef.current) controlsRef.current.update();
 
-        if (settings.autoRotate && meshFromSDF) {
-            const delta = clock.getDelta();
-            const rotationSpeed = isScrolling ? Math.PI * 0.01 : Math.PI * 0.03;
-            meshFromSDF.rotation.y += rotationSpeed * delta;
+        const clock = clockRef.current;
+        const delta = clock ? clock.getDelta() : 0.016;
+
+        cursorWorldCurrentRef.current.lerp(cursorWorldTargetRef.current, 0.14);
+        cursorActiveCurrentRef.current += (cursorActiveTargetRef.current - cursorActiveCurrentRef.current) * 0.12;
+
+        if (fractalGroupRef.current && settings.autoRotate && !centeredRef.current) {
+            fractalGroupRef.current.rotation.y += Math.PI * 0.03 * delta;
         }
 
-        renderer.render(scene, camera);
+        updateSplitChunks();
+
+        if (rendererRef.current && sceneRef.current && cameraRef.current) {
+            rendererRef.current.render(sceneRef.current, cameraRef.current);
+        }
     }
 
     return (
-        <div style={{
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            overflow: 'hidden',
-            backgroundColor: '#000',
-            willChange: 'transform',
-            transform: 'translateZ(0)',
-        }}>
-            {/* Soft Ambient Backdrop Aura — Shifted right to mirror fractal positioning */}
+        <div
+            style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                overflow: 'hidden',
+                backgroundColor: '#000',
+                willChange: 'transform',
+                transform: 'translateZ(0)',
+                cursor: isCenterTarget ? (hoveredInfo ? 'pointer' : 'grab') : 'default',
+            }}
+        >
+            <link rel="preconnect" href="https://fonts.googleapis.com" />
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+            <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+
+            {/* Soft Ambient Backdrop Aura */}
             <div style={{
                 position: 'absolute',
                 width: '100vmin',
@@ -596,9 +677,10 @@ export default function SDFAnimation(props) {
                 filter: 'blur(40px)',
                 opacity: 0.6,
                 zIndex: 0,
-                top: isMobile ? '30%' : '50%',
-                right: '-25%',
-                transform: 'translateY(-50%)',
+                top: '50%',
+                right: isCenterTarget ? '50%' : '-25%',
+                transform: isCenterTarget ? 'translate(50%, -50%)' : 'translateY(-50%)',
+                transition: 'right 1.05s cubic-bezier(0.22, 1, 0.36, 1), transform 1.05s cubic-bezier(0.22, 1, 0.36, 1)',
                 willChange: 'transform, opacity',
                 backfaceVisibility: 'hidden',
             }}></div>
@@ -614,6 +696,69 @@ export default function SDFAnimation(props) {
                 transform: 'translateZ(0)',
                 backfaceVisibility: 'hidden',
             }}></div>
+
+            {/* Editorial Cursor-Tracked Project Preview Card */}
+            {isCenterTarget && (
+                <div
+                    ref={previewRef}
+                    className={`pointer-events-none fixed top-0 left-0 z-30 w-56 rounded-2xl overflow-hidden bg-[#09090d]/90 backdrop-blur-2xl border shadow-[0_24px_60px_rgba(0,0,0,0.9)] transition-opacity duration-200 ${
+                        hoveredInfo ? 'opacity-100' : 'opacity-0'
+                    }`}
+                    style={{
+                        borderColor: hoveredInfo ? `${hoveredInfo.accentHex}66` : 'rgba(255,255,255,0.12)',
+                    }}
+                >
+                    {hoveredInfo && (
+                        <>
+                            <div
+                                className="h-[2px] w-full"
+                                style={{ backgroundColor: hoveredInfo.accentHex }}
+                            />
+                            <div className="relative w-full aspect-[16/10] bg-neutral-950 overflow-hidden">
+                                <Image
+                                    src={hoveredInfo.project.cover}
+                                    alt={hoveredInfo.project.title}
+                                    fill
+                                    sizes="224px"
+                                    className="object-cover"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#09090d] via-transparent to-black/25" />
+                                <span
+                                    className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-black/70 border border-white/10 text-[9px] tracking-[0.2em] text-white/80"
+                                    style={{ fontFamily: "'Space Mono', monospace" }}
+                                >
+                                    {String(hoveredInfo.index + 1).padStart(2, '0')}
+                                </span>
+                            </div>
+                            <div className="px-3.5 pt-2.5 pb-3">
+                                <p
+                                    className="text-[9px] uppercase tracking-[0.22em] truncate"
+                                    style={{
+                                        color: hoveredInfo.accentHex,
+                                        fontFamily: "'Space Mono', monospace",
+                                    }}
+                                >
+                                    {hoveredInfo.project.categoryTitle}
+                                </p>
+                                <div className="mt-1 flex items-baseline justify-between gap-2">
+                                    <p
+                                        className="text-sm font-bold text-white leading-snug tracking-tight truncate"
+                                        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                                    >
+                                        {hoveredInfo.project.title}
+                                    </p>
+                                    <span
+                                        className="text-[10px] text-white/40 shrink-0"
+                                        style={{ fontFamily: "'Space Mono', monospace" }}
+                                    >
+                                        ↗
+                                    </span>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

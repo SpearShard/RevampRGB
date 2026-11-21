@@ -157,7 +157,7 @@ export default function AutonomousAuraShader() {
             renderer.render(scene, camera);
             window.addEventListener('home-loader:reveal', startAnimationLoop, { once: true });
         } else {
-            startAnimationLoop();
+            requestAnimationFrame(() => startAnimationLoop());
         }
 
         return () => {
