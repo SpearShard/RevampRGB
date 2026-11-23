@@ -14,8 +14,9 @@ interface NavLink {
 
 const LINKS: NavLink[] = [
   { label: 'Home', href: '/', code: '01' },
-  { label: 'About', href: '/about', code: '02' },
-  { label: 'Contact', href: '/contact', code: '03' },
+  { label: 'Projects', href: '/project', code: '02' },
+  { label: 'About', href: '/about', code: '03' },
+  { label: 'Contact', href: '/contact', code: '04' },
 ];
 
 export default function Navbar() {
@@ -83,7 +84,7 @@ export default function Navbar() {
     animFrame = requestAnimationFrame(updateAuraPhysics);
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Enter' || e.repeat) return;
+      if (window.innerWidth < 768 || e.key !== 'Enter' || e.repeat) return;
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) {
         return;
@@ -211,7 +212,7 @@ export default function Navbar() {
 
       {/* Center Dock Navbar */}
       <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 select-none max-w-[calc(100vw-7.5rem)] sm:max-w-none">
-        <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-red-500/30 via-emerald-500/30 to-blue-500/30 opacity-40 blur-2xl transition-all duration-700 pointer-events-none" />
+        <div className="absolute -inset-1.5 hidden rounded-full bg-gradient-to-r from-red-500/30 via-emerald-500/30 to-blue-500/30 opacity-40 blur-2xl transition-all duration-700 pointer-events-none sm:block" />
         <div
           ref={dockRef}
           onMouseMove={handleMouseMove}
@@ -220,7 +221,7 @@ export default function Navbar() {
         >
           <div
             ref={auraRef}
-            className="absolute top-0 left-0 w-52 h-52 rounded-full pointer-events-none opacity-0 scale-50 z-0 mix-blend-screen"
+            className="absolute top-0 left-0 hidden h-52 w-52 rounded-full pointer-events-none opacity-0 scale-50 z-0 mix-blend-screen sm:block"
             style={{
               filter: 'url(#rgb-aura-displacement)',
               background: 'radial-gradient(circle, rgba(239,68,68,0.5) 0%, rgba(16,185,129,0.4) 40%, rgba(37,99,235,0.4) 70%, transparent 100%)',
@@ -237,13 +238,13 @@ export default function Navbar() {
                   onClick={(event) => {
                     if (pathname === link.href) return;
                     event.preventDefault();
-                    const eventName = link.href === '/' ? 'rgb:leave-project' : link.href === '/about' ? 'rgb:enter-about' : 'rgb:enter-contact';
+                    const eventName = link.href === '/' ? 'rgb:leave-project' : link.href === '/project' ? 'rgb:enter-project' : link.href === '/about' ? 'rgb:enter-about' : 'rgb:enter-contact';
                     window.dispatchEvent(new CustomEvent(eventName));
                     router.push(link.href);
                   }}
                   onMouseMove={(e) => handleLinkMouseMove(e, linksRef.current[idx])}
                   onMouseLeave={() => handleLinkMouseLeave(linksRef.current[idx])}
-                  className={`group relative flex items-baseline gap-1.5 sm:gap-2 py-2 px-3.5 sm:py-2.5 sm:px-6 rounded-full hover:bg-white/10 transition-colors duration-300 no-underline cursor-pointer ${
+                  className={`${link.href === '/project' ? 'sm:hidden ' : ''}group relative flex items-baseline gap-1.5 sm:gap-2 py-2 px-3.5 sm:py-2.5 sm:px-6 rounded-full hover:bg-white/10 transition-colors duration-300 no-underline cursor-pointer ${
                     isActive ? 'bg-white/10' : ''
                   }`}
                 >
@@ -261,7 +262,7 @@ export default function Navbar() {
       </div>
 
       {/* ISO Enter Button - Starts Pure White, Dissipates to Dark on Hover */}
-      <div className="fixed bottom-24 right-3 sm:bottom-8 sm:right-8 z-50 select-none">
+      <div className="fixed bottom-24 right-3 z-50 hidden select-none sm:bottom-8 sm:right-8 sm:block">
         <button
           ref={enterBtnRef}
           onClick={handleEnterAction}

@@ -35,6 +35,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
     const isCenterTarget = mode !== 'home';
     const [hoveredInfo, setHoveredInfo] = useState(null);
     const [isIndexHover, setIsIndexHover] = useState(false);
+    const [mobileSelectedInfo, setMobileSelectedInfo] = useState(null);
     const containerRef = useRef(null);
     const previewRef = useRef(null);
     const calloutRefs = useRef([]);
@@ -140,19 +141,24 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
         const h = window.innerHeight;
         const mobile = w <= 767;
         const base = Math.min(w, h);
+        // The orthographic camera is centered at world x=0. Mobile layouts use
+        // that same origin so each route can compose the fractal around its own UI.
         if (nextMode === 'home') {
-            return { scale: base * (mobile ? 0.72 : 0.85), x: mobile ? w * 0.5 : w * 0.5, y: mobile ? -h * 0.11 : 0, rotationZ: 0 };
+            return { scale: base * (mobile ? 0.64 : 0.85), x: mobile ? 0 : w * 0.5, y: mobile ? -h * 0.08 : 0, rotationZ: 0 };
         }
         if (nextMode === 'detail') {
-            return { scale: base * (mobile ? 0.58 : 0.9), x: mobile ? w * 0.08 : w * 0.25, y: mobile ? h * 0.1 : h * 0.06, rotationZ: Math.PI / 2 };
+            return { scale: base * (mobile ? 0.48 : 0.9), x: mobile ? 0 : w * 0.25, y: mobile ? h * 0.04 : h * 0.06, rotationZ: Math.PI / 2 };
         }
         if (nextMode === 'contact') {
-            return { scale: base * (mobile ? 0.36 : 0.58), x: mobile ? w * 0.5 : w * 0.39, y: mobile ? -h * 0.16 : 0, rotationZ: Math.PI / 2 };
+            return { scale: base * (mobile ? 0.32 : 0.58), x: mobile ? 0 : w * 0.39, y: mobile ? -h * 0.12 : 0, rotationZ: Math.PI / 2 };
         }
         if (nextMode === 'about') {
-            return { scale: base * (mobile ? 0.4 : 0.62), x: mobile ? w * 0.5 : w * 0.38, y: mobile ? -h * 0.12 : 0, rotationZ: Math.PI / 2 };
+            return { scale: base * (mobile ? 0.34 : 0.62), x: mobile ? 0 : w * 0.38, y: mobile ? -h * 0.1 : 0, rotationZ: Math.PI / 2 };
         }
-        return { scale: base * (mobile ? 0.44 : 0.66), x: mobile ? w * 0.08 : w * 0.08, y: mobile ? -h * 0.12 : 0, rotationZ: Math.PI / 2 };
+        if (nextMode === 'project') {
+            return { scale: base * (mobile ? 0.54 : 0.66), x: mobile ? 0 : w * 0.08, y: mobile ? 0 : 0, rotationZ: Math.PI / 2 };
+        }
+        return { scale: base * (mobile ? 0.38 : 0.66), x: mobile ? 0 : w * 0.08, y: mobile ? -h * 0.08 : 0, rotationZ: Math.PI / 2 };
     }
 
     function animateGroupToTarget(nextMode, immediate = false) {
@@ -231,6 +237,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             modeRef.current = nextMode;
             centeredRef.current = nextMode !== 'home';
             if (nextMode !== 'project') {
+                setMobileSelectedInfo(null);
                 hoveredIdxRef.current = null;
                 setHoveredInfo(null);
                 pointerNdcRef.current.set(-99, -99);
@@ -291,7 +298,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
         };
 
         const handlePointerMove = (e) => {
-            if (modeRef.current !== 'project' || !cameraRef.current || !rendererRef.current) return;
+            if (modeRef.current !== 'project' || window.innerWidth <= 767 || !cameraRef.current || !rendererRef.current) return;
 
             // Ignore pointer events over Navbar or other UI overlays above the canvas
             if (e.target !== rendererRef.current.domElement) {
@@ -338,12 +345,23 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             raycasterRef.current.setFromCamera(new Vector2(nx, ny), cameraRef.current);
             const hits = raycasterRef.current.intersectObjects(chunkMeshesRef.current, false);
             if (hits.length > 0) {
-                const hitProject = hits[0].object.userData?.project;
+                const hitChunk = chunksRef.current.find((chunk) => chunk.index === hits[0].object.userData?.chunkIndex);
+                const hitProject = hitChunk?.project;
                 if (hitProject?.href) {
-                    activeHrefRef.current = hitProject.href;
-                    window.dispatchEvent(new CustomEvent('rgb:enter-detail', { detail: { href: hitProject.href } }));
-                    router.push(hitProject.href);
+                    if (window.innerWidth <= 767) {
+                        setMobileSelectedInfo({
+                            index: hitChunk.index,
+                            project: hitProject,
+                            accentHex: hitChunk.accentHex,
+                        });
+                    } else {
+                        activeHrefRef.current = hitProject.href;
+                        window.dispatchEvent(new CustomEvent('rgb:enter-detail', { detail: { href: hitProject.href } }));
+                        router.push(hitProject.href);
+                    }
                 }
+            } else if (window.innerWidth <= 767) {
+                setMobileSelectedInfo(null);
             }
         };
 
@@ -544,7 +562,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
 
         const expand = expandRef.current.value;
 
-        if (pointerDirtyRef.current && centeredRef.current && expand > 0.65) {
+        if (window.innerWidth > 767 && pointerDirtyRef.current && centeredRef.current && expand > 0.65) {
             pointerDirtyRef.current = false;
             let nextHoveredIdx = null;
 
@@ -606,13 +624,13 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             const along = scratchToChunk.current.dot(cursorRayDirRef.current);
             const perpDist = scratchToChunk.current.addScaledVector(cursorRayDirRef.current, -along).length();
 
-            const cursorBoost = cursorActiveCurrentRef.current * Math.max(0, 1 - perpDist / openRadius) * 0.25;
+            const cursorBoost = window.innerWidth > 767 ? cursorActiveCurrentRef.current * Math.max(0, 1 - perpDist / openRadius) * 0.25 : 0;
             const targetOpen = (baseSplit + cursorBoost) * expand;
 
             chunk.openVal += (targetOpen - chunk.openVal) * 0.12;
             chunk.mesh.position.copy(chunk.dir).multiplyScalar(chunk.openVal * 0.72);
 
-            const targetHover = modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : isHovered ? 0.85 : 0.34;
+            const targetHover = window.innerWidth <= 767 ? 0.34 : modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : isHovered ? 0.85 : 0.34;
             chunk.hoverMix += (targetHover - chunk.hoverMix) * 0.16;
             if (modeRef.current === 'about') {
                 const elapsed = clockRef.current?.elapsedTime ?? 0;
@@ -767,18 +785,57 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             )}
 
             {mode === 'project' && projects.map((project, index) => (
-                <div key={project.href} ref={(element) => { calloutRefs.current[index] = element; }} className="pointer-events-none absolute left-0 top-0 z-10 flex items-center gap-2 whitespace-nowrap rounded-full border border-white/10 bg-[#08090d]/75 px-2.5 py-1.5 font-mono text-[8px] tracking-[0.12em] text-white/75 backdrop-blur-sm" style={{ opacity: 0, willChange: 'transform, opacity' }}>
+                <div key={project.href} ref={(element) => { calloutRefs.current[index] = element; }} className="pointer-events-none absolute left-0 top-0 z-10 hidden items-center gap-2 sm:flex whitespace-nowrap rounded-full border border-white/10 bg-[#08090d]/75 px-2.5 py-1.5 font-mono text-[8px] tracking-[0.12em] text-white/75 backdrop-blur-sm" style={{ opacity: 0, willChange: 'transform, opacity' }}>
                     <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: RGB_ACCENTS[index % RGB_ACCENTS.length].hex }} />
                     <span>{String(index + 1).padStart(2, '0')} / {project.title}</span>
                     <span className="text-white/35">[{['255, 36, 51', '31, 242, 97', '0, 86, 230'][index % 3]}]</span>
                 </div>
             ))}
 
+            {mode === 'project' && mobileSelectedInfo && (
+                <div className="pointer-events-auto fixed left-4 right-4 top-[54%] z-30 -translate-y-1/2 overflow-hidden rounded-2xl border border-white/15 bg-[#09090d]/95 shadow-[0_24px_70px_rgba(0,0,0,0.8)] backdrop-blur-2xl sm:hidden">
+                    <button
+                        type="button"
+                        onClick={() => setMobileSelectedInfo(null)}
+                        aria-label="Close project preview"
+                        className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/65 text-lg text-white/80"
+                    >
+                        ×
+                    </button>
+                    <div className="relative aspect-[16/9] w-full bg-neutral-950">
+                        <Image
+                            src={mobileSelectedInfo.project.cover}
+                            alt={mobileSelectedInfo.project.title}
+                            fill
+                            sizes="100vw"
+                            className="object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#09090d] via-transparent to-black/10" />
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            const href = mobileSelectedInfo.project.href;
+                            activeHrefRef.current = href;
+                            window.dispatchEvent(new CustomEvent('rgb:enter-detail', { detail: { href } }));
+                            router.push(href);
+                        }}
+                        className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left"
+                    >
+                        <span className="min-w-0">
+                            <span className="block text-[9px] uppercase tracking-[0.2em] text-white/40">{mobileSelectedInfo.project.categoryTitle}</span>
+                            <span className="mt-1 block truncate text-base font-medium text-white">{mobileSelectedInfo.project.title}</span>
+                        </span>
+                        <span className="shrink-0 font-mono text-[9px] uppercase tracking-[0.16em] text-white/55">Explore ↗</span>
+                    </button>
+                </div>
+            )}
+
             {/* Editorial Cursor-Tracked Project Preview Card */}
             {mode === 'project' && (
                 <div
                     ref={previewRef}
-                    className={`pointer-events-none fixed top-0 left-0 z-30 w-56 rounded-2xl overflow-hidden bg-[#09090d]/90 backdrop-blur-2xl border shadow-[0_24px_60px_rgba(0,0,0,0.9)] transition-opacity duration-200 ${
+                    className={`pointer-events-none fixed top-0 left-0 z-30 hidden w-56 sm:block rounded-2xl overflow-hidden bg-[#09090d]/90 backdrop-blur-2xl border shadow-[0_24px_60px_rgba(0,0,0,0.9)] transition-opacity duration-200 ${
                         hoveredInfo ? 'opacity-100' : 'opacity-0'
                     }`}
                     style={{

@@ -92,7 +92,7 @@ export default function LandingPage() {
                 className="absolute inset-0 w-full h-screen z-0 overflow-hidden pointer-events-none"
             >
                 {/* Full-bleed Red Green Blue liquid base matrix shader */}
-                <GalleryShader/>
+                <div className="hidden sm:block"><GalleryShader /></div>
             </div>
 
             {/* HIGH-END INDUSTRIAL ARCHITECTURE LAYOUT */}

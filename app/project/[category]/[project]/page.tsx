@@ -154,10 +154,10 @@ export default function ProjectPage({ params }: PageProps) {
         <div className="absolute left-5 top-5 flex items-center gap-3 sm:left-9 sm:top-8">
           <Link
             href="/project"
-            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/35 px-4 py-2 text-[9px] uppercase tracking-[0.2em] text-[#e9e5d9]/75 backdrop-blur-md transition-colors hover:bg-white hover:text-black"
+            className="inline-flex h-10 w-10 items-center justify-center gap-2 rounded-full border border-white/15 bg-black/35 px-0 py-2 sm:h-auto sm:w-auto sm:px-4 text-[9px] uppercase tracking-[0.2em] text-[#e9e5d9]/75 backdrop-blur-md transition-colors hover:bg-white hover:text-black"
           >
-            <ArrowLeft size={13} strokeWidth={1.4} />
-            Work
+            <ArrowLeft size={15} strokeWidth={1.5} />
+            <span className="hidden sm:inline">Work</span>
           </Link>
           <span className="h-px w-8 bg-[#e9e5d9]/30" />
           <span className="text-[9px] uppercase tracking-[0.23em] text-[#e9e5d9]/50">
