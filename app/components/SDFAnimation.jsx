@@ -25,16 +25,20 @@ import gsap from 'gsap';
 const RGB_ACCENTS = [
     { vec: new Vector3(1.0, 0.14, 0.2), hex: '#ff2433' },  // Red
     { vec: new Vector3(0.12, 0.95, 0.38), hex: '#1ff261' }, // Green
-    { vec: new Vector3(0.18, 0.48, 1.0), hex: '#2e7aff' },  // Blue
+    { vec: new Vector3(0.0, 0.337, 0.902), hex: '#0056e6' },  // Blue
 ];
 
-/** @param {{ centered?: boolean; projects?: import('./PersistentFractal').FractalProjectItem[] }} props */
-export default function SDFAnimation({ centered = false, projects = [] }) {
+/** @param {{ mode?: 'home'|'project'|'contact'|'about'|'detail'; activeHref?: string|null; projects?: import('./PersistentFractal').FractalProjectItem[] }} props */
+export default function SDFAnimation({ mode = 'home', activeHref = null, projects = [] }) {
+    const centered = mode !== 'home';
     const router = useRouter();
-    const [isCenterTarget, setIsCenterTarget] = useState(centered);
+    const isCenterTarget = mode !== 'home';
     const [hoveredInfo, setHoveredInfo] = useState(null);
+    const [isIndexHover, setIsIndexHover] = useState(false);
     const containerRef = useRef(null);
     const previewRef = useRef(null);
+    const calloutRefs = useRef([]);
+    const labelWorldRef = useRef(new Vector3());
 
     const fractalGroupRef = useRef(null);
     const chunksRef = useRef([]);
@@ -45,6 +49,9 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
     const clockRef = useRef(null);
     const controlsRef = useRef(null);
     const projectsRef = useRef(projects);
+    const modeRef = useRef(mode);
+    const activeHrefRef = useRef(activeHref);
+    const indexHoverHrefRef = useRef(null);
 
     const centeredRef = useRef(centered);
     const expandRef = useRef({ value: centered ? 1 : 0 });
@@ -123,101 +130,63 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
             float edgeFalloff = pow(1.0 - max(dot(vNormal, vec3(0.0, 0.0, 1.0)), 0.0), 2.0);
             mutedTone += vec3(0.02, 0.03, 0.05) * edgeFalloff;
 
-            vec3 finalColor = mix(mutedTone, uHoverColor, uHoverMix);
+            vec3 finalColor = mix(mutedTone, uHoverColor, max(0.34, uHoverMix));
             gl_FragColor = vec4(finalColor, 1.0);
         }
     `;
 
-    function getTargetLayout(isCentered) {
+    function getTargetLayout(nextMode) {
         const w = window.innerWidth;
         const h = window.innerHeight;
-        const mobile = w <= 480;
-        const baseDimension = Math.min(w, h);
-        const homeScale = mobile ? baseDimension * 0.9 : baseDimension * 0.85;
-
-        if (isCentered) {
-            return {
-                scale: homeScale * 0.58,
-                x: 0,
-                y: 0,
-                rotationZ: Math.PI / 2,
-            };
+        const mobile = w <= 767;
+        const base = Math.min(w, h);
+        if (nextMode === 'home') {
+            return { scale: base * (mobile ? 0.72 : 0.85), x: mobile ? w * 0.5 : w * 0.5, y: mobile ? -h * 0.11 : 0, rotationZ: 0 };
         }
-
-        const horizontalShift = mobile ? w * 0.45 : w * 0.5;
-        const verticalShift = mobile ? h * 0.15 : 0;
-        return {
-            scale: homeScale,
-            x: horizontalShift,
-            y: -verticalShift,
-            rotationZ: 0,
-        };
+        if (nextMode === 'detail') {
+            return { scale: base * (mobile ? 0.58 : 0.9), x: mobile ? w * 0.08 : w * 0.25, y: mobile ? h * 0.1 : h * 0.06, rotationZ: Math.PI / 2 };
+        }
+        if (nextMode === 'contact') {
+            return { scale: base * (mobile ? 0.36 : 0.58), x: mobile ? w * 0.5 : w * 0.39, y: mobile ? -h * 0.16 : 0, rotationZ: Math.PI / 2 };
+        }
+        if (nextMode === 'about') {
+            return { scale: base * (mobile ? 0.4 : 0.62), x: mobile ? w * 0.5 : w * 0.38, y: mobile ? -h * 0.12 : 0, rotationZ: Math.PI / 2 };
+        }
+        return { scale: base * (mobile ? 0.44 : 0.66), x: mobile ? w * 0.08 : w * 0.08, y: mobile ? -h * 0.12 : 0, rotationZ: Math.PI / 2 };
     }
 
-    function animateGroupToTarget(isCentered, immediate = false) {
+    function animateGroupToTarget(nextMode, immediate = false) {
         const group = fractalGroupRef.current;
         const camera = cameraRef.current;
         const controls = controlsRef.current;
         if (!group) return;
-
-        const { scale, x, y, rotationZ } = getTargetLayout(isCentered);
-
+        const { scale, x, y, rotationZ } = getTargetLayout(nextMode);
         gsap.killTweensOf(group.position);
         gsap.killTweensOf(group.scale);
         gsap.killTweensOf(group.rotation);
         gsap.killTweensOf(expandRef.current);
-
+        const interactive = nextMode === 'project';
         if (controls) {
-            controls.enabled = isCentered;
-            controls.autoRotate = isCentered;
+            controls.enabled = interactive;
+            controls.autoRotate = interactive;
             controls.autoRotateSpeed = 0.4;
         }
-
         if (immediate) {
             group.position.set(x, y, 0);
-            group.scale.set(scale, scale, scale);
+            group.scale.setScalar(scale);
             group.rotation.z = rotationZ;
-            expandRef.current.value = isCentered ? 1 : 0;
-            if (!isCentered && camera) {
-                camera.position.set(0, 0, 1100);
-                camera.lookAt(0, 0, 0);
-            }
+            expandRef.current.value = nextMode === 'home' ? 0 : 1;
+            if (camera) { camera.position.set(0, 0, 1100); camera.lookAt(0, 0, 0); }
         } else {
-            gsap.to(group.position, {
-                x,
-                y,
-                duration: 1.05,
-                ease: 'power3.out',
-            });
-            gsap.to(group.scale, {
-                x: scale,
-                y: scale,
-                z: scale,
-                duration: 1.05,
-                ease: 'power3.out',
-            });
-            gsap.to(group.rotation, {
-                z: rotationZ,
-                duration: 1.05,
-                ease: 'power3.out',
-            });
-            gsap.to(expandRef.current, {
-                value: isCentered ? 1 : 0,
-                duration: isCentered ? 1.0 : 0.55,
-                delay: isCentered ? 0.15 : 0,
-                ease: isCentered ? 'power3.out' : 'power2.out',
-            });
-
-            if (!isCentered && camera) {
+            gsap.to(group.position, { x, y, duration: nextMode === 'detail' ? 0.78 : 0.95, ease: 'power3.out', overwrite: 'auto' });
+            gsap.to(group.scale, { x: scale, y: scale, z: scale, duration: nextMode === 'detail' ? 0.78 : 0.95, ease: 'power3.out', overwrite: 'auto' });
+            const currentZ = group.rotation.z;
+            const delta = Math.atan2(Math.sin(rotationZ - currentZ), Math.cos(rotationZ - currentZ));
+            gsap.to(group.rotation, { z: currentZ + delta, duration: 0.95, ease: 'power3.out', overwrite: 'auto' });
+            gsap.to(expandRef.current, { value: nextMode === 'home' ? 0 : 1, duration: 0.8, ease: 'power3.out', overwrite: 'auto' });
+            if (camera) {
                 gsap.killTweensOf(camera.position);
-                gsap.to(camera.position, {
-                    x: 0,
-                    y: 0,
-                    z: 1100,
-                    duration: 0.9,
-                    ease: 'power3.out',
-                    onUpdate: () => camera.lookAt(0, 0, 0),
-                });
+                gsap.to(camera.position, { x: 0, y: 0, z: 1100, duration: 0.8, ease: 'power3.out', onUpdate: () => camera.lookAt(0, 0, 0) });
             }
         }
     }
@@ -241,26 +210,77 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
     }
 
     useEffect(() => {
-        centeredRef.current = centered;
-        setIsCenterTarget(centered);
-        if (!centered) {
-            hoveredIdxRef.current = null;
-            setHoveredInfo(null);
-            pointerNdcRef.current.set(-99, -99);
-            cursorActiveTargetRef.current = 0;
+        modeRef.current = mode;
+        activeHrefRef.current = activeHref;
+        centeredRef.current = mode !== 'home';
+        if (mode === 'detail' && activeHref) {
+            const applySelected = () => {
+                const selected = chunksRef.current.find((chunk) => chunk.project?.href === activeHref);
+                if (selected) chunksRef.current.forEach((chunk) => { chunk.targetOpacity = chunk === selected ? 1 : 0; });
+            };
+            applySelected();
+            requestAnimationFrame(applySelected);
+        } else if (mode !== 'detail') {
+            chunksRef.current.forEach((chunk) => { chunk.targetOpacity = 1; chunk.mesh.visible = true; });
         }
-        animateGroupToTarget(centered, false);
-    }, [centered]);
+        animateGroupToTarget(mode, false);
+    }, [mode, activeHref]);
 
     useEffect(() => {
-        const handleEnterProject = () => {
-            centeredRef.current = true;
-            setIsCenterTarget(true);
-            animateGroupToTarget(true, false);
+        const onMode = (nextMode) => {
+            modeRef.current = nextMode;
+            centeredRef.current = nextMode !== 'home';
+            if (nextMode !== 'project') {
+                hoveredIdxRef.current = null;
+                setHoveredInfo(null);
+                pointerNdcRef.current.set(-99, -99);
+                cursorActiveTargetRef.current = 0;
+            }
+            animateGroupToTarget(nextMode, false);
         };
+        const events = [
+            ['rgb:enter-project', () => onMode('project')],
+            ['rgb:leave-project', () => onMode('home')],
+            ['rgb:enter-contact', () => onMode('contact')],
+            ['rgb:enter-about', () => onMode('about')],
+            ['rgb:enter-detail', (event) => {
+                const href = event.detail?.href ?? activeHrefRef.current;
+                activeHrefRef.current = href;
+                onMode('detail');
+                const selected = chunksRef.current.find((chunk) => chunk.project?.href === href);
+                chunksRef.current.forEach((chunk) => { chunk.targetOpacity = selected && chunk !== selected ? 0 : 1; });
+            }],
+        ];
+        events.forEach(([name, handler]) => window.addEventListener(name, handler));
+        return () => events.forEach(([name, handler]) => window.removeEventListener(name, handler));
+    }, [projects]);
 
-        window.addEventListener('rgb:enter-project', handleEnterProject);
-        return () => window.removeEventListener('rgb:enter-project', handleEnterProject);
+    useEffect(() => {
+        const onIndexHover = (event) => {
+            const href = event.detail?.href;
+            indexHoverHrefRef.current = href ?? null;
+            setIsIndexHover(Boolean(href));
+            const match = chunksRef.current.find((chunk) => chunk.project?.href === href);
+            if (match) {
+                hoveredIdxRef.current = match.index;
+                setHoveredInfo({ index: match.index, project: match.project, accentHex: match.accentHex });
+            }
+            pointerDirtyRef.current = false;
+        };
+        const onIndexClear = () => {
+            indexHoverHrefRef.current = null;
+            setIsIndexHover(false);
+            hoveredIdxRef.current = null;
+            pointerNdcRef.current.set(-99, -99);
+            setHoveredInfo(null);
+            pointerDirtyRef.current = true;
+        };
+        window.addEventListener('rgb:index-hover', onIndexHover);
+        window.addEventListener('rgb:index-clear', onIndexClear);
+        return () => {
+            window.removeEventListener('rgb:index-hover', onIndexHover);
+            window.removeEventListener('rgb:index-clear', onIndexClear);
+        };
     }, []);
 
     useEffect(() => {
@@ -271,10 +291,11 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
         };
 
         const handlePointerMove = (e) => {
-            if (!centeredRef.current || !cameraRef.current || !rendererRef.current) return;
+            if (modeRef.current !== 'project' || !cameraRef.current || !rendererRef.current) return;
 
             // Ignore pointer events over Navbar or other UI overlays above the canvas
             if (e.target !== rendererRef.current.domElement) {
+                if (e.target instanceof Element && e.target.closest('[data-works-index]')) return;
                 clearPointerHover();
                 return;
             }
@@ -297,13 +318,13 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
         };
 
         const handlePointerDown = (e) => {
-            if (!centeredRef.current || !rendererRef.current) return;
+            if (modeRef.current !== 'project' || !rendererRef.current) return;
             if (e.target !== rendererRef.current.domElement) return;
             pointerDownPosRef.current = { x: e.clientX, y: e.clientY };
         };
 
         const handlePointerUp = (e) => {
-            if (!centeredRef.current || !cameraRef.current || !rendererRef.current) return;
+            if (modeRef.current !== 'project' || !cameraRef.current || !rendererRef.current) return;
             if (e.target !== rendererRef.current.domElement) return;
 
             const distMoved = Math.hypot(
@@ -319,6 +340,8 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
             if (hits.length > 0) {
                 const hitProject = hits[0].object.userData?.project;
                 if (hitProject?.href) {
+                    activeHrefRef.current = hitProject.href;
+                    window.dispatchEvent(new CustomEvent('rgb:enter-detail', { detail: { href: hitProject.href } }));
                     router.push(hitProject.href);
                 }
             }
@@ -336,46 +359,6 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
         };
     }, [router]);
 
-    useEffect(() => {
-        let isStarted = false;
-        const hasLoader = Boolean(document.querySelector('[data-home-loader]'));
-
-        const startAnimation = () => {
-            if (isStarted) return;
-            isStarted = true;
-            compile();
-            if (rendererRef.current) {
-                rendererRef.current.setAnimationLoop(animate);
-            }
-        };
-
-        init();
-
-        if (hasLoader) {
-            window.addEventListener('home-loader:reveal', startAnimation, { once: true });
-        } else {
-            startAnimation();
-        }
-
-        return () => {
-            window.removeEventListener('home-loader:reveal', startAnimation);
-            window.removeEventListener('resize', onWindowResize);
-            if (rendererRef.current) {
-                rendererRef.current.setAnimationLoop(null);
-                rendererRef.current.dispose();
-            }
-            if (fractalGroupRef.current) {
-                gsap.killTweensOf(fractalGroupRef.current.position);
-                gsap.killTweensOf(fractalGroupRef.current.scale);
-                gsap.killTweensOf(fractalGroupRef.current.rotation);
-            }
-            chunksRef.current.forEach((chunk) => {
-                chunk.mesh.geometry.dispose();
-                chunk.material.dispose();
-            });
-            if (sceneRef.current) sceneRef.current.clear();
-        };
-    }, []);
 
     function init() {
         const w = window.innerWidth;
@@ -396,7 +379,7 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
             powerPreference: 'high-performance',
             alpha: true
         });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, window.innerWidth < 768 ? 1.5 : 2));
         renderer.setSize(w, h);
         rendererRef.current = renderer;
 
@@ -498,7 +481,7 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
                 wireframe: settings.wireframe,
                 uniforms: {
                     uHoverColor: { value: accent.vec.clone() },
-                    uHoverMix: { value: 0 },
+                    uHoverMix: { value: 0.34 },
                 },
             });
 
@@ -515,15 +498,20 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
                 project,
                 accentHex: accent.hex,
                 openVal: 0,
-                hoverMix: 0,
+                hoverMix: 0.34,
+                targetOpacity: 1,
             });
             chunkMeshes.push(chunkMesh);
         }
 
+        if (modeRef.current === 'detail' && activeHrefRef.current) {
+            const selected = createdChunks.find((chunk) => chunk.project?.href === activeHrefRef.current);
+            createdChunks.forEach((chunk) => { chunk.targetOpacity = selected && chunk !== selected ? 0 : 1; });
+        }
         chunksRef.current = createdChunks;
         chunkMeshesRef.current = chunkMeshes;
 
-        animateGroupToTarget(centeredRef.current, true);
+        animateGroupToTarget(modeRef.current, true);
 
         gsap.from(group.scale, { duration: 1.8, x: 0.1, y: 0.1, z: 0.1, ease: 'power3.out' });
         gsap.from(group.rotation, { duration: 1.8, y: Math.PI, ease: 'power3.out' });
@@ -545,7 +533,7 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
         camera.bottom = h / -2;
         camera.updateProjectionMatrix();
 
-        animateGroupToTarget(centeredRef.current, true);
+        animateGroupToTarget(modeRef.current, true);
     }
 
     function updateSplitChunks() {
@@ -581,8 +569,10 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
                               }
                             : null
                     );
+                    if (hitChunk?.project?.href) window.dispatchEvent(new CustomEvent('rgb:fractal-hover', { detail: { href: hitChunk.project.href } }));
                 } else {
                     setHoveredInfo(null);
+                    window.dispatchEvent(new CustomEvent('rgb:fractal-clear'));
                 }
                 if (controlsRef.current) {
                     controlsRef.current.autoRotate = centeredRef.current && nextHoveredIdx === null;
@@ -622,9 +612,36 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
             chunk.openVal += (targetOpen - chunk.openVal) * 0.12;
             chunk.mesh.position.copy(chunk.dir).multiplyScalar(chunk.openVal * 0.72);
 
-            const targetHover = isHovered ? 0.92 : 0.0;
+            const targetHover = modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : isHovered ? 0.85 : 0.34;
             chunk.hoverMix += (targetHover - chunk.hoverMix) * 0.16;
-            chunk.mesh.scale.setScalar(1 + chunk.hoverMix * 0.08);
+            if (modeRef.current === 'about') {
+                const elapsed = clockRef.current?.elapsedTime ?? 0;
+                const isInnerOrbit = i < 5;
+                const orbitIndex = isInnerOrbit ? i : i - 5;
+                const orbitCount = isInnerOrbit ? 5 : 9;
+                const direction = isInnerOrbit ? 1 : -1;
+                const speed = isInnerOrbit ? 0.22 : 0.14;
+                const angle = direction * elapsed * speed + orbitIndex * (Math.PI * 2 / orbitCount);
+                const radius = isInnerOrbit ? 0.28 : 0.68;
+                chunk.mesh.position.set(Math.cos(angle) * radius, Math.sin(angle) * radius, chunk.dir.z * 0.08);
+            }
+            const callout = calloutRefs.current[chunk.index];
+            if (callout) {
+                if (modeRef.current === 'project' && chunk.project) {
+                    chunk.mesh.getWorldPosition(labelWorldRef.current);
+                    labelWorldRef.current.project(camera);
+                    const screenX = (labelWorldRef.current.x * 0.5 + 0.5) * window.innerWidth;
+                    const screenY = (-labelWorldRef.current.y * 0.5 + 0.5) * window.innerHeight;
+                    const visible = labelWorldRef.current.z > -1 && labelWorldRef.current.z < 1 && screenX > 12 && screenX < window.innerWidth - 12 && screenY > 12 && screenY < window.innerHeight - 12;
+                    callout.style.transform = 'translate3d(' + screenX + 'px,' + screenY + 'px,0) translate(-50%,-50%)';
+                    callout.style.opacity = visible ? (isHovered ? '1' : '0.72') : '0';
+                } else { callout.style.opacity = '0'; }
+            }
+
+            const detailSelected = modeRef.current === 'detail' && chunk.targetOpacity === 1;
+            const detailScale = detailSelected ? (window.innerWidth < 640 ? 1.32 : 1.58) : 1;
+            chunk.mesh.scale.setScalar(detailScale * (1 + chunk.hoverMix * 0.08));
+            chunk.mesh.visible = modeRef.current !== 'detail' || chunk.targetOpacity === 1;
             chunk.material.uniforms.uHoverMix.value = chunk.hoverMix;
         }
     }
@@ -638,8 +655,11 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
         cursorWorldCurrentRef.current.lerp(cursorWorldTargetRef.current, 0.14);
         cursorActiveCurrentRef.current += (cursorActiveTargetRef.current - cursorActiveCurrentRef.current) * 0.12;
 
-        if (fractalGroupRef.current && settings.autoRotate && !centeredRef.current) {
+        if (fractalGroupRef.current && settings.autoRotate && modeRef.current === 'home') {
             fractalGroupRef.current.rotation.y += Math.PI * 0.03 * delta;
+        }
+        if (fractalGroupRef.current && (modeRef.current === 'about' || modeRef.current === 'contact')) {
+            fractalGroupRef.current.rotation.y += (modeRef.current === 'about' ? -1 : 1) * Math.PI * 0.008 * delta;
         }
 
         updateSplitChunks();
@@ -649,6 +669,47 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
         }
     }
 
+    useEffect(() => {
+        let isStarted = false;
+        const hasLoader = Boolean(document.querySelector('[data-home-loader]'));
+
+        const startAnimation = () => {
+            if (isStarted) return;
+            isStarted = true;
+            compile();
+            if (rendererRef.current) {
+                rendererRef.current.setAnimationLoop(animate);
+            }
+        };
+
+        init();
+
+        if (hasLoader) {
+            window.addEventListener('home-loader:reveal', startAnimation, { once: true });
+        } else {
+            startAnimation();
+        }
+
+        return () => {
+            window.removeEventListener('home-loader:reveal', startAnimation);
+            window.removeEventListener('resize', onWindowResize);
+            if (rendererRef.current) {
+                rendererRef.current.setAnimationLoop(null);
+                rendererRef.current.dispose();
+            }
+            if (fractalGroupRef.current) {
+                gsap.killTweensOf(fractalGroupRef.current.position);
+                gsap.killTweensOf(fractalGroupRef.current.scale);
+                gsap.killTweensOf(fractalGroupRef.current.rotation);
+            }
+            chunksRef.current.forEach((chunk) => {
+                chunk.mesh.geometry.dispose();
+                chunk.material.dispose();
+            });
+            if (sceneRef.current) sceneRef.current.clear();
+        };
+    }, []);
+
     return (
         <div
             style={{
@@ -657,7 +718,7 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
                 height: '100%',
                 display: 'flex',
                 overflow: 'hidden',
-                backgroundColor: '#000',
+                backgroundColor: 'transparent',
                 willChange: 'transform',
                 transform: 'translateZ(0)',
                 cursor: isCenterTarget ? (hoveredInfo ? 'pointer' : 'grab') : 'default',
@@ -691,14 +752,30 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
                 width: '100%',
                 height: '100%',
                 touchAction: 'none',
+                pointerEvents: mode === 'project' ? 'auto' : 'none',
                 zIndex: 1,
                 willChange: 'transform',
                 transform: 'translateZ(0)',
                 backfaceVisibility: 'hidden',
             }}></div>
 
+            {mode === 'project' && hoveredInfo && (
+                <div className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-y-1/2 translate-x-8 rounded-full border border-white/20 bg-black/65 px-3 py-1.5 font-mono text-[9px] tracking-[0.16em] text-white/75 backdrop-blur-md">
+                    <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full" style={{ backgroundColor: hoveredInfo.accentHex }} />
+                    {({ '#ff2433': '(255, 36, 51)', '#1ff261': '(31, 242, 97)', '#0056e6': '(0, 86, 230)' })[hoveredInfo.accentHex] ?? hoveredInfo.accentHex}
+                </div>
+            )}
+
+            {mode === 'project' && projects.map((project, index) => (
+                <div key={project.href} ref={(element) => { calloutRefs.current[index] = element; }} className="pointer-events-none absolute left-0 top-0 z-10 flex items-center gap-2 whitespace-nowrap rounded-full border border-white/10 bg-[#08090d]/75 px-2.5 py-1.5 font-mono text-[8px] tracking-[0.12em] text-white/75 backdrop-blur-sm" style={{ opacity: 0, willChange: 'transform, opacity' }}>
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: RGB_ACCENTS[index % RGB_ACCENTS.length].hex }} />
+                    <span>{String(index + 1).padStart(2, '0')} / {project.title}</span>
+                    <span className="text-white/35">[{['255, 36, 51', '31, 242, 97', '0, 86, 230'][index % 3]}]</span>
+                </div>
+            ))}
+
             {/* Editorial Cursor-Tracked Project Preview Card */}
-            {isCenterTarget && (
+            {mode === 'project' && (
                 <div
                     ref={previewRef}
                     className={`pointer-events-none fixed top-0 left-0 z-30 w-56 rounded-2xl overflow-hidden bg-[#09090d]/90 backdrop-blur-2xl border shadow-[0_24px_60px_rgba(0,0,0,0.9)] transition-opacity duration-200 ${
@@ -708,7 +785,7 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
                         borderColor: hoveredInfo ? `${hoveredInfo.accentHex}66` : 'rgba(255,255,255,0.12)',
                     }}
                 >
-                    {hoveredInfo && (
+                    {hoveredInfo && !isIndexHover && (
                         <>
                             <div
                                 className="h-[2px] w-full"

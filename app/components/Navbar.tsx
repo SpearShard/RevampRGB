@@ -26,7 +26,6 @@ export default function Navbar() {
   const filterRef = useRef<SVGFETurbulenceElement>(null);
   const enterBtnRef = useRef<HTMLButtonElement>(null);
   const linksRef = useRef<(HTMLAnchorElement | null)[]>([]);
-  const enterTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const mouse = useRef({ x: 0, y: 0, velocityX: 0, velocityY: 0, prevX: 0, prevY: 0 });
 
@@ -43,30 +42,21 @@ export default function Navbar() {
 
     if (pathname === '/project') return;
 
-    if (enterTimeoutRef.current) {
-      clearTimeout(enterTimeoutRef.current);
-      enterTimeoutRef.current = null;
-    }
-
-    if (pathname === '/') {
-      window.dispatchEvent(new CustomEvent('rgb:enter-project'));
-      enterTimeoutRef.current = setTimeout(() => {
-        router.push('/project');
-      }, 380);
-    } else {
-      router.push('/project');
-    }
+    window.dispatchEvent(new CustomEvent('rgb:enter-project'));
+    router.push('/project');
   }, [pathname, router]);
 
   useEffect(() => {
     if (!dockRef.current) return;
-
-    // Entrance Animation
     gsap.fromTo(
       [dockRef.current, enterBtnRef.current],
       { scale: 0.15, borderRadius: '50%', y: 80, opacity: 0 },
       { scale: 1, borderRadius: '9999px', y: 0, opacity: 1, duration: 0.9, stagger: 0.1, ease: 'power3.out' }
     );
+  }, []);
+
+  useEffect(() => {
+    if (!dockRef.current) return;
 
     let animFrame: number;
 
@@ -106,9 +96,6 @@ export default function Navbar() {
     return () => {
       cancelAnimationFrame(animFrame);
       window.removeEventListener('keydown', handleKeyDown);
-      if (enterTimeoutRef.current) {
-        clearTimeout(enterTimeoutRef.current);
-      }
     };
   }, [handleEnterAction]);
 
@@ -213,7 +200,7 @@ export default function Navbar() {
       </svg>
 
       {/* Top Left Logo */}
-      <header className="fixed top-6 left-6 sm:top-8 sm:left-8 z-50 select-none">
+      <header className="fixed top-4 left-4 sm:top-8 sm:left-8 z-50 select-none">
         <Link
           href="/"
           className="relative w-20 h-7 sm:w-24 sm:h-8 flex items-center pointer-events-auto transition-transform hover:scale-105 duration-300"
@@ -223,7 +210,7 @@ export default function Navbar() {
       </header>
 
       {/* Center Dock Navbar */}
-      <div className="fixed bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 select-none max-w-[92vw] sm:max-w-none">
+      <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 select-none max-w-[calc(100vw-7.5rem)] sm:max-w-none">
         <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-red-500/30 via-emerald-500/30 to-blue-500/30 opacity-40 blur-2xl transition-all duration-700 pointer-events-none" />
         <div
           ref={dockRef}
@@ -247,6 +234,13 @@ export default function Navbar() {
                   key={link.label}
                   ref={(el) => { linksRef.current[idx] = el; }}
                   href={link.href}
+                  onClick={(event) => {
+                    if (pathname === link.href) return;
+                    event.preventDefault();
+                    const eventName = link.href === '/' ? 'rgb:leave-project' : link.href === '/about' ? 'rgb:enter-about' : 'rgb:enter-contact';
+                    window.dispatchEvent(new CustomEvent(eventName));
+                    router.push(link.href);
+                  }}
                   onMouseMove={(e) => handleLinkMouseMove(e, linksRef.current[idx])}
                   onMouseLeave={() => handleLinkMouseLeave(linksRef.current[idx])}
                   className={`group relative flex items-baseline gap-1.5 sm:gap-2 py-2 px-3.5 sm:py-2.5 sm:px-6 rounded-full hover:bg-white/10 transition-colors duration-300 no-underline cursor-pointer ${
@@ -267,7 +261,7 @@ export default function Navbar() {
       </div>
 
       {/* ISO Enter Button - Starts Pure White, Dissipates to Dark on Hover */}
-      <div className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-50 select-none">
+      <div className="fixed bottom-24 right-3 sm:bottom-8 sm:right-8 z-50 select-none">
         <button
           ref={enterBtnRef}
           onClick={handleEnterAction}
@@ -276,7 +270,7 @@ export default function Navbar() {
           aria-label="Enter action"
           className="relative cursor-pointer group focus:outline-none origin-center"
         >
-          <div className="relative w-[80px] h-[95px] sm:w-[92px] sm:h-[110px] filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.85)]">
+          <div className="relative w-[58px] h-[69px] sm:w-[92px] sm:h-[110px] filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.85)]">
             <svg viewBox="0 0 92 110" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full overflow-visible">
               <defs>
                 <clipPath id="btnClip" clipPathUnits="userSpaceOnUse">
@@ -311,10 +305,10 @@ export default function Navbar() {
             </svg>
 
             {/* Text & Icon (Inverts from Black to White on hover) */}
-            <div className="absolute bottom-2.5 left-2.5 sm:bottom-3.5 sm:left-3.5 flex items-center gap-1.5 pointer-events-none z-10">
+            <div className="absolute bottom-1.5 left-2 sm:bottom-3.5 sm:left-3.5 flex items-center gap-1.5 pointer-events-none z-10">
               <svg
-                width="18"
-                height="18"
+                width="15"
+                height="15"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"

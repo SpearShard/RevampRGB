@@ -7,7 +7,6 @@ import Link from "next/link";
 import { ArrowDownRight, ArrowLeft, ArrowRight, X } from "lucide-react";
 import projectsData from "@/app/data/projects.json";
 import { projectSlug } from "@/app/utils/projectSlugs";
-import ProjectsBackground from "@/app/components/bgwebglshaders/ProjectsBackground";
 
 type Project = {
   title: string;
@@ -31,6 +30,12 @@ type PageProps = {
 export default function ProjectPage({ params }: PageProps) {
   const { category: categorySlug, project: selectedProjectSlug } = use(params);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [showGallery, setShowGallery] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShowGallery(true), 920);
+    return () => window.clearTimeout(timer);
+  }, [selectedProjectSlug]);
 
   const category = projectsData[
     categorySlug as keyof typeof projectsData
@@ -39,6 +44,14 @@ export default function ProjectPage({ params }: PageProps) {
   const project = category?.projects?.find(
     (item) => projectSlug(item.dir) === selectedProjectSlug
   );
+
+  useEffect(() => {
+    if (!project) return;
+    window.dispatchEvent(new CustomEvent("rgb:enter-detail", {
+      detail: { href: `/project/${categorySlug}/${selectedProjectSlug}` },
+    }));
+  }, [categorySlug, selectedProjectSlug, project]);
+
 
   // Keep every hook above the notFound branches so route changes remain hook-safe.
   const descriptionItems = project?.description ?? [];
@@ -55,6 +68,7 @@ export default function ProjectPage({ params }: PageProps) {
   });
 
   const allMediaImages = project?.images ?? [];
+  const mediaCount = project?.images?.length ?? 0;
   const secondaryImages = allMediaImages.slice(1);
   const imagePairs: string[][] = [];
 
@@ -72,21 +86,21 @@ export default function ProjectPage({ params }: PageProps) {
     ? category.projects[currentProjectIndex + 1] ?? null
     : null;
 
-  const showNext = useCallback(() => {
-    if (lightboxIndex === null || allMediaImages.length === 0) return;
+  const showNext = () => {
+    if (lightboxIndex === null || mediaCount === 0) return;
     setLightboxIndex((current) =>
-      current === null ? null : (current + 1) % allMediaImages.length
+      current === null ? null : (current + 1) % mediaCount
     );
-  }, [lightboxIndex, allMediaImages.length]);
+  };
 
-  const showPrev = useCallback(() => {
-    if (lightboxIndex === null || allMediaImages.length === 0) return;
+  const showPrev = () => {
+    if (lightboxIndex === null || mediaCount === 0) return;
     setLightboxIndex((current) =>
       current === null
         ? null
-        : (current - 1 + allMediaImages.length) % allMediaImages.length
+        : (current - 1 + mediaCount) % mediaCount
     );
-  }, [lightboxIndex, allMediaImages.length]);
+  };
 
   const closeLightbox = useCallback(() => setLightboxIndex(null), []);
 
@@ -114,15 +128,14 @@ export default function ProjectPage({ params }: PageProps) {
   const plateNumber = String(currentProjectIndex + 1).padStart(2, "0");
 
   return (
-    <main className="relative isolate min-h-screen overflow-hidden bg-[#0b0c0a] px-3 pb-8 pt-3 text-[#e9e5d9] selection:bg-[#d8c9a9] selection:text-[#171713] sm:px-5 sm:pt-5">
-      <ProjectsBackground />
+    <main className="relative isolate min-h-screen overflow-hidden bg-transparent px-3 pb-8 pt-20 text-[#e9e5d9] selection:bg-[#d8c9a9] selection:text-[#171713] sm:px-6 sm:pt-28">
       <div
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_50%_0%,rgba(151,139,110,0.13),transparent_52%)]"
       />
 
       {/* Cover study */}
-      <section className="relative mx-auto min-h-[78svh] max-w-[1800px] overflow-hidden border border-[#d8c9a9]/15 bg-[#171914]">
+      <section className="relative mx-auto min-h-[64svh] max-w-[1680px] sm:min-h-[76svh] overflow-hidden rounded-[32px] border border-white/10 bg-[#090a0e]/65 shadow-[0_30px_120px_rgba(0,0,0,.38)] sm:rounded-[44px]">
         <Image
           src={project.cover}
           alt={project.title}
@@ -138,10 +151,10 @@ export default function ProjectPage({ params }: PageProps) {
           className="absolute inset-0 opacity-[0.14] [background-image:linear-gradient(rgba(235,228,210,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(235,228,210,0.2)_1px,transparent_1px)] [background-size:84px_84px] mix-blend-soft-light"
         />
 
-        <div className="absolute left-5 top-6 flex items-center gap-3 sm:left-9 sm:top-9">
+        <div className="absolute left-5 top-5 flex items-center gap-3 sm:left-9 sm:top-8">
           <Link
             href="/project"
-            className="inline-flex items-center gap-2 text-[9px] uppercase tracking-[0.23em] text-[#e9e5d9]/65 transition-colors hover:text-white"
+            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/35 px-4 py-2 text-[9px] uppercase tracking-[0.2em] text-[#e9e5d9]/75 backdrop-blur-md transition-colors hover:bg-white hover:text-black"
           >
             <ArrowLeft size={13} strokeWidth={1.4} />
             Work
@@ -157,31 +170,25 @@ export default function ProjectPage({ params }: PageProps) {
           <div>PLATE — {plateNumber}</div>
         </div>
 
-        {/* Pencil-like construction drawing */}
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 480 480"
-          className="pointer-events-none absolute bottom-10 right-10 hidden h-[min(42vw,440px)] w-[min(42vw,440px)] text-[#e9e2d2]/40 lg:block"
-          fill="none"
-        >
-          <circle cx="240" cy="240" r="184" stroke="currentColor" strokeWidth=".7" strokeDasharray="2 7" />
-          <circle cx="240" cy="240" r="143" stroke="currentColor" strokeWidth=".55" />
-          <circle cx="240" cy="240" r="91" stroke="currentColor" strokeWidth=".5" strokeDasharray="5 5" />
-          <path d="M240 18V462M18 240H462M83 83L397 397M397 83L83 397" stroke="currentColor" strokeWidth=".55" />
-          <path d="M240 56C342 56 424 138 424 240M240 82C327 82 398 153 398 240" stroke="currentColor" strokeWidth="1.1" />
-          <path d="M240 240L354 129M240 240L119 326M240 240L306 408" stroke="currentColor" strokeWidth=".75" strokeDasharray="3 5" />
-          <path d="M230 240h20m-10-10v20" stroke="currentColor" strokeWidth="1" />
-          <circle cx="240" cy="240" r="6" stroke="currentColor" strokeWidth=".8" />
-          <text x="240" y="225" fill="currentColor" fontSize="8" textAnchor="middle" letterSpacing="2">RGB / {plateNumber}</text>
-          <text x="240" y="454" fill="currentColor" fontSize="7" textAnchor="middle" letterSpacing="2">STUDY / DRAWING FIELD</text>
+        {/* Minimal RGB study mark */}
+        <svg aria-hidden="true" viewBox="0 0 420 420" className="pointer-events-none absolute bottom-8 right-8 hidden h-[min(38vw,390px)] w-[min(38vw,390px)] opacity-75 lg:block" fill="none">
+          <circle cx="210" cy="210" r="154" stroke="rgba(235,228,210,.22)" strokeWidth=".8" strokeDasharray="2 9" />
+          <circle cx="210" cy="210" r="106" stroke="rgba(235,228,210,.16)" strokeWidth=".7" />
+          <path d="M210 28V392M28 210H392" stroke="rgba(235,228,210,.12)" strokeWidth=".7" />
+          <path d="M210 210L115 105M210 210L333 150M210 210L265 345" stroke="rgba(235,228,210,.28)" strokeWidth=".8" />
+          <circle cx="115" cy="105" r="5" fill="#ff2433" />
+          <circle cx="333" cy="150" r="5" fill="#1ff261" />
+          <circle cx="265" cy="345" r="5" fill="#0056e6" />
+          <circle cx="210" cy="210" r="3" fill="#e9e5d9" />
+          <text x="210" y="405" fill="rgba(235,228,210,.45)" fontSize="8" textAnchor="middle" letterSpacing="3">FORM / MATERIAL / SYSTEM</text>
         </svg>
 
-        <div className="absolute bottom-7 left-5 right-5 sm:bottom-12 sm:left-9 sm:right-9 lg:bottom-16 lg:left-14">
+        <div className="absolute bottom-6 left-4 right-4 sm:bottom-12 sm:left-9 sm:right-9 lg:bottom-16 lg:left-14">
           <div className="mb-5 flex items-center gap-3 text-[9px] uppercase tracking-[0.28em] text-[#e9e5d9]/55">
             <span className="h-px w-8 bg-[#d8c9a9]/80" />
             Selected work
           </div>
-          <h1 className="max-w-[1100px] text-[clamp(3.2rem,9.5vw,9.5rem)] font-light uppercase leading-[0.82] tracking-[-0.075em] text-[#f0ede4]">
+          <h1 className="max-w-[1100px] text-[clamp(2.65rem,13vw,9.5rem)] sm:text-[clamp(3.2rem,9.5vw,9.5rem)] font-light uppercase leading-[0.82] tracking-[-0.075em] text-[#f0ede4]">
             {project.title}
           </h1>
           {project.subtitle && (
@@ -198,7 +205,7 @@ export default function ProjectPage({ params }: PageProps) {
       </section>
 
       {/* Project note and credits */}
-      <section className="relative mx-auto grid max-w-[1500px] grid-cols-1 gap-10 border-b border-[#d8c9a9]/20 px-2 py-16 sm:px-5 md:py-24 lg:grid-cols-12 lg:gap-16">
+      <section className="relative mx-auto mt-4 grid max-w-[1500px] grid-cols-1 gap-6 sm:mt-8 sm:gap-8 rounded-[24px] border border-white/10 bg-[#090a0e]/70 px-4 py-7 sm:rounded-[32px] sm:px-10 sm:py-14 shadow-[0_20px_70px_rgba(0,0,0,.2)] sm:px-10 sm:py-14 md:mt-8 lg:grid-cols-12 lg:gap-16">
         <div className="lg:col-span-3">
           <p className="font-mono text-[8px] uppercase tracking-[0.25em] text-[#c8bda6]/55">
             Project / {plateNumber}
@@ -216,7 +223,7 @@ export default function ProjectPage({ params }: PageProps) {
 
         <div className="lg:col-span-3">
           {Object.keys(metadata).length > 0 && (
-            <dl className="grid grid-cols-1 gap-y-4 border-t border-[#d8c9a9]/20 pt-4">
+            <dl className="grid grid-cols-1 gap-y-4 rounded-2xl border border-white/10 bg-black/20 p-5">
               {Object.entries(metadata).map(([key, value]) => (
                 <div key={key} className="grid grid-cols-[90px_1fr] gap-3">
                   <dt className="font-mono text-[8px] uppercase tracking-[0.17em] text-[#c8bda6]/50">
@@ -233,7 +240,7 @@ export default function ProjectPage({ params }: PageProps) {
       </section>
 
       {/* Primary visual */}
-      <section className="mx-auto max-w-[1800px] py-8 sm:py-12">
+      {showGallery && <section className="mx-auto mt-8 max-w-[1680px] rounded-[32px] border border-white/10 bg-[#090a0e]/65 p-4 sm:rounded-[40px] sm:p-7">
         <div className="mb-4 flex items-end justify-between px-1">
           <span className="font-mono text-[8px] uppercase tracking-[0.22em] text-[#c8bda6]/50">
             01 / Primary view
@@ -271,11 +278,11 @@ export default function ProjectPage({ params }: PageProps) {
             </span>
           </button>
         ) : null}
-      </section>
+      </section>}
 
       {/* Asymmetric image studies */}
-      {imagePairs.length > 0 && (
-        <section className="mx-auto max-w-[1500px] px-1 pb-20 pt-12 sm:px-5 md:pb-28 md:pt-20">
+      {showGallery && imagePairs.length > 0 && (
+        <section className="mx-auto mt-8 max-w-[1500px] rounded-[32px] border border-white/10 bg-[#090a0e]/65 px-5 pb-16 pt-10 sm:rounded-[40px] sm:px-10 md:pb-24 md:pt-16">
           <div className="mb-8 flex items-end justify-between border-b border-[#d8c9a9]/20 pb-4">
             <div>
               <span className="font-mono text-[8px] uppercase tracking-[0.25em] text-[#c8bda6]/50">
@@ -336,7 +343,7 @@ export default function ProjectPage({ params }: PageProps) {
 
       {/* Closing image */}
       {project.images.length > 2 && (
-        <section className="relative mx-auto h-[36vh] max-w-[1800px] overflow-hidden bg-[#151812] sm:h-[52vh]">
+        <section className="relative mx-auto mt-8 h-[36vh] max-w-[1680px] overflow-hidden rounded-[36px] border border-white/10 bg-[#151812] sm:h-[52vh]">
           <Image
             src={project.images[project.images.length - 1]}
             alt={`${project.title} — final view`}
@@ -359,7 +366,7 @@ export default function ProjectPage({ params }: PageProps) {
       {/* Project navigation */}
       <nav
         aria-label="Project navigation"
-        className="mx-auto flex max-w-[1500px] items-center justify-between border-t border-[#d8c9a9]/20 px-1 py-8 sm:px-5 md:py-12"
+        className="mx-auto mt-8 flex max-w-[1500px] items-center justify-between rounded-[22px] border border-white/10 bg-[#090a0e]/75 px-4 py-4 sm:rounded-full sm:px-8 sm:py-6"
       >
         {previousProject ? (
           <Link href={`/project/${categorySlug}/${projectSlug(previousProject.dir)}`} className="group max-w-[45%]">
@@ -394,7 +401,7 @@ export default function ProjectPage({ params }: PageProps) {
           aria-modal="true"
           aria-label="Image viewer"
           onClick={closeLightbox}
-          className="fixed inset-0 z-[100] flex flex-col justify-between bg-[#080907]/[0.97] p-4 backdrop-blur-xl sm:p-7"
+          className="fixed inset-0 z-[100] flex flex-col justify-between bg-[#050609]/[0.97] p-4 backdrop-blur-md sm:p-7"
         >
           <div className="flex items-center justify-between">
             <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/45">
@@ -407,7 +414,7 @@ export default function ProjectPage({ params }: PageProps) {
                 closeLightbox();
               }}
               aria-label="Close image viewer"
-              className="flex h-10 w-10 items-center justify-center border border-white/15 text-white/80 transition-colors hover:bg-white hover:text-black"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 text-white/80 transition-colors hover:bg-white hover:text-black"
             >
               <X size={17} />
             </button>
@@ -421,7 +428,7 @@ export default function ProjectPage({ params }: PageProps) {
                 showPrev();
               }}
               aria-label="Previous image"
-              className="absolute left-0 z-10 flex h-10 w-10 items-center justify-center border border-white/15 bg-black/30 text-white/75 hover:bg-white hover:text-black sm:left-3"
+              className="absolute left-0 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black/40 text-white/75 hover:bg-white hover:text-black sm:left-3"
             >
               <ArrowLeft size={16} />
             </button>
@@ -444,7 +451,7 @@ export default function ProjectPage({ params }: PageProps) {
                 showNext();
               }}
               aria-label="Next image"
-              className="absolute right-0 z-10 flex h-10 w-10 items-center justify-center border border-white/15 bg-black/30 text-white/75 hover:bg-white hover:text-black sm:right-3"
+              className="absolute right-0 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black/40 text-white/75 hover:bg-white hover:text-black sm:right-3"
             >
               <ArrowRight size={16} />
             </button>
