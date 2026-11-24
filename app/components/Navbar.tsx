@@ -211,13 +211,13 @@ export default function Navbar() {
       </header>
 
       {/* Center Dock Navbar */}
-      <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 select-none max-w-[calc(100vw-7.5rem)] sm:max-w-none">
+      <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 select-none max-w-[calc(100vw-2rem)] sm:max-w-none">
         <div className="absolute -inset-1.5 hidden rounded-full bg-gradient-to-r from-red-500/30 via-emerald-500/30 to-blue-500/30 opacity-40 blur-2xl transition-all duration-700 pointer-events-none sm:block" />
         <div
           ref={dockRef}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          className="relative flex items-center gap-1 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2 bg-[#08080c]/85 backdrop-blur-3xl rounded-full border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.9)] overflow-hidden"
+          className="relative flex items-center gap-0 sm:gap-3 px-1.5 sm:px-3 py-1.5 sm:py-2 bg-[#08080c]/90 backdrop-blur-3xl rounded-full border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.9)]"
         >
           <div
             ref={auraRef}
@@ -244,14 +244,14 @@ export default function Navbar() {
                   }}
                   onMouseMove={(e) => handleLinkMouseMove(e, linksRef.current[idx])}
                   onMouseLeave={() => handleLinkMouseLeave(linksRef.current[idx])}
-                  className={`${link.href === '/project' ? 'sm:hidden ' : ''}group relative flex items-baseline gap-1.5 sm:gap-2 py-2 px-3.5 sm:py-2.5 sm:px-6 rounded-full hover:bg-white/10 transition-colors duration-300 no-underline cursor-pointer ${
+                  className={`${link.href === '/project' ? 'sm:hidden ' : ''}group relative flex shrink-0 items-baseline gap-0 sm:gap-2 py-2 px-2 sm:py-2.5 sm:px-6 rounded-full hover:bg-white/10 transition-colors duration-300 no-underline cursor-pointer ${
                     isActive ? 'bg-white/10' : ''
                   }`}
                 >
-                  <span className={`text-[9px] sm:text-[10px] font-mono transition-colors ${isActive ? 'text-cyan-400' : 'text-neutral-500 group-hover:text-cyan-400'}`}>
+                  <span className={`hidden sm:inline text-[10px] font-mono transition-colors ${isActive ? 'text-cyan-400' : 'text-neutral-500 group-hover:text-cyan-400'}`}>
                     {link.code}
                   </span>
-                  <span className={`text-[11px] sm:text-xs font-sans uppercase tracking-wider sm:tracking-widest font-medium transition-colors ${isActive ? 'text-white' : 'text-neutral-300 group-hover:text-white'}`}>
+                  <span className={`text-[9px] sm:text-xs font-sans uppercase tracking-[0.06em] sm:tracking-widest font-medium whitespace-nowrap transition-colors ${isActive ? 'text-white' : 'text-neutral-300 group-hover:text-white'}`}>
                     {link.label}
                   </span>
                 </Link>

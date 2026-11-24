@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
+import Link from "next/link";
+import projectsData from "@/app/data/projects.json";
+import { projectSlug } from "@/app/utils/projectSlugs";
 
 const projects = [
   {
@@ -158,6 +161,27 @@ export default function WorksPage() {
           </h1>
         </div>
 
+        {/* Mobile category cards use real archive covers and valid project routes */}
+        <div className="grid grid-cols-1 gap-3 md:hidden">
+          {Object.entries(projectsData).map(([categorySlug, category], index) => {
+            if (!("projects" in category) || !Array.isArray(category.projects)) return null;
+            const firstProject = category.projects[0];
+            if (!firstProject) return null;
+            return (
+              <Link key={categorySlug} href={"/project/" + categorySlug + "/" + projectSlug(firstProject.dir)} className="group relative flex min-h-[190px] items-end overflow-hidden rounded-[22px] border border-white/10 bg-[#111] p-5">
+                <img src={firstProject.cover} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-65 transition-transform duration-700 group-active:scale-[1.03]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/10" />
+                <span className="absolute left-5 top-5 font-mono text-[9px] tracking-[0.22em] text-white/55">{String(index + 1).padStart(2, "0")}</span>
+                <span className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-full border border-white/25 bg-black/20 text-white"><ArrowUpRight size={16} /></span>
+                <span className="relative z-10 max-w-[85%] text-[clamp(1.7rem,8vw,2.5rem)] font-light leading-[0.95] tracking-[-0.06em] text-white">{category.title}</span>
+              </Link>
+            );
+          })}
+          <Link href="/project" className="flex min-h-14 items-center justify-between border-y border-white/15 px-1 text-[10px] uppercase tracking-[0.22em] text-white/70">Explore the complete archive <ArrowUpRight size={16} /></Link>
+        </div>
+
+        {/* Desktop slider remains unchanged */}
+        <div className="hidden md:block">
         {/* Slider */}
         <div className="relative flex items-center justify-center">
           {/* LEFT RGB AURA */}
@@ -265,6 +289,7 @@ export default function WorksPage() {
           >
             <ChevronRight size={18} />
           </button>
+        </div>
         </div>
       </section>
     </main>
