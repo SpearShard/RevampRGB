@@ -156,7 +156,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             return { scale: base * (mobile ? 0.34 : 0.62), x: mobile ? 0 : w * 0.38, y: mobile ? -h * 0.1 : 0, rotationZ: Math.PI / 2 };
         }
         if (nextMode === 'project') {
-            return { scale: base * (mobile ? 0.54 : 0.66), x: mobile ? 0 : w * 0.08, y: mobile ? 0 : 0, rotationZ: Math.PI / 2 };
+            return { scale: base * (mobile ? 0.36 : 0.66), x: mobile ? 0 : w * 0.08, y: mobile ? 0 : 0, rotationZ: Math.PI / 2 };
         }
         return { scale: base * (mobile ? 0.38 : 0.66), x: mobile ? 0 : w * 0.08, y: mobile ? -h * 0.08 : 0, rotationZ: Math.PI / 2 };
     }

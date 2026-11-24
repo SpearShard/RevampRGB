@@ -58,8 +58,8 @@ export default function ProjectsPage() {
   const featuredEntry = entries.find((entry) => entry.href === activeHref) ?? entries[0];
 
   return (
-    <main className="pointer-events-none relative z-10 flex h-[100svh] min-h-[560px] w-full overflow-hidden bg-transparent text-white">
-      <section aria-label="Works introduction" className="pointer-events-none absolute right-4 top-24 z-10 w-[min(330px,calc(100vw-2rem))] text-right sm:right-10 sm:top-24 sm:w-[min(420px,38vw)]">
+    <main className="pointer-events-none relative z-10 flex min-h-screen w-full overflow-visible bg-transparent text-white md:h-[100svh] md:min-h-[560px] md:overflow-hidden">
+      <section aria-label="Works introduction" className="pointer-events-none absolute right-4 top-24 z-10 hidden w-[min(330px,calc(100vw-2rem))] text-right sm:right-10 sm:top-24 sm:block sm:w-[min(420px,38vw)]">
         <p className="font-mono text-[9px] uppercase tracking-[0.28em] text-white/45">RGB / Selected works / 2020—26</p>
         <h1 className="mt-3 text-[2.15rem] font-light leading-[0.94] tracking-[-0.075em] text-white sm:text-5xl md:text-6xl">
           Ideas made <span className="text-white/45">tangible.</span>
@@ -71,6 +71,37 @@ export default function ProjectsPage() {
           <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-white/40">{String(categories.length).padStart(2, "0")} disciplines</span>
           <span className="h-1 w-1 rounded-full bg-white/35" />
           <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-white/40">{String(entries.length).padStart(2, "0")} projects</span>
+        </div>
+      </section>
+
+
+      <section aria-label="Selected projects" className="pointer-events-auto relative z-20 mx-auto w-full max-w-2xl px-6 pb-28 pt-28 sm:hidden">
+        <div className="mb-9 border-b border-white/20 pb-6">
+          <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/45">RGB / Selected works / 2020—26</p>
+          <h1 className="mt-3 text-[2.7rem] font-light leading-none tracking-[-0.075em] text-white">Selected <span className="text-white/45">projects.</span></h1>
+          <p className="mt-3 max-w-[260px] text-[11px] leading-relaxed text-white/55">{String(entries.length).padStart(2, "0")} projects across {String(categories.length).padStart(2, "0")} disciplines.</p>
+        </div>
+        <div className="space-y-8">
+          {categories.map(([slug, category], categoryIndex) => (
+            <section key={slug}>
+              <div className="mb-2 flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: RGB[categoryIndex % RGB.length] }} />
+                <h2 className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/50">{category.title}</h2>
+              </div>
+              <div className="border-t border-white/15">
+                {category.projects.map((project, projectIndex) => {
+                  const href = `/project/${slug}/${projectSlug(project.dir)}`;
+                  return (
+                    <button key={project.dir} type="button" onClick={() => openProject(href)} className="group flex min-h-[58px] w-full items-center gap-3 border-b border-white/10 py-3 text-left">
+                      <span className="w-5 shrink-0 font-mono text-[9px] tabular-nums text-white/30">{String(projectIndex + 1).padStart(2, "0")}</span>
+                      <span className="min-w-0 flex-1 text-[13px] font-light tracking-[-0.015em] text-white/85 transition-colors group-active:text-white">{project.title}</span>
+                      <span className="shrink-0 text-sm text-white/35 transition-transform group-active:translate-x-0.5">↗</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
         </div>
       </section>
 

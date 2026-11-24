@@ -61,11 +61,12 @@ export default function ExperienceController({ children }: ExperienceControllerP
     for (const { match, el, fixed } of layers) {
       if (!el) continue;
       const isTarget = match(targetPath);
+      const useFixed = fixed && !(targetPath === "/project" && window.matchMedia("(max-width: 767px)").matches);
       el.style.display = isTarget ? "block" : "none";
       el.style.visibility = isTarget ? "visible" : "hidden";
-      el.style.pointerEvents = isTarget && !fixed ? "auto" : "none";
+      el.style.pointerEvents = isTarget && !useFixed ? "auto" : "none";
 
-      if (fixed) {
+      if (useFixed) {
         el.style.position = "fixed";
         el.style.inset = "0";
         el.style.width = "100%";
@@ -96,8 +97,9 @@ export default function ExperienceController({ children }: ExperienceControllerP
       transitionTweenRef.current?.kill();
       transitionTargetRef.current = targetPath;
 
-      const incomingIsFixed = targetPath === "/project";
-      const outgoingIsFixed = outgoingPath === "/project";
+      const isMobileProject = (path: string) => path === "/project" && window.matchMedia("(max-width: 767px)").matches;
+      const incomingIsFixed = targetPath === "/project" && !isMobileProject(targetPath);
+      const outgoingIsFixed = outgoingPath === "/project" && !isMobileProject(outgoingPath);
       const involvesDetail = isProjectDetailPath(targetPath) || isProjectDetailPath(outgoingPath);
 
       incoming.style.display = "block";
@@ -216,7 +218,7 @@ export default function ExperienceController({ children }: ExperienceControllerP
   if (!isExperienceRoute) return <>{children}</>;
 
   return (
-    <div className={`relative min-h-screen w-full ${pathname === "/project" ? "h-screen overflow-hidden" : ""}`}>
+    <div className={`relative min-h-screen w-full ${pathname === "/project" ? "md:h-screen md:overflow-hidden" : ""}`}>
       <div
         ref={homeRef}
         className="relative w-full"
@@ -235,7 +237,7 @@ export default function ExperienceController({ children }: ExperienceControllerP
 
       <div
         ref={projectsRef}
-        className="fixed inset-0 z-[8] overflow-hidden"
+        className="relative z-[8] w-full overflow-visible md:fixed md:inset-0 md:overflow-hidden"
         style={{
           display: pathname === "/project" ? "block" : "none",
           visibility: pathname === "/project" ? "visible" : "hidden",
