@@ -55,8 +55,25 @@ export default function ProjectsPage() {
     router.push(href);
   };
 
+  const featuredEntry = entries.find((entry) => entry.href === activeHref) ?? entries[0];
+
   return (
     <main className="pointer-events-none relative z-10 flex h-[100svh] min-h-[560px] w-full overflow-hidden bg-transparent text-white">
+      <section aria-label="Works introduction" className="pointer-events-none absolute right-4 top-24 z-10 w-[min(330px,calc(100vw-2rem))] text-right sm:right-10 sm:top-24 sm:w-[min(420px,38vw)]">
+        <p className="font-mono text-[9px] uppercase tracking-[0.28em] text-white/45">RGB / Selected works / 2020—26</p>
+        <h1 className="mt-3 text-[2.15rem] font-light leading-[0.94] tracking-[-0.075em] text-white sm:text-5xl md:text-6xl">
+          Ideas made <span className="text-white/45">tangible.</span>
+        </h1>
+        <p className="ml-auto mt-3 max-w-[290px] text-[11px] leading-relaxed text-white/50 sm:text-xs">
+          A collection of spatial experiments, material studies and built work — shaped by curiosity, craft and computation.
+        </p>
+        <div className="mt-5 flex items-center justify-end gap-4 border-t border-white/15 pt-3">
+          <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-white/40">{String(categories.length).padStart(2, "0")} disciplines</span>
+          <span className="h-1 w-1 rounded-full bg-white/35" />
+          <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-white/40">{String(entries.length).padStart(2, "0")} projects</span>
+        </div>
+      </section>
+
       <aside data-works-index className={`pointer-events-auto absolute left-3 top-28 bottom-24 z-20 hidden w-[min(340px,calc(100vw-24px))] flex-col overflow-hidden rounded-[22px] border border-white/[0.11] bg-[#090a0e]/65 shadow-[0_24px_90px_rgba(0,0,0,.45)] backdrop-blur-xl transition-transform duration-500 sm:left-7 sm:top-24 sm:bottom-28 sm:flex sm:rounded-[28px] ${indexOpen ? "translate-x-0" : "-translate-x-[calc(100%+40px)]"}`}>
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
           <div>
@@ -134,26 +151,19 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      <div className="pointer-events-none absolute bottom-24 right-3 z-10 max-w-[42vw] text-right sm:bottom-28 sm:right-10">
-        <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/35">Selected Works</p>
-        <p className="mt-1 text-[10px] text-white/45 sm:text-xs">Hover a shard or choose a title</p>
-      </div>
-
-      {activeHref && (() => {
-        const active = entries.find((entry) => entry.href === activeHref);
-        if (!active) return null;
-        return (
-          <div className="pointer-events-none absolute bottom-36 right-3 z-20 hidden w-52 overflow-hidden rounded-2xl border border-white/15 bg-[#090a0e]/85 shadow-2xl backdrop-blur-xl sm:right-6 sm:w-64 md:block">
-            <div className="relative aspect-[16/10]">
-              <Image src={active.cover} alt={active.title} fill sizes="256px" className="object-cover" />
-            </div>
-            <div className="p-3">
-              <p className="text-[9px] uppercase tracking-[0.2em] text-white/40">{active.category}</p>
-              <p className="mt-1 text-sm text-white">{active.title}</p>
-            </div>
+      {featuredEntry && (
+        <div className="pointer-events-none absolute bottom-28 right-4 z-20 hidden w-56 overflow-hidden rounded-2xl border border-white/15 bg-[#090a0e]/85 shadow-2xl backdrop-blur-xl sm:right-8 sm:block md:w-64">
+          <div className="relative aspect-[16/10]">
+            <Image src={featuredEntry.cover} alt={featuredEntry.title} fill sizes="256px" className="object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent" />
+            <span className="absolute bottom-3 left-3 font-mono text-[9px] uppercase tracking-[0.2em] text-white/70">Featured study</span>
           </div>
-        );
-      })()}
+          <div className="p-3">
+            <p className="text-[9px] uppercase tracking-[0.2em] text-white/40">{featuredEntry.category}</p>
+            <p className="mt-1 text-sm text-white">{featuredEntry.title}</p>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
