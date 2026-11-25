@@ -1,113 +1,306 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
+import { ArrowUpRight, Check, Copy, Mail, MapPin, Send } from "lucide-react";
 
-const channels = [
-  { code: "R", label: "Email", value: "hello@rgbstudio.com", note: "Project enquiries & ideas", href: "mailto:hello@rgbstudio.com", color: "#ff4d5a", tint: "rgba(255,77,90,.12)" },
-  { code: "G", label: "Instagram", value: "Follow the studio", note: "Work in progress & experiments", href: "https://instagram.com", color: "#35d58a", tint: "rgba(53,213,138,.12)" },
-  { code: "B", label: "LinkedIn", value: "Connect with us", note: "Studio updates & conversations", href: "https://linkedin.com", color: "#5795ff", tint: "rgba(87,149,255,.12)" },
-];
+const STUDIO_EMAIL = "hello@rgbstudio.com";
 
-function ArrowUpRight() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M7 17 17 7M7 7h10v10" />
-    </svg>
-  );
-}
+const TOPICS = [
+  "Spatial & Architecture",
+  "Computational Design",
+  "Material R&D",
+  "Digital & Interactive",
+] as const;
+
+const CHANNELS = [
+  {
+    label: "Email",
+    handle: STUDIO_EMAIL,
+    href: `mailto:${STUDIO_EMAIL}`,
+    accent: "#ff4d5a",
+    external: false,
+  },
+  {
+    label: "Instagram",
+    handle: "Studio journal",
+    href: "https://instagram.com",
+    accent: "#35d58a",
+    external: true,
+  },
+  {
+    label: "LinkedIn",
+    handle: "RGB Design Studio",
+    href: "https://linkedin.com",
+    accent: "#5795ff",
+    external: true,
+  },
+] as const;
 
 export default function ContactSection() {
   const root = useRef<HTMLElement>(null);
+  const [selectedTopic, setSelectedTopic] = useState<string>(TOPICS[0]);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.fromTo(".contact-reveal", { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, stagger: 0.08, ease: "power3.out", clearProps: "transform" });
+      gsap.fromTo(
+        ".contact-reveal",
+        { y: 20, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.7,
+          stagger: 0.06,
+          ease: "power3.out",
+          clearProps: "transform",
+        }
+      );
     }, root);
     return () => ctx.revert();
   }, []);
 
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(STUDIO_EMAIL);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.location.href = `mailto:${STUDIO_EMAIL}`;
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const subject = encodeURIComponent(`[${selectedTopic}] New enquiry from ${name || "Studio Visitor"}`);
+    const body = encodeURIComponent(
+      `Name: ${name || "—"}\nEmail: ${email || "—"}\nDiscipline: ${selectedTopic}\n\n${message}`
+    );
+    window.location.href = `mailto:${STUDIO_EMAIL}?subject=${subject}&body=${body}`;
+    setSubmitted(true);
+    window.setTimeout(() => setSubmitted(false), 4000);
+  };
+
   return (
-    <main ref={root} className="relative isolate min-h-screen w-full overflow-hidden bg-[#0b0c10] text-[#f5f6fa]">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-[#ff4d5a] via-[#35d58a] to-[#5795ff]" />
-      <div aria-hidden="true" className="pointer-events-none absolute -left-48 top-20 h-[28rem] w-[28rem] rounded-full bg-[#ff4d5a]/[0.07] blur-[130px]" />
-      <div aria-hidden="true" className="pointer-events-none absolute -right-48 bottom-0 h-[30rem] w-[30rem] rounded-full bg-[#5795ff]/[0.08] blur-[140px]" />
+    <main
+      ref={root}
+      className="relative isolate min-h-screen w-full overflow-x-hidden bg-[#090a0e] text-[#f3f4f6]"
+    >
+      {/* Subtle ambient chromatic wash */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-40 left-1/2 h-[34rem] w-[58rem] -translate-x-1/2 rounded-full opacity-[0.14] blur-[140px]"
+        style={{
+          background:
+            "radial-gradient(circle at 25% 50%, rgba(255,77,90,0.45), transparent 55%), radial-gradient(circle at 50% 35%, rgba(53,213,138,0.35), transparent 55%), radial-gradient(circle at 75% 50%, rgba(87,149,255,0.5), transparent 55%)",
+        }}
+      />
 
-      <section className="relative mx-auto flex min-h-screen w-full max-w-[1440px] flex-col px-5 pb-36 pt-28 sm:px-10 sm:pt-36 lg:px-16 lg:pb-32 lg:pt-36">
-        <header className="contact-reveal relative z-10 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[11px] font-bold text-[#111318]">R</span>
-            <span className="text-xs font-semibold tracking-wide text-white/80">RGB Design Studio</span>
-          </div>
-          <span className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1.5 text-[10px] font-medium tracking-wide text-white/55">CONTACT / 04</span>
-        </header>
-
-        <div className="relative mt-14 grid flex-1 grid-cols-1 gap-10 lg:mt-20 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:gap-8">
-          <div className="relative z-10 flex flex-col items-start">
-            <div className="contact-reveal mb-6 inline-flex items-center gap-2 rounded-full bg-white/[0.07] px-3.5 py-2 text-[11px] font-medium text-white/65 ring-1 ring-white/10">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#35d58a] opacity-50" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#35d58a]" />
+      <section className="relative mx-auto flex min-h-screen w-full max-w-[1360px] flex-col justify-center px-5 pb-32 pt-28 sm:px-10 sm:pt-32 lg:px-16">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:items-start lg:gap-12">
+          {/* Left Column: Editorial Intro & Quick Actions */}
+          <div className="flex flex-col items-start lg:col-span-5 lg:pt-4">
+            <div className="contact-reveal inline-flex items-center gap-2 rounded-full border border-white/[0.1] bg-white/[0.04] px-3.5 py-1.5 text-xs font-medium tracking-wide text-white/75">
+              <span className="flex items-center gap-1" aria-hidden="true">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#ff4d5a]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-[#35d58a]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-[#5795ff]" />
               </span>
-              Good things start here
+              Contact
             </div>
-            <h1 className="contact-reveal max-w-[10ch] text-[clamp(3.8rem,10vw,8.6rem)] font-medium leading-[0.91] tracking-[-0.075em]">
-              Let&apos;s talk<span className="text-[#ff5965]">.</span>
+
+            <h1 className="contact-reveal mt-6 text-[clamp(2.75rem,6vw,4.75rem)] font-medium leading-[1.02] tracking-[-0.045em] text-white">
+              Start a
               <br />
-              <span className="text-white/45">Let&apos;s</span> make
-              <br />
-              <span className="text-white/45">it real.</span>
+              conversation
+              <span className="text-[#5795ff]">.</span>
             </h1>
-            <p className="contact-reveal mt-7 max-w-[31rem] text-[15px] leading-7 text-white/55 sm:text-base sm:leading-8">
-              Have a big idea or just the first little spark? Tell us what you&apos;re imagining. We&apos;ll bring the right mix of design, technology and curiosity.
+
+            <p className="contact-reveal mt-5 max-w-md text-[15px] leading-7 text-white/60 sm:text-base">
+              We partner with teams and cultural spaces on material research, computational
+              workflows, and spatial experiences. Share what you&apos;re building.
             </p>
-            <a href="mailto:hello@rgbstudio.com" className="contact-reveal mt-8 inline-flex min-h-14 items-center gap-4 rounded-full bg-[#d8e2ff] py-2 pl-6 pr-2 text-sm font-semibold text-[#14213d] transition-all duration-200 hover:bg-white hover:shadow-[0_0_0_4px_rgba(87,149,255,.14)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#d8e2ff]">
-              Start a conversation
-              <span className="grid h-10 w-10 place-items-center rounded-full bg-[#273d69] text-white"><ArrowUpRight /></span>
-            </a>
+
+            {/* Primary Pill Actions */}
+            <div className="contact-reveal mt-8 flex flex-wrap items-center gap-3">
+              <a
+                href={`mailto:${STUDIO_EMAIL}`}
+                className="inline-flex h-12 items-center gap-2.5 rounded-full bg-[#e8eaed] px-6 text-sm font-medium text-[#0b0c10] transition-all duration-200 hover:bg-white hover:shadow-[0_0_0_4px_rgba(255,255,255,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                <Mail className="h-4 w-4" />
+                <span>{STUDIO_EMAIL}</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={handleCopyEmail}
+                className="inline-flex h-12 cursor-pointer items-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.04] px-5 text-sm font-medium text-white/85 transition-colors hover:border-white/25 hover:bg-white/[0.08] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-4 w-4 text-[#35d58a]" />
+                    <span className="text-[#35d58a]">Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4 text-white/60" />
+                    <span>Copy address</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Clean Metadata Card */}
+            <div className="contact-reveal mt-10 w-full max-w-md rounded-[24px] border border-white/[0.08] bg-[#121319]/80 p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-white/[0.06] text-white/80">
+                    <MapPin className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium text-white">Bengaluru, India</p>
+                    <p className="mt-0.5 text-xs text-white/50">
+                      Working globally · IST (UTC+5:30)
+                    </p>
+                  </div>
+                </div>
+                <span className="rounded-full bg-[#35d58a]/10 px-2.5 py-1 text-[11px] font-medium text-[#35d58a]">
+                  Available
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="relative min-h-[220px] sm:min-h-[280px] lg:min-h-[440px]">
-            <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="h-[min(72vw,440px)] w-[min(72vw,440px)] rounded-full border border-white/[0.08]" />
-              <div className="absolute h-[min(56vw,340px)] w-[min(56vw,340px)] rounded-full border border-dashed border-white/[0.09]" />
-            </div>
-            <div className="contact-reveal absolute bottom-2 left-0 right-0 z-10 mx-auto max-w-[430px] rounded-[28px] border border-white/[0.13] bg-[#17191f]/90 p-5 shadow-[0_18px_60px_rgba(0,0,0,.32)] backdrop-blur-xl sm:p-6 lg:bottom-5 lg:left-auto lg:right-0">
-              <div className="mb-4 flex items-center justify-between">
+          {/* Right Column: M3 Tonal Inquiry Surface + Channel Bento */}
+          <div className="flex flex-col gap-4 lg:col-span-7">
+            <form
+              onSubmit={handleSubmit}
+              className="contact-reveal rounded-[28px] border border-white/[0.09] bg-[#121319]/90 p-6 shadow-[0_24px_60px_rgba(0,0,0,0.45)] sm:p-8"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <p className="text-sm font-semibold text-white">Find your way to us</p>
-                  <p className="mt-1 text-xs text-white/45">Pick a channel. We&apos;ll take it from there.</p>
+                  <h2 className="text-lg font-medium tracking-tight text-white sm:text-xl">
+                    Project brief
+                  </h2>
+                  <p className="mt-1 text-xs text-white/50 sm:text-sm">
+                    Select a discipline and tell us a bit about your timeline.
+                  </p>
                 </div>
-                <div className="flex gap-1">
-                  <span className="h-1.5 w-5 rounded-full bg-[#ff4d5a]" />
-                  <span className="h-1.5 w-5 rounded-full bg-[#35d58a]" />
-                  <span className="h-1.5 w-5 rounded-full bg-[#5795ff]" />
-                </div>
               </div>
-              <div className="space-y-2">
-                {channels.map((channel) => (
-                  <a key={channel.code} href={channel.href} target={channel.href.startsWith("http") ? "_blank" : undefined} rel={channel.href.startsWith("http") ? "noreferrer" : undefined} className="group flex min-h-[68px] items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 transition-colors hover:border-white/20 hover:bg-white/[0.07] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-4">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[14px] text-sm font-bold" style={{ color: channel.color, backgroundColor: channel.tint }}>{channel.code}</span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-semibold text-white/90">{channel.label}</span>
-                      <span className="mt-0.5 block truncate text-xs text-white/45">{channel.value}</span>
-                    </span>
-                    <span className="text-white/40 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-white"><ArrowUpRight /></span>
-                  </a>
-                ))}
+
+              {/* Filter Chips */}
+              <div className="mt-5 flex flex-wrap gap-2">
+                {TOPICS.map((topic) => {
+                  const active = selectedTopic === topic;
+                  return (
+                    <button
+                      key={topic}
+                      type="button"
+                      onClick={() => setSelectedTopic(topic)}
+                      className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-medium transition-all duration-150 ${
+                        active
+                          ? "bg-[#d3e3fd] text-[#041e49] shadow-sm"
+                          : "border border-white/[0.1] bg-white/[0.03] text-white/70 hover:border-white/20 hover:bg-white/[0.07] hover:text-white"
+                      }`}
+                    >
+                      {active && <Check className="h-3.5 w-3.5" />}
+                      <span>{topic}</span>
+                    </button>
+                  );
+                })}
               </div>
-              <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-4 text-xs">
-                <span className="text-white/40">Bengaluru, India</span>
-                <span className="font-medium text-white/65">RGB / 2026</span>
+
+              {/* Outlined Clean Inputs */}
+              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-medium text-white/60">Your name</span>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Alex Rivera"
+                    className="h-12 w-full rounded-2xl border border-white/[0.12] bg-[#0b0c10]/70 px-4 text-sm text-white placeholder:text-white/30 transition-colors focus:border-[#8ab4f8] focus:bg-[#0b0c10] focus:outline-none"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-medium text-white/60">
+                    Email address
+                  </span>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="alex@company.com"
+                    className="h-12 w-full rounded-2xl border border-white/[0.12] bg-[#0b0c10]/70 px-4 text-sm text-white placeholder:text-white/30 transition-colors focus:border-[#8ab4f8] focus:bg-[#0b0c10] focus:outline-none"
+                  />
+                </label>
               </div>
+
+              <label className="mt-4 block">
+                <span className="mb-1.5 block text-xs font-medium text-white/60">
+                  Tell us about the project
+                </span>
+                <textarea
+                  required
+                  rows={4}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Scope, goals, or any early ideas you'd like to explore together..."
+                  className="w-full resize-none rounded-2xl border border-white/[0.12] bg-[#0b0c10]/70 p-4 text-sm leading-6 text-white placeholder:text-white/30 transition-colors focus:border-[#8ab4f8] focus:bg-[#0b0c10] focus:outline-none"
+                />
+              </label>
+
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+                <p className="text-xs text-white/45">
+                  {submitted
+                    ? "Opening your mail client with your brief..."
+                    : "Usually responds within 1–2 business days."}
+                </p>
+
+                <button
+                  type="submit"
+                  className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full bg-[#8ab4f8] px-6 text-sm font-medium text-[#062e6f] transition-all duration-200 hover:bg-[#aecbfa] hover:shadow-[0_0_0_4px_rgba(138,180,248,0.16)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ab4f8]"
+                >
+                  <span>Send enquiry</span>
+                  <Send className="h-4 w-4" />
+                </button>
+              </div>
+            </form>
+
+            {/* Channel Bento Strip */}
+            <div className="contact-reveal grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {CHANNELS.map((channel) => (
+                <a
+                  key={channel.label}
+                  href={channel.href}
+                  target={channel.external ? "_blank" : undefined}
+                  rel={channel.external ? "noreferrer" : undefined}
+                  className="group flex items-center justify-between rounded-[22px] border border-white/[0.08] bg-[#121319]/80 px-5 py-4 transition-all duration-200 hover:border-white/20 hover:bg-[#181a22] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: channel.accent }}
+                        aria-hidden="true"
+                      />
+                      <span className="text-sm font-medium text-white">{channel.label}</span>
+                    </div>
+                    <p className="mt-1 truncate text-xs text-white/50">{channel.handle}</p>
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 shrink-0 text-white/40 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-white" />
+                </a>
+              ))}
             </div>
           </div>
         </div>
-
-        <footer className="contact-reveal mt-12 flex items-center justify-between border-t border-white/10 pt-5 text-[10px] font-medium uppercase tracking-[0.15em] text-white/35">
-          <span>Design × Technology × Curiosity</span>
-          <span className="hidden sm:inline">R <span className="text-[#ff5965]">/</span> G <span className="text-[#35d58a]">/</span> B <span className="text-[#5795ff]">—</span> Bengaluru</span>
-        </footer>
       </section>
     </main>
   );
