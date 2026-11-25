@@ -41,6 +41,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
     const calloutRefs = useRef([]);
     const labelWorldRef = useRef(new Vector3());
 
+    const layoutViewportRef = useRef({ width: 0, height: 0 });
     const fractalGroupRef = useRef(null);
     const chunksRef = useRef([]);
     const chunkMeshesRef = useRef([]);
@@ -137,8 +138,8 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
     `;
 
     function getTargetLayout(nextMode) {
-        const w = window.innerWidth;
-        const h = window.innerHeight;
+        const w = layoutViewportRef.current.width || window.innerWidth;
+        const h = layoutViewportRef.current.height || window.innerHeight;
         const mobile = w <= 767;
         const base = Math.min(w, h);
         // The orthographic camera is centered at world x=0. Mobile layouts use
@@ -381,6 +382,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
     function init() {
         const w = window.innerWidth;
         const h = window.innerHeight;
+        layoutViewportRef.current = { width: w, height: h };
 
         const camera = new OrthographicCamera(w / -2, w / 2, h / 2, h / -2, 0.01, 2600);
         camera.position.z = 1100;
@@ -542,6 +544,12 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
 
         const w = window.innerWidth;
         const h = window.innerHeight;
+        const previous = layoutViewportRef.current;
+
+        // Ignore mobile browser-toolbar height changes while scrolling.
+        if (w <= 767 && previous.width <= 767 && w === previous.width) return;
+
+        layoutViewportRef.current = { width: w, height: h };
 
         renderer.setSize(w, h);
 
