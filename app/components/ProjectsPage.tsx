@@ -14,7 +14,7 @@ const RGB = ["#ff2433", "#1ff261", "#0056e6"];
 export default function ProjectsPage() {
   const router = useRouter();
   const [indexOpen, setIndexOpen] = useState(true);
-  const [openMobileCategory, setOpenMobileCategory] = useState<string | null>(null);
+  const [selectedMobileCategory, setSelectedMobileCategory] = useState<string>("all");
   const [activeHref, setActiveHref] = useState<string | null>(null);
   const categories = useMemo(() => Object.entries(projectsData as unknown as Record<string, Category>).filter(([, value]) => Array.isArray(value.projects)), []);
 
@@ -30,6 +30,11 @@ export default function ProjectsPage() {
       }))
     );
   }, [categories]);
+
+  const mobileEntries = useMemo(() => {
+    if (selectedMobileCategory === "all") return entries;
+    return entries.filter((entry) => entry.categorySlug === selectedMobileCategory);
+  }, [entries, selectedMobileCategory]);
 
   useEffect(() => {
     const onFractalHover = (event: Event) => {
@@ -74,33 +79,88 @@ export default function ProjectsPage() {
         </div>
       </section>
 
+      {/* Mobile-only Google Material 3 Editorial Center Layout */}
+      <section aria-label="Selected projects" className="pointer-events-auto relative z-20 mx-auto w-full max-w-[296px] px-1 pb-28 pt-20 sm:hidden">
+        <header className="mb-5 px-1">
+          <div className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 backdrop-blur-md">
+            <span className="text-[11px] font-medium tracking-tight text-white/80">Selected works · 2020–26</span>
+          </div>
+          <h1 className="mt-3 text-[2rem] font-medium leading-[1.08] tracking-[-0.03em] text-white">
+            Projects
+          </h1>
+          <p className="mt-1.5 text-xs leading-relaxed text-white/60">
+            {entries.length} spatial, material, and computational studies across {categories.length} disciplines.
+          </p>
+        </header>
 
-      <section aria-label="Selected projects" className="pointer-events-auto relative z-20 mx-auto w-full max-w-2xl px-6 pb-28 pt-28 sm:hidden">
-        <div className="mb-9 border-b border-white/20 pb-6">
-          <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/45">RGB / Selected works / 2020—26</p>
-          <h1 className="mt-3 text-[2.7rem] font-light leading-none tracking-[-0.075em] text-white">Selected <span className="text-white/45">projects.</span></h1>
-          <p className="mt-3 max-w-[260px] text-[11px] leading-relaxed text-white/55">{String(entries.length).padStart(2, "0")} projects across {String(categories.length).padStart(2, "0")} disciplines.</p>
+        {/* Material 3 Filter Chips */}
+        <div className="mb-5 flex items-center gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <button
+            type="button"
+            onClick={() => setSelectedMobileCategory("all")}
+            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
+              selectedMobileCategory === "all"
+                ? "bg-white text-[#0b0b10] shadow-sm"
+                : "border border-white/10 bg-[#121318]/85 text-white/75 active:bg-white/10"
+            }`}
+          >
+            All ({entries.length})
+          </button>
+          {categories.map(([slug, category]) => {
+            const active = selectedMobileCategory === slug;
+            return (
+              <button
+                key={slug}
+                type="button"
+                onClick={() => setSelectedMobileCategory(slug)}
+                className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
+                  active
+                    ? "bg-white text-[#0b0b10] shadow-sm"
+                    : "border border-white/10 bg-[#121318]/85 text-white/75 active:bg-white/10"
+                }`}
+              >
+                {category.title}
+              </button>
+            );
+          })}
         </div>
-        <div className="space-y-8">
-          {categories.map(([slug, category], categoryIndex) => (
-            <section key={slug}>
-              <div className="mb-2 flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: RGB[categoryIndex % RGB.length] }} />
-                <h2 className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/50">{category.title}</h2>
+
+        {/* Google Tonal Surface Project Cards */}
+        <div className="space-y-3.5">
+          {mobileEntries.map((entry, idx) => (
+            <button
+              key={entry.href}
+              type="button"
+              onClick={() => openProject(entry.href)}
+              className="group w-full overflow-hidden rounded-[22px] border border-white/[0.1] bg-[#111217]/92 text-left shadow-[0_10px_32px_rgba(0,0,0,0.5)] backdrop-blur-md transition-transform duration-150 active:scale-[0.985]"
+            >
+              <div className="relative aspect-[16/9] w-full overflow-hidden bg-[#181a22]">
+                <Image
+                  src={entry.cover}
+                  alt={entry.title}
+                  fill
+                  sizes="296px"
+                  className="object-cover transition-transform duration-500 group-active:scale-[1.02]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#111217] via-black/10 to-black/20" />
+                <div className="absolute left-3 top-3 inline-flex items-center rounded-full border border-white/15 bg-black/60 px-2.5 py-1 backdrop-blur-md">
+                  <span className="text-[10px] font-medium text-white/90">{entry.category}</span>
+                </div>
               </div>
-              <div className="border-t border-white/15">
-                {category.projects.map((project, projectIndex) => {
-                  const href = `/project/${slug}/${projectSlug(project.dir)}`;
-                  return (
-                    <button key={project.dir} type="button" onClick={() => openProject(href)} className="group flex min-h-[58px] w-full items-center gap-3 border-b border-white/10 py-3 text-left">
-                      <span className="w-5 shrink-0 font-mono text-[9px] tabular-nums text-white/30">{String(projectIndex + 1).padStart(2, "0")}</span>
-                      <span className="min-w-0 flex-1 text-[13px] font-light tracking-[-0.015em] text-white/85 transition-colors group-active:text-white">{project.title}</span>
-                      <span className="shrink-0 text-sm text-white/35 transition-transform group-active:translate-x-0.5">↗</span>
-                    </button>
-                  );
-                })}
+              <div className="flex items-center justify-between gap-3 px-4 py-3.5">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[15px] font-medium tracking-[-0.015em] text-white">
+                    {entry.title}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-white/50">
+                    Study {String(idx + 1).padStart(2, "0")}
+                  </p>
+                </div>
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-sm text-white/85 transition-colors group-active:bg-white group-active:text-[#0b0b10]">
+                  ↗
+                </span>
               </div>
-            </section>
+            </button>
           ))}
         </div>
       </section>
@@ -143,44 +203,6 @@ export default function ProjectsPage() {
       <button data-works-index type="button" className="pointer-events-auto absolute left-3 top-[5.25rem] z-30 hidden rounded-full border border-white/15 bg-[#090a0e]/80 px-4 py-2 text-[9px] uppercase tracking-[0.2em] text-white/75 backdrop-blur-xl transition hover:bg-white hover:text-black sm:left-7 sm:block" onClick={() => setIndexOpen((open) => !open)}>
         {indexOpen ? "Hide Index" : "Works Index"}
       </button>
-
-      <div data-works-index className="pointer-events-auto fixed bottom-[5.25rem] left-3 right-3 z-40 sm:hidden">
-        {openMobileCategory && (
-          <div className="mb-2 max-h-[34svh] overflow-y-auto rounded-2xl border border-white/10 bg-[#090a0e]/95 p-2 shadow-2xl backdrop-blur-2xl">
-            {categories.filter(([slug]) => slug === openMobileCategory).map(([slug, category]) => (
-              <div key={slug}>
-                <div className="flex items-center justify-between border-b border-white/[0.08] px-3 py-2">
-                  <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-white/45">{category.title}</span>
-                  <button type="button" aria-label="Collapse project group" onClick={() => setOpenMobileCategory(null)} className="px-2 text-sm text-white/50">−</button>
-                </div>
-                <div className="py-1">
-                  {category.projects.map((project) => {
-                    const href = `/project/${slug}/${projectSlug(project.dir)}`;
-                    const active = activeHref === href;
-                    return (
-                      <button key={project.dir} type="button" onClick={() => openProject(href)} className={`flex w-full items-center rounded-lg px-3 py-3 text-left text-[12px] transition-colors ${active ? "bg-white/[0.09] text-white" : "text-white/65 active:bg-white/[0.06]"}`}>
-                        <span className="min-w-0 flex-1 truncate">{project.title}</span>
-                        <span className="text-[10px] text-white/25">↗</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="flex items-center gap-1.5 overflow-x-auto rounded-full border border-white/15 bg-[#090a0e]/90 p-1.5 shadow-2xl backdrop-blur-2xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {categories.map(([slug, category]) => {
-            const expanded = openMobileCategory === slug;
-            return (
-              <button key={slug} type="button" aria-expanded={expanded} onClick={() => setOpenMobileCategory(expanded ? null : slug)} className={`flex shrink-0 items-center gap-2 rounded-full px-3.5 py-2.5 text-[9px] font-medium uppercase tracking-[0.12em] transition-colors ${expanded ? "bg-white text-black" : "text-white/65 active:bg-white/10"}`}>
-                <span>{category.title}</span>
-                <span className={`text-[11px] ${expanded ? "text-black/55" : "text-white/35"}`}>{expanded ? "−" : "+"}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       {featuredEntry && (
         <div className="pointer-events-none absolute bottom-28 right-4 z-20 hidden w-56 overflow-hidden rounded-2xl border border-white/15 bg-[#090a0e]/85 shadow-2xl backdrop-blur-xl sm:right-8 sm:block md:w-64">

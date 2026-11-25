@@ -171,7 +171,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
         gsap.killTweensOf(group.scale);
         gsap.killTweensOf(group.rotation);
         gsap.killTweensOf(expandRef.current);
-        const interactive = nextMode === 'project';
+        const interactive = nextMode === 'project' && window.innerWidth >= 640;
         if (controls) {
             controls.enabled = interactive;
             controls.autoRotate = interactive;
@@ -331,7 +331,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
         };
 
         const handlePointerUp = (e) => {
-            if (modeRef.current !== 'project' || !cameraRef.current || !rendererRef.current) return;
+            if (modeRef.current !== 'project' || window.innerWidth < 640 || !cameraRef.current || !rendererRef.current) return;
             if (e.target !== rendererRef.current.domElement) return;
 
             const distMoved = Math.hypot(
@@ -630,9 +630,9 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             chunk.openVal += (targetOpen - chunk.openVal) * 0.12;
             chunk.mesh.position.copy(chunk.dir).multiplyScalar(chunk.openVal * 0.72);
 
-            const targetHover = window.innerWidth <= 767 ? 0.34 : modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : isHovered ? 0.85 : 0.34;
+            const targetHover = (modeRef.current === 'project' && window.innerWidth < 640) ? 0.85 : window.innerWidth <= 767 ? 0.34 : modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : isHovered ? 0.85 : 0.34;
             chunk.hoverMix += (targetHover - chunk.hoverMix) * 0.16;
-            if (modeRef.current === 'about') {
+            if (modeRef.current === 'project' && window.innerWidth < 640) { const elapsed = clockRef.current?.elapsedTime ?? 0; const side = i % 2 === 0 ? 1 : -1; const rowCount = Math.ceil(chunks.length / 2); const yRow = Math.floor(i / 2); const yNorm = rowCount > 1 ? yRow / (rowCount - 1) - 0.5 : 0; const flankX = (window.innerWidth * 0.43) / Math.max(1, group.scale.x); chunk.mesh.position.set(yNorm * 3.8 + Math.sin(elapsed * 0.45 + i) * 0.08, side * (flankX + (i % 2) * 0.14) + Math.cos(elapsed * 0.35 + i) * 0.06, chunk.dir.z * 0.15); } if (modeRef.current === 'about') {
                 const elapsed = clockRef.current?.elapsedTime ?? 0;
                 const isInnerOrbit = i < 5;
                 const orbitIndex = isInnerOrbit ? i : i - 5;
@@ -645,7 +645,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             }
             const callout = calloutRefs.current[chunk.index];
             if (callout) {
-                if (modeRef.current === 'project' && chunk.project) {
+                if (modeRef.current === 'project' && chunk.project && window.innerWidth >= 640) {
                     chunk.mesh.getWorldPosition(labelWorldRef.current);
                     labelWorldRef.current.project(camera);
                     const screenX = (labelWorldRef.current.x * 0.5 + 0.5) * window.innerWidth;
