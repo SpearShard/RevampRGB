@@ -55,6 +55,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
     const activeHrefRef = useRef(activeHref);
     const indexHoverHrefRef = useRef(null);
     const contactIndexRef = useRef(0);
+    const aboutIndexRef = useRef(0);
 
     const centeredRef = useRef(centered);
     const expandRef = useRef({ value: centered ? 1 : 0 });
@@ -155,7 +156,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             return { scale: base * (mobile ? 0.62 : 0.58), x: mobile ? 0 : w * 0.39, y: mobile ? h * 0.08 : 0, rotationZ: Math.PI / 2 };
         }
         if (nextMode === 'about') {
-            return { scale: base * (mobile ? 0.34 : 0.62), x: mobile ? 0 : w * 0.38, y: mobile ? -h * 0.1 : 0, rotationZ: Math.PI / 2 };
+            return { scale: base * (mobile ? 0.56 : 0.62), x: mobile ? 0 : w * 0.38, y: mobile ? h * 0.04 : 0, rotationZ: Math.PI / 2 };
         }
         if (nextMode === 'project') {
             return { scale: base * (mobile ? 0.62 : 0.66), x: mobile ? 0 : w * 0.08, y: mobile ? h * 0.08 : 0, rotationZ: Math.PI / 2 };
@@ -288,10 +289,16 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             const idx = Number(event.detail?.index);
             if (!Number.isNaN(idx)) contactIndexRef.current = ((idx % 3) + 3) % 3;
         };
+        const onAboutSelect = (event) => {
+            const idx = Number(event.detail?.index);
+            if (!Number.isNaN(idx)) aboutIndexRef.current = ((idx % 3) + 3) % 3;
+        };
+        window.addEventListener('rgb:about-select', onAboutSelect);
         window.addEventListener('rgb:contact-select', onContactSelect);
         window.addEventListener('rgb:index-hover', onIndexHover);
         window.addEventListener('rgb:index-clear', onIndexClear);
         return () => {
+            window.removeEventListener('rgb:about-select', onAboutSelect);
             window.removeEventListener('rgb:contact-select', onContactSelect);
             window.removeEventListener('rgb:index-hover', onIndexHover);
             window.removeEventListener('rgb:index-clear', onIndexClear);
@@ -661,14 +668,17 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             const targetOpen = (baseSplit + cursorBoost) * expand;
 
             const isMobileContact = modeRef.current === 'contact' && window.innerWidth < 640;
+            const isMobileAbout = modeRef.current === 'about' && window.innerWidth < 640;
             const isContactColorMatch = isMobileContact && (chunk.index % 3 === contactIndexRef.current);
+            const isAboutColorMatch = isMobileAbout && (chunk.index % 3 === aboutIndexRef.current);
             const contactPop = isContactColorMatch ? 0.22 : 0;
-            chunk.openVal += (targetOpen + contactPop - chunk.openVal) * 0.12;
+            const effectiveOpen = isMobileAbout ? 0 : (targetOpen + contactPop);
+            chunk.openVal += (effectiveOpen - chunk.openVal) * 0.12;
             chunk.mesh.position.copy(chunk.dir).multiplyScalar(chunk.openVal * (isMobileContact ? 0.64 : 0.72));
 
-            const targetHover = modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : isMobileContact ? (isContactColorMatch ? 1.0 : 0.18) : isHovered ? 0.95 : 0.34;
+            const targetHover = modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : (isMobileContact || isMobileAbout) ? ((isContactColorMatch || isAboutColorMatch) ? 1.0 : 0.18) : isHovered ? 0.95 : 0.34;
             chunk.hoverMix += (targetHover - chunk.hoverMix) * 0.16;
-            if (modeRef.current === 'about') {
+            if (modeRef.current === 'about' && window.innerWidth >= 640) {
                 const elapsed = clockRef.current?.elapsedTime ?? 0;
                 const isInnerOrbit = i < 5;
                 const orbitIndex = isInnerOrbit ? i : i - 5;
