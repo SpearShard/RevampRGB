@@ -506,73 +506,6 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
 
         const group = new Group();
         fractalGroupRef.current = group;
-
-        const sampleWordPoints = (text, count = 210) => {
-            const c = document.createElement('canvas');
-            c.width = 480;
-            c.height = 140;
-            const ctx2d = c.getContext('2d');
-            if (!ctx2d) return new Float32Array(count * 3);
-            ctx2d.clearRect(0, 0, c.width, c.height);
-            ctx2d.fillStyle = '#ffffff';
-            ctx2d.textAlign = 'center';
-            ctx2d.textBaseline = 'middle';
-            const fontSize = text.length > 7 ? 74 : 92;
-            ctx2d.font = '700 ' + fontSize + 'px system-ui, -apple-system, sans-serif';
-            ctx2d.fillText(text, c.width / 2, c.height / 2);
-            const img = ctx2d.getImageData(0, 0, c.width, c.height).data;
-            const pixels = [];
-            for (let py = 0; py < c.height; py += 3) {
-                for (let px = 0; px < c.width; px += 3) {
-                    if (img[(py * c.width + px) * 4 + 3] > 128) {
-                        const sx = ((px / c.width) - 0.5) * 1.68;
-                        const sy = (0.5 - (py / c.height)) * 0.52;
-                        pixels.push([sx, sy]);
-                    }
-                }
-            }
-            const out = new Float32Array(count * 3);
-            for (let k = 0; k < count; k++) {
-                const p = pixels.length ? pixels[Math.floor((k / count) * pixels.length)] : [0, 0];
-                // group.rotation.z = PI/2 => localX = screenY, localY = -screenX
-                out[k * 3] = p[1];
-                out[k * 3 + 1] = -p[0];
-                out[k * 3 + 2] = ((k % 5) - 2) * 0.02;
-            }
-            return out;
-        };
-
-        const WORD_COUNT = 210;
-        wordTargetsRef.current = [
-            sampleWordPoints('EMAIL', WORD_COUNT),
-            sampleWordPoints('INSTAGRAM', WORD_COUNT),
-            sampleWordPoints('YOUTUBE', WORD_COUNT),
-        ];
-        const initWordPos = new Float32Array(WORD_COUNT * 3);
-        const wordColors = new Float32Array(WORD_COUNT * 3);
-        for (let k = 0; k < WORD_COUNT; k++) {
-            const acc = RGB_ACCENTS[k % RGB_ACCENTS.length].vec;
-            wordColors[k * 3] = acc.x;
-            wordColors[k * 3 + 1] = acc.y;
-            wordColors[k * 3 + 2] = acc.z;
-        }
-        wordCurrentRef.current = initWordPos;
-        const wordGeo = new BufferGeometry();
-        wordGeo.setAttribute('position', new BufferAttribute(initWordPos, 3));
-        wordGeo.setAttribute('color', new BufferAttribute(wordColors, 3));
-        const wordMat = new ShaderMaterial({
-            transparent: true,
-            depthWrite: false,
-            vertexColors: true,
-            uniforms: { uOpacity: { value: 0 } },
-            vertexShader: 'varying vec3 vColor; void main() { vColor = color; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_PointSize = 7.5; }',
-            fragmentShader: 'varying vec3 vColor; uniform float uOpacity; void main() { float d = length(gl_PointCoord - vec2(0.5)); if (d > 0.5) discard; float a = smoothstep(0.5, 0.12, d) * uOpacity; gl_FragColor = vec4(mix(vec3(1.0), vColor, 0.65), a); }'
-        });
-        const wordPoints = new Points(wordGeo, wordMat);
-        wordPoints.visible = false;
-        group.add(wordPoints);
-        wordPointsRef.current = wordPoints;
-
         scene.add(group);
 
         const createdChunks = [];
@@ -765,30 +698,6 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             chunk.mesh.visible = modeRef.current !== 'detail' || chunk.targetOpacity === 1;
             chunk.material.uniforms.uHoverMix.value = chunk.hoverMix;
         }
-
-        const wp = wordPointsRef.current;
-        const targets = wordTargetsRef.current;
-        const curr = wordCurrentRef.current;
-        if (wp && targets && curr) {
-            const showWords = modeRef.current === 'contact' && window.innerWidth < 640;
-            wp.visible = showWords;
-            if (showWords) {
-                const targetArr = targets[contactIndexRef.current] || targets[0];
-                const elapsed = clockRef.current?.elapsedTime ?? 0;
-                const posAttr = wp.geometry.getAttribute('position');
-                for (let k = 0; k < targetArr.length; k += 3) {
-                    const wave = Math.sin(elapsed * 1.4 + k * 0.07) * 0.012;
-                    curr[k] += (targetArr[k] + wave - curr[k]) * 0.12;
-                    curr[k + 1] += (targetArr[k + 1] - curr[k + 1]) * 0.12;
-                    curr[k + 2] += (targetArr[k + 2] + wave - curr[k + 2]) * 0.12;
-                }
-                posAttr.needsUpdate = true;
-                wp.material.uniforms.uOpacity.value += (0.95 - wp.material.uniforms.uOpacity.value) * 0.14;
-            } else {
-                wp.material.uniforms.uOpacity.value = 0;
-            }
-        }
-
     }
 
     function animate() {
