@@ -157,7 +157,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             return { scale: base * (mobile ? 0.34 : 0.62), x: mobile ? 0 : w * 0.38, y: mobile ? -h * 0.1 : 0, rotationZ: Math.PI / 2 };
         }
         if (nextMode === 'project') {
-            return { scale: base * (mobile ? 0.36 : 0.66), x: mobile ? 0 : w * 0.08, y: mobile ? 0 : 0, rotationZ: Math.PI / 2 };
+            return { scale: base * (mobile ? 0.62 : 0.66), x: mobile ? 0 : w * 0.08, y: mobile ? h * 0.08 : 0, rotationZ: Math.PI / 2 };
         }
         return { scale: base * (mobile ? 0.38 : 0.66), x: mobile ? 0 : w * 0.08, y: mobile ? -h * 0.08 : 0, rotationZ: Math.PI / 2 };
     }
@@ -172,7 +172,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
         gsap.killTweensOf(group.scale);
         gsap.killTweensOf(group.rotation);
         gsap.killTweensOf(expandRef.current);
-        const interactive = nextMode === 'project' && window.innerWidth >= 640;
+        const interactive = nextMode === 'project';
         if (controls) {
             controls.enabled = interactive;
             controls.autoRotate = interactive;
@@ -638,9 +638,9 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             chunk.openVal += (targetOpen - chunk.openVal) * 0.12;
             chunk.mesh.position.copy(chunk.dir).multiplyScalar(chunk.openVal * 0.72);
 
-            const targetHover = (modeRef.current === 'project' && window.innerWidth < 640) ? 0.85 : window.innerWidth <= 767 ? 0.34 : modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : isHovered ? 0.85 : 0.34;
+            const targetHover = modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : isHovered ? 0.95 : 0.34;
             chunk.hoverMix += (targetHover - chunk.hoverMix) * 0.16;
-            if (modeRef.current === 'project' && window.innerWidth < 640) { const elapsed = clockRef.current?.elapsedTime ?? 0; const side = i % 2 === 0 ? 1 : -1; const rowCount = Math.ceil(chunks.length / 2); const yRow = Math.floor(i / 2); const yNorm = rowCount > 1 ? yRow / (rowCount - 1) - 0.5 : 0; const flankX = (window.innerWidth * 0.43) / Math.max(1, group.scale.x); chunk.mesh.position.set(yNorm * 3.8 + Math.sin(elapsed * 0.45 + i) * 0.08, side * (flankX + (i % 2) * 0.14) + Math.cos(elapsed * 0.35 + i) * 0.06, chunk.dir.z * 0.15); } if (modeRef.current === 'about') {
+            if (modeRef.current === 'about') {
                 const elapsed = clockRef.current?.elapsedTime ?? 0;
                 const isInnerOrbit = i < 5;
                 const orbitIndex = isInnerOrbit ? i : i - 5;

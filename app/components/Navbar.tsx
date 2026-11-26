@@ -10,14 +10,13 @@ interface NavLink {
   label: string;
   href: string;
   code: string;
-  accent: string;
 }
 
 const LINKS: NavLink[] = [
-  { label: 'Home', href: '/', code: '01', accent: '#ff2433' },
-  { label: 'Projects', href: '/project', code: '02', accent: '#1ff261' },
-  { label: 'About', href: '/about', code: '03', accent: '#0056e6' },
-  { label: 'Contact', href: '/contact', code: '04', accent: '#ffffff' },
+  { label: 'Home', href: '/', code: '01' },
+  { label: 'Projects', href: '/project', code: '02' },
+  { label: 'About', href: '/about', code: '03' },
+  { label: 'Contact', href: '/contact', code: '04' },
 ];
 
 export default function Navbar() {
@@ -257,11 +256,11 @@ export default function Navbar() {
 
       {/* Mobile Top-Right Expanding Hamburger Menu */}
       <div ref={mobileMenuRef} className="fixed top-4 right-4 z-50 select-none sm:hidden">
-        {/* Subtle RGB Aura behind trigger/menu */}
+        {/* Subtle Auroric RGB Glow */}
         <div
           aria-hidden="true"
-          className={`pointer-events-none absolute -inset-1 rounded-[22px] bg-gradient-to-br from-[#ff2433]/35 via-[#1ff261]/25 to-[#0056e6]/35 blur-lg transition-opacity duration-300 ${
-            mobileMenuOpen ? 'opacity-90' : 'opacity-45'
+          className={`pointer-events-none absolute -inset-2 rounded-[26px] bg-gradient-to-br from-[#ff2433]/20 via-[#1ff261]/12 to-[#0056e6]/22 blur-xl transition-opacity duration-300 ${
+            mobileMenuOpen ? 'opacity-100' : 'opacity-50'
           }`}
         />
 
@@ -271,57 +270,42 @@ export default function Navbar() {
           onClick={() => setMobileMenuOpen((open) => !open)}
           aria-expanded={mobileMenuOpen}
           aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-          className={`relative ml-auto flex h-11 w-11 items-center justify-center rounded-[15px] border border-white/20 bg-[#08080c]/90 backdrop-blur-2xl shadow-[0_12px_32px_rgba(0,0,0,0.8)] transition-all duration-300 active:scale-95 ${
+          className={`relative ml-auto flex h-11 w-11 items-center justify-center rounded-[14px] border border-white/[0.14] bg-[#08090d]/85 backdrop-blur-2xl shadow-[0_12px_32px_rgba(0,0,0,0.75)] transition-all duration-300 active:scale-95 ${
             mobileMenuOpen ? 'opacity-0 pointer-events-none scale-75' : 'opacity-100 scale-100'
           }`}
         >
           <span className="flex flex-col items-end gap-[5px]">
-            <span className="h-[1.5px] w-5 rounded-full bg-white" />
-            <span className="flex items-center gap-1">
-              <span className="h-1 w-1 rounded-full bg-[#ff2433]" />
-              <span className="h-[1.5px] w-3.5 rounded-full bg-white/80" />
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="h-1 w-1 rounded-full bg-[#1ff261]" />
-              <span className="h-1 w-1 rounded-full bg-[#0056e6]" />
-              <span className="h-[1.5px] w-2 rounded-full bg-white/65" />
-            </span>
+            <span className="h-[1.5px] w-4 rounded-full bg-white/90" />
+            <span className="h-[1.5px] w-3 rounded-full bg-white/70" />
+            <span className="h-[1.5px] w-4 rounded-full bg-white/90" />
           </span>
         </button>
 
-        {/* Expanded Rounded Rectangular RGB Menu */}
+        {/* Expanded Rounded Rectangular Menu */}
         <div
-          className={`origin-top-right overflow-hidden rounded-[22px] border border-white/[0.16] bg-[#08090d]/95 backdrop-blur-2xl shadow-[0_24px_64px_rgba(0,0,0,0.92)] transition-all duration-300 ease-out ${
+          className={`origin-top-right overflow-hidden rounded-[20px] border border-white/[0.14] bg-[#08090d]/92 backdrop-blur-2xl shadow-[0_24px_64px_rgba(0,0,0,0.9)] transition-all duration-300 ease-out ${
             mobileMenuOpen
-              ? 'pointer-events-auto -mt-11 w-[224px] scale-100 opacity-100'
-              : 'pointer-events-none -mt-11 w-[224px] scale-75 opacity-0'
+              ? 'pointer-events-auto -mt-11 w-[212px] scale-100 opacity-100'
+              : 'pointer-events-none -mt-11 w-[212px] scale-75 opacity-0'
           }`}
         >
-          {/* Top RGB Prism Hairline */}
-          <div className="h-[2px] w-full bg-gradient-to-r from-[#ff2433] via-[#1ff261] to-[#0056e6]" />
-
-          <div className="flex items-center justify-between border-b border-white/[0.08] px-4 py-3">
-            <div className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#ff2433]" />
-              <span className="h-1.5 w-1.5 rounded-full bg-[#1ff261]" />
-              <span className="h-1.5 w-1.5 rounded-full bg-[#0056e6]" />
-              <span className="ml-1 text-[10px] font-medium uppercase tracking-[0.2em] text-white/55">
-                Menu
-              </span>
-            </div>
+          <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-3">
+            <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-white/45">
+              Menu
+            </span>
             <button
               type="button"
               onClick={() => setMobileMenuOpen(false)}
               aria-label="Close navigation menu"
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.07] text-white/75 transition-colors active:bg-white/20"
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.06] text-white/70 transition-colors active:bg-white/15"
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
                 <path d="M18 6L6 18M6 6l12 12" />
               </svg>
             </button>
           </div>
 
-          <nav className="flex flex-col gap-1 p-2.5">
+          <nav className="flex flex-col gap-0.5 p-2">
             {LINKS.map((link) => {
               const isActive = pathname === link.href;
               return (
@@ -332,22 +316,16 @@ export default function Navbar() {
                     e.preventDefault();
                     navigateTo(link.href);
                   }}
-                  className={`group flex items-center justify-between rounded-[14px] px-3.5 py-2.5 transition-all duration-200 no-underline ${
+                  className={`flex items-center justify-between rounded-[13px] px-3.5 py-2.5 transition-all duration-200 no-underline ${
                     isActive
-                      ? 'bg-white/[0.11] text-white'
-                      : 'text-white/70 active:bg-white/[0.07] hover:bg-white/[0.06] hover:text-white'
+                      ? 'bg-white/[0.1] text-white'
+                      : 'text-white/65 active:bg-white/[0.07] hover:bg-white/[0.05] hover:text-white'
                   }`}
                 >
-                  <span className="flex items-center gap-2.5">
-                    <span
-                      className="h-1.5 w-1.5 rounded-full transition-transform duration-200 group-hover:scale-125"
-                      style={{ backgroundColor: link.accent }}
-                    />
-                    <span className="text-xs font-medium uppercase tracking-[0.14em]">
-                      {link.label}
-                    </span>
+                  <span className="text-xs font-medium uppercase tracking-[0.14em]">
+                    {link.label}
                   </span>
-                  <span className="font-mono text-[10px] text-white/35">{link.code}</span>
+                  <span className="font-mono text-[10px] text-white/30">{link.code}</span>
                 </Link>
               );
             })}

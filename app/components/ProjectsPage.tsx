@@ -10,7 +10,7 @@ type ProjectItem = { title: string; dir: string; cover: string };
 type Category = { title: string; projects: ProjectItem[] };
 
 const RGB = ["#ff2433", "#1ff261", "#0056e6"];
-const RULER_STEP = 64;
+const RULER_STEP = 52;
 
 export default function ProjectsPage() {
   const router = useRouter();
@@ -55,6 +55,12 @@ export default function ProjectsPage() {
     },
     [router]
   );
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 640 && entries[0]) {
+      hoverProject(entries[0].href);
+    }
+  }, [entries, hoverProject]);
 
   useEffect(() => {
     const onFractalHover = (event: Event) => {
@@ -143,127 +149,102 @@ export default function ProjectsPage() {
         </div>
       </section>
 
-      {/* Mobile-only Measurement-Tape Ruler Scale + Bottom-Middle Protruding Image */}
+      {/* Mobile-only Minimalist Ruler Scale + Top-Middle Image Protrusion */}
       {mobileActiveEntry && (
         <section
           aria-label="Mobile project scale"
-          className="pointer-events-none absolute inset-x-0 bottom-3 z-20 flex flex-col items-center px-3 sm:hidden"
+          className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex flex-col items-center px-4 sm:hidden"
         >
-          {/* Scale Bar Container */}
-          <div className="pointer-events-auto relative w-full max-w-[390px] rounded-[22px] border border-white/[0.12] bg-[#090a0e]/85 pt-3 shadow-[0_20px_50px_rgba(0,0,0,0.85)] backdrop-blur-2xl">
-            {/* Active Project Readout */}
-            <div className="flex items-center justify-between gap-2 px-4 pb-2">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className="h-1.5 w-1.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: mobileActiveEntry.color }}
-                  />
-                  <span className="truncate text-[10px] font-medium uppercase tracking-[0.16em] text-white/55">
-                    {mobileActiveEntry.category}
-                  </span>
-                </div>
-                <p className="mt-0.5 truncate text-sm font-medium tracking-tight text-white">
+          <div className="relative flex w-full max-w-[356px] flex-col items-center">
+            {/* Subtle Auroric RGB Glow */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -inset-x-3 -bottom-2 h-28 rounded-full bg-gradient-to-r from-[#ff2433]/18 via-[#1ff261]/12 to-[#0056e6]/18 blur-2xl"
+            />
+
+            {/* Top-Middle Protruding Project Image */}
+            <button
+              type="button"
+              onClick={() => openProject(mobileActiveEntry.href)}
+              aria-label={`Open ${mobileActiveEntry.title}`}
+              className="pointer-events-auto group relative z-10 -mb-px w-[162px] overflow-hidden rounded-t-[18px] border border-b-0 border-white/[0.12] bg-[#090a0e]/92 p-1.5 backdrop-blur-2xl shadow-[0_-12px_36px_rgba(0,0,0,0.65)] transition-transform duration-150 active:scale-[0.98]"
+            >
+              <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[12px] bg-[#13151d]">
+                <Image
+                  src={mobileActiveEntry.cover}
+                  alt={mobileActiveEntry.title}
+                  fill
+                  sizes="162px"
+                  className="object-cover transition-transform duration-300 group-active:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+              </div>
+            </button>
+
+            {/* Bottom Scale Dock */}
+            <div className="pointer-events-auto relative w-full overflow-hidden rounded-[20px] border border-white/[0.12] bg-[#090a0e]/88 pb-3 pt-2.5 shadow-[0_18px_48px_rgba(0,0,0,0.88)] backdrop-blur-2xl">
+              {/* Minimalist Readout */}
+              <div className="flex items-baseline justify-between gap-3 px-4 pb-2">
+                <p className="min-w-0 truncate text-[13px] font-medium tracking-tight text-white">
                   {mobileActiveEntry.title}
                 </p>
+                <span className="shrink-0 font-mono text-[10px] text-white/40">
+                  {String(mobileIndex + 1).padStart(2, "0")}/{String(entries.length).padStart(2, "0")}
+                </span>
               </div>
-              <span className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 font-mono text-[10px] text-white/65">
-                {String(mobileIndex + 1).padStart(2, "0")} / {String(entries.length).padStart(2, "0")}
-              </span>
-            </div>
 
-            {/* Horizontal Measurement-Tape Scale */}
-            <div className="relative border-t border-white/[0.08] py-2">
-              {/* Center Needle Indicator */}
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute bottom-0 left-1/2 top-0 z-20 flex -translate-x-1/2 flex-col items-center justify-end"
-              >
-                <span
-                  className="h-9 w-[2px] rounded-full transition-colors duration-200"
-                  style={{
-                    backgroundColor: mobileActiveEntry.color,
-                    boxShadow: `0 0 12px ${mobileActiveEntry.color}`,
-                  }}
+              {/* Minimal Vertical-Line Ruler */}
+              <div className="relative pt-1">
+                {/* Center Hairline Needle */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute bottom-0 left-1/2 top-0 z-20 -translate-x-1/2"
+                >
+                  <span className="block h-7 w-[1.5px] rounded-full bg-white/95 shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+                </div>
+
+                {/* Edge Fades */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-[#090a0e] to-transparent"
                 />
-              </div>
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-[#090a0e] to-transparent"
+                />
 
-              {/* Left & Right Edge Fades */}
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-[#090a0e] to-transparent"
-              />
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-[#090a0e] to-transparent"
-              />
-
-              {/* Scrollable Tick Track */}
-              <div
-                ref={rulerRef}
-                onScroll={handleRulerScroll}
-                className="flex snap-x snap-mandatory items-end overflow-x-auto px-[calc(50%-32px)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-              >
-                {entries.map((entry, idx) => {
-                  const isActive = idx === mobileIndex;
-                  return (
-                    <button
-                      key={entry.href}
-                      type="button"
-                      onClick={() => scrollToProject(idx)}
-                      aria-label={`Select ${entry.title}`}
-                      className="flex w-[64px] shrink-0 snap-center flex-col items-center justify-end pt-1 focus:outline-none"
-                    >
-                      <span
-                        className={`mb-1.5 font-mono text-[9px] transition-colors duration-150 ${
-                          isActive ? "text-white font-semibold" : "text-white/30"
-                        }`}
+                {/* Scrollable Tick Track */}
+                <div
+                  ref={rulerRef}
+                  onScroll={handleRulerScroll}
+                  className="flex snap-x snap-mandatory items-end overflow-x-auto px-[calc(50%-26px)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                >
+                  {entries.map((entry, idx) => {
+                    const isActive = idx === mobileIndex;
+                    return (
+                      <button
+                        key={entry.href}
+                        type="button"
+                        onClick={() => scrollToProject(idx)}
+                        aria-label={`Select ${entry.title}`}
+                        className="flex w-[52px] shrink-0 snap-center items-end justify-between px-1 pt-2 focus:outline-none"
                       >
-                        {String(idx + 1).padStart(2, "0")}
-                      </span>
-                      <div className="flex w-full items-end justify-between px-1.5">
                         <span className="h-2 w-px bg-white/15" />
                         <span className="h-3 w-px bg-white/25" />
                         <span
-                          className={`w-[2px] rounded-full transition-all duration-200 ${
-                            isActive ? "h-6" : "h-4 bg-white/40"
+                          className={`w-[1.5px] rounded-full transition-all duration-150 ${
+                            isActive ? "h-6 bg-white" : "h-4 bg-white/40"
                           }`}
-                          style={isActive ? { backgroundColor: entry.color } : undefined}
                         />
                         <span className="h-3 w-px bg-white/25" />
                         <span className="h-2 w-px bg-white/15" />
-                      </div>
-                    </button>
-                  );
-                })}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Bottom-Middle Protruding Project Image */}
-          <button
-            type="button"
-            onClick={() => openProject(mobileActiveEntry.href)}
-            className="pointer-events-auto group relative -mt-px w-[188px] overflow-hidden rounded-b-[20px] border border-t-0 border-white/[0.14] bg-[#0a0b10]/95 p-1.5 text-left shadow-[0_18px_42px_rgba(0,0,0,0.92)] backdrop-blur-2xl transition-transform duration-150 active:scale-[0.98]"
-          >
-            <div
-              className="h-[2px] w-full rounded-full opacity-80"
-              style={{ backgroundColor: mobileActiveEntry.color }}
-            />
-            <div className="relative mt-1.5 aspect-[16/10] w-full overflow-hidden rounded-[13px] bg-[#14161e]">
-              <Image
-                src={mobileActiveEntry.cover}
-                alt={mobileActiveEntry.title}
-                fill
-                sizes="188px"
-                className="object-cover transition-transform duration-300 group-active:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-              <span className="absolute bottom-1.5 right-2 rounded-full bg-black/65 px-2 py-0.5 text-[9px] font-medium tracking-wide text-white/90 backdrop-blur-md">
-                Open ↗
-              </span>
-            </div>
-          </button>
         </section>
       )}
 
