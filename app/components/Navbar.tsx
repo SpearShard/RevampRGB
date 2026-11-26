@@ -23,6 +23,15 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 640px)");
+    const sync = () => setIsDesktop(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const dockRef = useRef<HTMLDivElement>(null);
@@ -89,13 +98,13 @@ export default function Navbar() {
   }, [mobileMenuOpen]);
 
   useEffect(() => {
-    if (!dockRef.current) return;
+    if (!isDesktop || !dockRef.current) return;
     gsap.fromTo(
       [dockRef.current, enterBtnRef.current],
       { scale: 0.15, borderRadius: '50%', y: 80, opacity: 0 },
       { scale: 1, borderRadius: '9999px', y: 0, opacity: 1, duration: 0.9, stagger: 0.1, ease: 'power3.out' }
     );
-  }, []);
+  }, [isDesktop]);
 
   useEffect(() => {
     if (!dockRef.current) return;
@@ -139,7 +148,7 @@ export default function Navbar() {
       cancelAnimationFrame(animFrame);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [handleEnterAction]);
+  }, [isDesktop, handleEnterAction]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     mouse.current.x = e.clientX;
@@ -334,6 +343,7 @@ export default function Navbar() {
       </div>
 
       {/* Desktop Center Dock Navbar */}
+      {isDesktop && (
       <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 hidden select-none sm:block">
         <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-red-500/30 via-emerald-500/30 to-blue-500/30 opacity-40 blur-2xl transition-all duration-700 pointer-events-none" />
         <div
@@ -382,7 +392,10 @@ export default function Navbar() {
         </div>
       </div>
 
+      )}
+
       {/* ISO Enter Button - Starts Pure White, Dissipates to Dark on Hover */}
+      {isDesktop && (
       <div className="fixed bottom-24 right-3 z-50 hidden select-none sm:bottom-8 sm:right-8 sm:block">
         <button
           ref={enterBtnRef}
@@ -442,6 +455,7 @@ export default function Navbar() {
           </div>
         </button>
       </div>
+      )}
     </>
   );
 }

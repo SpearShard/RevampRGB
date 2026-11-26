@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import GalleryShader from "./BgShader";
 
@@ -7,6 +7,15 @@ export default function LandingPage() {
     const sectionRef = useRef<HTMLDivElement>(null);
     const canvasContainerRef = useRef<HTMLDivElement>(null);
     const textGroupRef = useRef<HTMLDivElement>(null);
+    const [isDesktop, setIsDesktop] = useState(false);
+
+    useEffect(() => {
+        const mq = window.matchMedia("(min-width: 640px)");
+        const sync = () => setIsDesktop(mq.matches);
+        sync();
+        mq.addEventListener("change", sync);
+        return () => mq.removeEventListener("change", sync);
+    }, []);
 
     useEffect(() => {
         const isWaitingForLoader = Boolean(document.querySelector("[data-home-loader]"));
@@ -104,7 +113,7 @@ export default function LandingPage() {
                 className="absolute inset-0 w-full h-screen z-0 overflow-hidden pointer-events-none"
             >
                 {/* Full-bleed Red Green Blue liquid base matrix shader */}
-                <div className="hidden sm:block"><GalleryShader /></div>
+                {isDesktop && <GalleryShader />}
             </div>
 
             {/* HIGH-END INDUSTRIAL ARCHITECTURE LAYOUT */}

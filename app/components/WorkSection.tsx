@@ -48,6 +48,15 @@ const projects = [
 
 export default function WorksPage() {
   const [active, setActive] = useState(0);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const sync = () => setIsDesktop(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const mainCardRef = useRef<HTMLDivElement | null>(null);
   const leftCardRef = useRef<HTMLDivElement | null>(null);
@@ -109,8 +118,9 @@ export default function WorksPage() {
   };
 
   useEffect(() => {
+    if (!isDesktop) return;
     animateSlide("next");
-  }, []);
+  }, [isDesktop]);
 
   const nextSlide = () => {
     setActive((prev) => (prev + 1) % projects.length);
@@ -182,6 +192,7 @@ export default function WorksPage() {
         </div>
 
         {/* Desktop slider remains unchanged */}
+        {isDesktop && (
         <div className="hidden md:block">
         {/* Slider */}
         <div className="relative flex items-center justify-center">
@@ -292,6 +303,7 @@ export default function WorksPage() {
           </button>
         </div>
         </div>
+        )}
       </section>
     </main>
   );

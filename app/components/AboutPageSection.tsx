@@ -19,6 +19,7 @@ export default function AboutPageSection() {
   const [mobileIndex, setMobileIndex] = useState(0);
 
   useEffect(() => {
+    if (window.innerWidth < 640) return;
     const ctx = gsap.context(() => {
       gsap.fromTo(".about-reveal", { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.85, stagger: 0.1, ease: "power3.out" });
     }, root);

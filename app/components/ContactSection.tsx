@@ -72,6 +72,7 @@ export default function ContactSection() {
   const [mobileChannelIndex, setMobileChannelIndex] = useState(0);
 
   useEffect(() => {
+    if (window.innerWidth < 640) return;
     const ctx = gsap.context(() => {
       gsap.fromTo(
         ".contact-reveal",
