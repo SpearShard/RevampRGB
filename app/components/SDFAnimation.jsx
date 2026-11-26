@@ -17,7 +17,8 @@ import {
     Group,
     BufferGeometry,
     BufferAttribute,
-    Raycaster
+    Raycaster,
+    Points
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import gsap from 'gsap';
@@ -55,6 +56,9 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
     const activeHrefRef = useRef(activeHref);
     const indexHoverHrefRef = useRef(null);
     const contactIndexRef = useRef(0);
+    const wordPointsRef = useRef(null);
+    const wordTargetsRef = useRef(null);
+    const wordCurrentRef = useRef(null);
 
     const centeredRef = useRef(centered);
     const expandRef = useRef({ value: centered ? 1 : 0 });
@@ -506,6 +510,73 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
 
         const group = new Group();
         fractalGroupRef.current = group;
+
+        const sampleWordPoints = (text, count = 210) => {
+            const c = document.createElement('canvas');
+            c.width = 480;
+            c.height = 140;
+            const ctx2d = c.getContext('2d');
+            if (!ctx2d) return new Float32Array(count * 3);
+            ctx2d.clearRect(0, 0, c.width, c.height);
+            ctx2d.fillStyle = '#ffffff';
+            ctx2d.textAlign = 'center';
+            ctx2d.textBaseline = 'middle';
+            const fontSize = text.length > 7 ? 74 : 92;
+            ctx2d.font = '700 ' + fontSize + 'px system-ui, -apple-system, sans-serif';
+            ctx2d.fillText(text, c.width / 2, c.height / 2);
+            const img = ctx2d.getImageData(0, 0, c.width, c.height).data;
+            const pixels = [];
+            for (let py = 0; py < c.height; py += 3) {
+                for (let px = 0; px < c.width; px += 3) {
+                    if (img[(py * c.width + px) * 4 + 3] > 128) {
+                        const sx = ((px / c.width) - 0.5) * 1.68;
+                        const sy = (0.5 - (py / c.height)) * 0.52;
+                        pixels.push([sx, sy]);
+                    }
+                }
+            }
+            const out = new Float32Array(count * 3);
+            for (let k = 0; k < count; k++) {
+                const p = pixels.length ? pixels[Math.floor((k / count) * pixels.length)] : [0, 0];
+                // group.rotation.z = PI/2 => localX = screenY, localY = -screenX
+                out[k * 3] = p[1];
+                out[k * 3 + 1] = -p[0];
+                out[k * 3 + 2] = ((k % 5) - 2) * 0.02;
+            }
+            return out;
+        };
+
+        const WORD_COUNT = 210;
+        wordTargetsRef.current = [
+            sampleWordPoints('EMAIL', WORD_COUNT),
+            sampleWordPoints('INSTAGRAM', WORD_COUNT),
+            sampleWordPoints('YOUTUBE', WORD_COUNT),
+        ];
+        const initWordPos = new Float32Array(WORD_COUNT * 3);
+        const wordColors = new Float32Array(WORD_COUNT * 3);
+        for (let k = 0; k < WORD_COUNT; k++) {
+            const acc = RGB_ACCENTS[k % RGB_ACCENTS.length].vec;
+            wordColors[k * 3] = acc.x;
+            wordColors[k * 3 + 1] = acc.y;
+            wordColors[k * 3 + 2] = acc.z;
+        }
+        wordCurrentRef.current = initWordPos;
+        const wordGeo = new BufferGeometry();
+        wordGeo.setAttribute('position', new BufferAttribute(initWordPos, 3));
+        wordGeo.setAttribute('color', new BufferAttribute(wordColors, 3));
+        const wordMat = new ShaderMaterial({
+            transparent: true,
+            depthWrite: false,
+            vertexColors: true,
+            uniforms: { uOpacity: { value: 0 } },
+            vertexShader: 'varying vec3 vColor; void main() { vColor = color; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_PointSize = 7.5; }',
+            fragmentShader: 'varying vec3 vColor; uniform float uOpacity; void main() { float d = length(gl_PointCoord - vec2(0.5)); if (d > 0.5) discard; float a = smoothstep(0.5, 0.12, d) * uOpacity; gl_FragColor = vec4(mix(vec3(1.0), vColor, 0.65), a); }'
+        });
+        const wordPoints = new Points(wordGeo, wordMat);
+        wordPoints.visible = false;
+        group.add(wordPoints);
+        wordPointsRef.current = wordPoints;
+
         scene.add(group);
 
         const createdChunks = [];
@@ -660,31 +731,16 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             const cursorBoost = window.innerWidth > 767 ? cursorActiveCurrentRef.current * Math.max(0, 1 - perpDist / openRadius) * 0.25 : 0;
             const targetOpen = (baseSplit + cursorBoost) * expand;
 
-            chunk.openVal += (targetOpen - chunk.openVal) * 0.12;
-            chunk.mesh.position.copy(chunk.dir).multiplyScalar(chunk.openVal * 0.72);
-
             const isMobileContact = modeRef.current === 'contact' && window.innerWidth < 640;
-            const targetHover = modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : isMobileContact ? 0.85 : isHovered ? 0.95 : 0.34;
+            chunk.openVal += (targetOpen - chunk.openVal) * 0.12;
+            if (!isMobileContact) {
+                chunk.mesh.position.copy(chunk.dir).multiplyScalar(chunk.openVal * 0.72);
+            }
+
+            const targetHover = modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : isMobileContact ? 0.9 : isHovered ? 0.95 : 0.34;
             chunk.hoverMix += (targetHover - chunk.hoverMix) * 0.16;
             if (isMobileContact) {
-                const elapsed = clockRef.current?.elapsedTime ?? 0;
-                const WORDS = [
-                    // 0: EMAIL
-                    [[-1.02,0.24],[-1.02,0],[-1.02,-0.24],[-0.56,-0.24],[-0.45,0.24],[-0.34,-0.24],[-0.02,-0.24],[0.08,0.24],[0.18,-0.24],[0.46,0.24],[0.46,-0.24],[0.76,0.24],[0.76,-0.24],[0.98,-0.24]],
-                    // 1: INSTA
-                    [[-1.02,0.24],[-1.02,-0.24],[-0.68,-0.24],[-0.56,0.24],[-0.44,-0.24],[-0.06,0.24],[-0.10,0],[-0.14,-0.24],[0.24,0.24],[0.38,0.24],[0.31,-0.24],[0.68,-0.24],[0.80,0.24],[0.92,-0.24]],
-                    // 2: YOUTUBE
-                    [[-1.08,0.24],[-1.08,-0.18],[-0.74,0.16],[-0.74,-0.16],[-0.40,0.22],[-0.34,-0.20],[-0.04,0.24],[-0.04,-0.22],[0.28,0.22],[0.34,-0.20],[0.66,0.18],[0.66,-0.18],[1.00,0.22],[1.00,-0.22]]
-                ];
-                const pts = WORDS[contactIndexRef.current] || WORDS[0];
-                const pt = pts[i % pts.length];
-                // group.rotation.z = PI/2, so screenX = -localY and screenY = localX
-                const targetX = pt[1] + Math.sin(elapsed * 0.9 + i) * 0.015;
-                const targetY = -pt[0] + Math.cos(elapsed * 0.8 + i) * 0.015;
-                const targetZ = 0.18 + Math.sin(elapsed * 1.1 + i * 0.7) * 0.03;
-                chunk.mesh.position.x += (targetX - chunk.mesh.position.x) * 0.12;
-                chunk.mesh.position.y += (targetY - chunk.mesh.position.y) * 0.12;
-                chunk.mesh.position.z += (targetZ - chunk.mesh.position.z) * 0.12;
+                chunk.mesh.position.lerp(new Vector3(0, 0, 0), 0.14);
             } else if (modeRef.current === 'about') {
                 const elapsed = clockRef.current?.elapsedTime ?? 0;
                 const isInnerOrbit = i < 5;
@@ -711,10 +767,35 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
 
             const detailSelected = modeRef.current === 'detail' && chunk.targetOpacity === 1;
             const detailScale = detailSelected ? (window.innerWidth < 640 ? 1.32 : 1.58) : 1;
-            chunk.mesh.scale.setScalar(detailScale * (1 + chunk.hoverMix * 0.08));
-            chunk.mesh.visible = modeRef.current !== 'detail' || chunk.targetOpacity === 1;
+            const contactChunkScale = isMobileContact ? 0.01 : 1;
+            chunk.mesh.scale.setScalar(detailScale * (1 + chunk.hoverMix * 0.08) * contactChunkScale);
+            chunk.mesh.visible = !isMobileContact && (modeRef.current !== 'detail' || chunk.targetOpacity === 1);
             chunk.material.uniforms.uHoverMix.value = chunk.hoverMix;
         }
+
+        const wp = wordPointsRef.current;
+        const targets = wordTargetsRef.current;
+        const curr = wordCurrentRef.current;
+        if (wp && targets && curr) {
+            const showWords = modeRef.current === 'contact' && window.innerWidth < 640;
+            wp.visible = showWords;
+            if (showWords) {
+                const targetArr = targets[contactIndexRef.current] || targets[0];
+                const elapsed = clockRef.current?.elapsedTime ?? 0;
+                const posAttr = wp.geometry.getAttribute('position');
+                for (let k = 0; k < targetArr.length; k += 3) {
+                    const wave = Math.sin(elapsed * 1.4 + k * 0.07) * 0.012;
+                    curr[k] += (targetArr[k] + wave - curr[k]) * 0.12;
+                    curr[k + 1] += (targetArr[k + 1] - curr[k + 1]) * 0.12;
+                    curr[k + 2] += (targetArr[k + 2] + wave - curr[k + 2]) * 0.12;
+                }
+                posAttr.needsUpdate = true;
+                wp.material.uniforms.uOpacity.value += (0.95 - wp.material.uniforms.uOpacity.value) * 0.14;
+            } else {
+                wp.material.uniforms.uOpacity.value = 0;
+            }
+        }
+
     }
 
     function animate() {
