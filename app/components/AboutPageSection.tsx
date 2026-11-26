@@ -95,7 +95,7 @@ export default function AboutPageSection() {
                   opacity,
                   zIndex: isFront ? 20 : 2,
                 }}
-                className={`pointer-events-auto absolute w-[250px] cursor-pointer overflow-hidden rounded-[22px] border border-white/[0.2] bg-white/[0.08] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_20px_50px_rgba(0,0,0,0.65)] backdrop-blur-[32px] backdrop-saturate-150 transition-[opacity,filter] duration-300 ${
+                className={`pointer-events-auto absolute w-[256px] cursor-pointer overflow-hidden rounded-[24px] border border-white/[0.18] bg-[#0c0d13]/90 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_24px_56px_rgba(0,0,0,0.85)] backdrop-blur-[32px] backdrop-saturate-150 transition-[opacity,filter] duration-300 ${
                   isFront ? "blur-0" : "blur-[0.6px]"
                 }`}
               >
@@ -103,8 +103,8 @@ export default function AboutPageSection() {
                   <span className="font-mono text-[10px] tracking-[0.2em] text-white/55">
                     {pillar.number} / 03
                   </span>
-                  <div className="relative h-8 w-8 opacity-80">
-                    <Image src={pillar.icon} alt="" fill className="object-contain" />
+                  <div className="relative h-12 w-12 shrink-0">
+                    <Image src={pillar.icon} alt="" width={48} height={48} className="h-12 w-12 object-contain opacity-95" />
                   </div>
                 </div>
                 <h2 className="mt-3 text-base font-medium tracking-tight text-white">
