@@ -54,6 +54,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
     const modeRef = useRef(mode);
     const activeHrefRef = useRef(activeHref);
     const indexHoverHrefRef = useRef(null);
+    const contactIndexRef = useRef(0);
 
     const centeredRef = useRef(centered);
     const expandRef = useRef({ value: centered ? 1 : 0 });
@@ -151,7 +152,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             return { scale: base * (mobile ? 0.48 : 0.9), x: mobile ? 0 : w * 0.25, y: mobile ? h * 0.04 : h * 0.06, rotationZ: Math.PI / 2 };
         }
         if (nextMode === 'contact') {
-            return { scale: base * (mobile ? 0.32 : 0.58), x: mobile ? 0 : w * 0.39, y: mobile ? -h * 0.12 : 0, rotationZ: Math.PI / 2 };
+            return { scale: base * (mobile ? 0.56 : 0.58), x: mobile ? 0 : w * 0.39, y: mobile ? h * 0.08 : 0, rotationZ: Math.PI / 2 };
         }
         if (nextMode === 'about') {
             return { scale: base * (mobile ? 0.34 : 0.62), x: mobile ? 0 : w * 0.38, y: mobile ? -h * 0.1 : 0, rotationZ: Math.PI / 2 };
@@ -283,9 +284,15 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             setHoveredInfo(null);
             pointerDirtyRef.current = true;
         };
+        const onContactSelect = (event) => {
+            const idx = Number(event.detail?.index);
+            if (!Number.isNaN(idx)) contactIndexRef.current = ((idx % 3) + 3) % 3;
+        };
+        window.addEventListener('rgb:contact-select', onContactSelect);
         window.addEventListener('rgb:index-hover', onIndexHover);
         window.addEventListener('rgb:index-clear', onIndexClear);
         return () => {
+            window.removeEventListener('rgb:contact-select', onContactSelect);
             window.removeEventListener('rgb:index-hover', onIndexHover);
             window.removeEventListener('rgb:index-clear', onIndexClear);
         };
@@ -326,12 +333,30 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
         };
 
         const handlePointerDown = (e) => {
-            if (modeRef.current !== 'project' || !rendererRef.current) return;
+            if ((modeRef.current !== 'project' && modeRef.current !== 'contact') || !rendererRef.current) return;
             if (e.target !== rendererRef.current.domElement) return;
             pointerDownPosRef.current = { x: e.clientX, y: e.clientY };
         };
 
         const handlePointerUp = (e) => {
+            if (modeRef.current === 'contact' && window.innerWidth < 640 && cameraRef.current && rendererRef.current) {
+                if (e.target !== rendererRef.current.domElement) return;
+                const distMoved = Math.hypot(e.clientX - pointerDownPosRef.current.x, e.clientY - pointerDownPosRef.current.y);
+                if (distMoved > 8) return;
+                const nx = (e.clientX / window.innerWidth) * 2 - 1;
+                const ny = -((e.clientY / window.innerHeight) * 2 - 1);
+                raycasterRef.current.setFromCamera(new Vector2(nx, ny), cameraRef.current);
+                const hits = raycasterRef.current.intersectObjects(chunkMeshesRef.current, false);
+                if (hits.length > 0) {
+                    const hitChunk = chunksRef.current.find((chunk) => chunk.index === hits[0].object.userData?.chunkIndex);
+                    if (hitChunk) {
+                        const nextIdx = hitChunk.index % 3;
+                        contactIndexRef.current = nextIdx;
+                        window.dispatchEvent(new CustomEvent('rgb:contact-cluster-tap', { detail: { index: nextIdx } }));
+                    }
+                }
+                return;
+            }
             if (modeRef.current !== 'project' || window.innerWidth < 640 || !cameraRef.current || !rendererRef.current) return;
             if (e.target !== rendererRef.current.domElement) return;
 
@@ -638,9 +663,27 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             chunk.openVal += (targetOpen - chunk.openVal) * 0.12;
             chunk.mesh.position.copy(chunk.dir).multiplyScalar(chunk.openVal * 0.72);
 
-            const targetHover = modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : isHovered ? 0.95 : 0.34;
+            const isMobileContact = modeRef.current === 'contact' && window.innerWidth < 640;
+            const isContactSelected = isMobileContact && (i % 3 === contactIndexRef.current);
+            const targetHover = modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : isMobileContact ? (isContactSelected ? 0.95 : 0.25) : isHovered ? 0.95 : 0.34;
             chunk.hoverMix += (targetHover - chunk.hoverMix) * 0.16;
-            if (modeRef.current === 'about') {
+            if (isMobileContact) {
+                const elapsed = clockRef.current?.elapsedTime ?? 0;
+                const cluster = i % 3;
+                const memberIdx = Math.floor(i / 3);
+                const clusterAngle = (cluster * Math.PI * 2) / 3 - Math.PI / 2;
+                const clusterRadius = 0.56;
+                const cx = Math.cos(clusterAngle) * clusterRadius;
+                const cy = Math.sin(clusterAngle) * clusterRadius;
+                const localAngle = elapsed * 0.55 + memberIdx * ((Math.PI * 2) / 5) + cluster;
+                const localRadius = 0.14 + (memberIdx % 2) * 0.06;
+                const targetX = cx + Math.cos(localAngle) * localRadius;
+                const targetY = cy + Math.sin(localAngle) * localRadius;
+                const targetZ = (isContactSelected ? 0.24 : -0.08) + Math.sin(elapsed * 0.8 + i) * 0.04;
+                chunk.mesh.position.x += (targetX - chunk.mesh.position.x) * 0.1;
+                chunk.mesh.position.y += (targetY - chunk.mesh.position.y) * 0.1;
+                chunk.mesh.position.z += (targetZ - chunk.mesh.position.z) * 0.1;
+            } else if (modeRef.current === 'about') {
                 const elapsed = clockRef.current?.elapsedTime ?? 0;
                 const isInnerOrbit = i < 5;
                 const orbitIndex = isInnerOrbit ? i : i - 5;
@@ -778,7 +821,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
                 width: '100%',
                 height: '100%',
                 touchAction: 'none',
-                pointerEvents: mode === 'project' ? 'auto' : 'none',
+                pointerEvents: mode === 'project' || mode === 'contact' ? 'auto' : 'none',
                 zIndex: 1,
                 willChange: 'transform',
                 transform: 'translateZ(0)',

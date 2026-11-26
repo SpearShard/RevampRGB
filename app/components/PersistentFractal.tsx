@@ -124,11 +124,13 @@ export default function PersistentFractal() {
       className={`fixed inset-0 mix-blend-screen will-change-transform transition-[opacity,z-index] duration-500 ${
         isProjectMode
           ? 'z-[6] pointer-events-auto opacity-95'
-          : mode === 'contact' || mode === 'about'
-            ? 'z-[5] pointer-events-none opacity-80'
-            : mode === 'detail'
-              ? 'z-[5] pointer-events-none opacity-85'
-              : 'z-[5] pointer-events-none opacity-95'
+          : mode === 'contact'
+            ? 'z-[6] pointer-events-auto sm:pointer-events-none opacity-95 sm:opacity-80'
+            : mode === 'about'
+              ? 'z-[5] pointer-events-none opacity-80'
+              : mode === 'detail'
+                ? 'z-[5] pointer-events-none opacity-85'
+                : 'z-[5] pointer-events-none opacity-95'
       }`}
     >
       <SDFAnimation mode={mode} projects={projects} activeHref={isDetailRoute ? pathname : null} />
