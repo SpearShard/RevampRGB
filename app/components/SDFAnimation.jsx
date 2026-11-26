@@ -156,7 +156,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             return { scale: base * (mobile ? 0.62 : 0.58), x: mobile ? 0 : w * 0.39, y: mobile ? h * 0.08 : 0, rotationZ: Math.PI / 2 };
         }
         if (nextMode === 'about') {
-            return { scale: base * (mobile ? 0.56 : 0.62), x: mobile ? 0 : w * 0.38, y: mobile ? h * 0.04 : 0, rotationZ: Math.PI / 2 };
+            return { scale: base * (mobile ? 0.8 : 0.62), x: mobile ? 0 : w * 0.38, y: mobile ? h * 0.02 : 0, rotationZ: Math.PI / 2 };
         }
         if (nextMode === 'project') {
             return { scale: base * (mobile ? 0.62 : 0.66), x: mobile ? 0 : w * 0.08, y: mobile ? h * 0.08 : 0, rotationZ: Math.PI / 2 };
@@ -672,7 +672,8 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             const isContactColorMatch = isMobileContact && (chunk.index % 3 === contactIndexRef.current);
             const isAboutColorMatch = isMobileAbout && (chunk.index % 3 === aboutIndexRef.current);
             const contactPop = isContactColorMatch ? 0.22 : 0;
-            const effectiveOpen = isMobileAbout ? 0 : (targetOpen + contactPop);
+            const aboutPop = isAboutColorMatch ? 0.18 : 0;
+            const effectiveOpen = isMobileAbout ? aboutPop : (targetOpen + contactPop);
             chunk.openVal += (effectiveOpen - chunk.openVal) * 0.12;
             chunk.mesh.position.copy(chunk.dir).multiplyScalar(chunk.openVal * (isMobileContact ? 0.64 : 0.72));
 

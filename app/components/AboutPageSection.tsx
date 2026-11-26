@@ -58,8 +58,8 @@ export default function AboutPageSection() {
 
   return (
     <>
-      {/* Mobile-only Revolving Cards Around Intact Fractal + Lower Liquid Glass Scale Dock */}
-      <main className="pointer-events-none relative flex h-[100svh] min-h-[560px] w-full flex-col justify-between overflow-hidden bg-transparent text-white sm:hidden">
+      {/* Mobile-only Sliding Cards Over Intact Fractal (edges peek out on all 4 sides) + Lower Liquid Glass Scale Dock */}
+      <main className="pointer-events-none relative z-10 flex h-[100svh] min-h-[560px] w-full flex-col justify-between overflow-hidden bg-transparent text-white sm:hidden">
         <header className="relative z-20 px-5 pt-20">
           <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-white/45">
             About RGB
@@ -69,47 +69,39 @@ export default function AboutPageSection() {
           </h1>
         </header>
 
-        {/* 3D Revolving Cards Stage: cards snap smoothly around the fractal when hitting a pin */}
-        <div className="pointer-events-none relative flex flex-1 items-center justify-center">
-          {pillars.map((pillar, idx) => {
-            const angle = (idx - mobileIndex) * ((Math.PI * 2) / 3);
-            const depth = Math.cos(angle); // +1 = front, -0.5 = back
-            const xOffset = Math.sin(angle) * 108;
-            const yOffset = -depth * 84 + 4;
-            const scale = depth > 0.5 ? 1 : 0.68;
-            const opacity = depth > 0.5 ? 1 : 0.4;
-            const isFront = idx === mobileIndex;
-
-            return (
-              <article
-                key={pillar.number}
-                onClick={() => selectPillar(idx)}
-                style={{
-                  transform: `translate3d(${xOffset.toFixed(1)}px, ${yOffset.toFixed(1)}px, 0) scale(${scale})`,
-                  opacity,
-                  zIndex: isFront ? 20 : 2,
-                }}
-                className={`pointer-events-auto absolute w-[256px] cursor-pointer overflow-hidden rounded-[24px] border border-white/[0.18] bg-[#0c0d13]/92 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_24px_56px_rgba(0,0,0,0.85)] backdrop-blur-[32px] backdrop-saturate-150 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                  isFront ? "blur-0" : "blur-[0.5px]"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-[10px] tracking-[0.2em] text-white/55">
-                    {pillar.number} / 03
-                  </span>
-                  <div className="relative h-12 w-12 shrink-0">
-                    <Image src={pillar.icon} alt="" width={48} height={48} className="h-12 w-12 object-contain opacity-95" />
+        {/* Centered Sliding Card Window (fractal pokes out on all 4 sides behind it) */}
+        <div className="pointer-events-none relative z-20 flex flex-1 items-center justify-center px-6">
+          <div className="pointer-events-auto w-[268px] overflow-hidden rounded-[24px] border border-white/[0.18] bg-[#0c0d13]/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_24px_56px_rgba(0,0,0,0.85)] backdrop-blur-[32px] backdrop-saturate-150">
+            <div
+              className="flex w-full transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
+              style={{ transform: `translate3d(-${mobileIndex * 100}%, 0, 0)` }}
+            >
+              {pillars.map((pillar) => (
+                <article key={pillar.number} className="w-full shrink-0 p-5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] tracking-[0.2em] text-white/55">
+                      {pillar.number} / 03
+                    </span>
+                    <div className="relative h-12 w-12 shrink-0">
+                      <Image
+                        src={pillar.icon}
+                        alt=""
+                        width={48}
+                        height={48}
+                        className="h-12 w-12 object-contain opacity-95"
+                      />
+                    </div>
                   </div>
-                </div>
-                <h2 className="mt-3 text-base font-medium tracking-tight text-white">
-                  {pillar.title}
-                </h2>
-                <p className="mt-1.5 text-[11px] leading-relaxed text-white/65">
-                  {pillar.text}
-                </p>
-              </article>
-            );
-          })}
+                  <h2 className="mt-4 text-lg font-medium tracking-tight text-white">
+                    {pillar.title}
+                  </h2>
+                  <p className="mt-2 text-xs leading-relaxed text-white/65">
+                    {pillar.text}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Lower Liquid Glass Scale Dock */}
