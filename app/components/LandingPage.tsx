@@ -67,11 +67,27 @@ export default function LandingPage() {
             }
         };
 
+        const handleReturnHome = () => {
+            if (textGroupRef.current) {
+                gsap.to(textGroupRef.current, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out", overwrite: "auto" });
+            }
+            if (canvasContainerRef.current) {
+                gsap.to(canvasContainerRef.current, { opacity: 1, duration: 0.6, ease: "power3.out", overwrite: "auto" });
+            }
+        };
+        const handleHomeActive = (e: Event) => {
+            if ((e as CustomEvent<{ active?: boolean }>).detail?.active) handleReturnHome();
+        };
+
         window.addEventListener("rgb:enter-project", handleEnterProject);
+        window.addEventListener("rgb:leave-project", handleReturnHome);
+        window.addEventListener("rgb:home-active", handleHomeActive);
 
         return () => {
             window.removeEventListener("home-loader:reveal", playReveal);
             window.removeEventListener("rgb:enter-project", handleEnterProject);
+            window.removeEventListener("rgb:leave-project", handleReturnHome);
+            window.removeEventListener("rgb:home-active", handleHomeActive);
             tl.kill();
         };
     }, []);
