@@ -17,7 +17,6 @@ export default function AboutPageSection() {
   const rulerRef = useRef<HTMLDivElement>(null);
   const isProgrammaticScrollRef = useRef(false);
   const [mobileIndex, setMobileIndex] = useState(0);
-  const [orbitProgress, setOrbitProgress] = useState(0);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -29,7 +28,6 @@ export default function AboutPageSection() {
   const selectPillar = useCallback((idx: number, scrollScale = true) => {
     const clamped = Math.max(0, Math.min(pillars.length - 1, idx));
     setMobileIndex(clamped);
-    setOrbitProgress(clamped);
     window.dispatchEvent(new CustomEvent("rgb:about-select", { detail: { index: clamped } }));
     if (scrollScale && rulerRef.current) {
       isProgrammaticScrollRef.current = true;
@@ -49,11 +47,7 @@ export default function AboutPageSection() {
   const handleScaleScroll = () => {
     const el = rulerRef.current;
     if (!el || isProgrammaticScrollRef.current) return;
-    const raw = el.scrollLeft / SCALE_STEP;
-    const clampedProgress = Math.max(0, Math.min(pillars.length - 1, raw));
-    setOrbitProgress(clampedProgress);
-
-    const nearest = Math.round(clampedProgress);
+    const nearest = Math.max(0, Math.min(pillars.length - 1, Math.round(el.scrollLeft / SCALE_STEP)));
     if (nearest !== mobileIndex) {
       setMobileIndex(nearest);
       window.dispatchEvent(new CustomEvent("rgb:about-select", { detail: { index: nearest } }));
@@ -75,28 +69,28 @@ export default function AboutPageSection() {
           </h1>
         </header>
 
-        {/* 3D Revolving Cards Stage (cards orbit behind z-[5] fractal and come to front z-[20]) */}
+        {/* 3D Revolving Cards Stage: cards snap smoothly around the fractal when hitting a pin */}
         <div className="pointer-events-none relative flex flex-1 items-center justify-center">
           {pillars.map((pillar, idx) => {
-            const angle = (idx - orbitProgress) * ((Math.PI * 2) / 3);
+            const angle = (idx - mobileIndex) * ((Math.PI * 2) / 3);
             const depth = Math.cos(angle); // +1 = front, -0.5 = back
-            const xOffset = Math.sin(angle) * 112;
-            const yOffset = -depth * 30 + 26;
-            const scale = 0.72 + ((depth + 1) / 2) * 0.28;
-            const opacity = depth > 0.2 ? 1 : 0.28 + ((depth + 1) / 2) * 0.25;
-            const isFront = depth >= 0.35;
+            const xOffset = Math.sin(angle) * 108;
+            const yOffset = -depth * 84 + 4;
+            const scale = depth > 0.5 ? 1 : 0.68;
+            const opacity = depth > 0.5 ? 1 : 0.4;
+            const isFront = idx === mobileIndex;
 
             return (
               <article
                 key={pillar.number}
                 onClick={() => selectPillar(idx)}
                 style={{
-                  transform: `translate3d(${xOffset.toFixed(1)}px, ${yOffset.toFixed(1)}px, 0) scale(${scale.toFixed(3)})`,
+                  transform: `translate3d(${xOffset.toFixed(1)}px, ${yOffset.toFixed(1)}px, 0) scale(${scale})`,
                   opacity,
                   zIndex: isFront ? 20 : 2,
                 }}
-                className={`pointer-events-auto absolute w-[256px] cursor-pointer overflow-hidden rounded-[24px] border border-white/[0.18] bg-[#0c0d13]/90 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_24px_56px_rgba(0,0,0,0.85)] backdrop-blur-[32px] backdrop-saturate-150 transition-[opacity,filter] duration-300 ${
-                  isFront ? "blur-0" : "blur-[0.6px]"
+                className={`pointer-events-auto absolute w-[256px] cursor-pointer overflow-hidden rounded-[24px] border border-white/[0.18] bg-[#0c0d13]/92 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_24px_56px_rgba(0,0,0,0.85)] backdrop-blur-[32px] backdrop-saturate-150 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                  isFront ? "blur-0" : "blur-[0.5px]"
                 }`}
               >
                 <div className="flex items-center justify-between">
