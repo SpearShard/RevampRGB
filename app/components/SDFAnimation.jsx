@@ -664,25 +664,27 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             chunk.mesh.position.copy(chunk.dir).multiplyScalar(chunk.openVal * 0.72);
 
             const isMobileContact = modeRef.current === 'contact' && window.innerWidth < 640;
-            const isContactSelected = isMobileContact && (i % 3 === contactIndexRef.current);
-            const targetHover = modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : isMobileContact ? (isContactSelected ? 0.95 : 0.25) : isHovered ? 0.95 : 0.34;
+            const targetHover = modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : isMobileContact ? 0.85 : isHovered ? 0.95 : 0.34;
             chunk.hoverMix += (targetHover - chunk.hoverMix) * 0.16;
             if (isMobileContact) {
                 const elapsed = clockRef.current?.elapsedTime ?? 0;
-                const cluster = i % 3;
-                const memberIdx = Math.floor(i / 3);
-                const clusterAngle = (cluster * Math.PI * 2) / 3 - Math.PI / 2;
-                const clusterRadius = 0.56;
-                const cx = Math.cos(clusterAngle) * clusterRadius;
-                const cy = Math.sin(clusterAngle) * clusterRadius;
-                const localAngle = elapsed * 0.55 + memberIdx * ((Math.PI * 2) / 5) + cluster;
-                const localRadius = 0.14 + (memberIdx % 2) * 0.06;
-                const targetX = cx + Math.cos(localAngle) * localRadius;
-                const targetY = cy + Math.sin(localAngle) * localRadius;
-                const targetZ = (isContactSelected ? 0.24 : -0.08) + Math.sin(elapsed * 0.8 + i) * 0.04;
-                chunk.mesh.position.x += (targetX - chunk.mesh.position.x) * 0.1;
-                chunk.mesh.position.y += (targetY - chunk.mesh.position.y) * 0.1;
-                chunk.mesh.position.z += (targetZ - chunk.mesh.position.z) * 0.1;
+                const WORDS = [
+                    // 0: EMAIL
+                    [[-1.02,0.24],[-1.02,0],[-1.02,-0.24],[-0.56,-0.24],[-0.45,0.24],[-0.34,-0.24],[-0.02,-0.24],[0.08,0.24],[0.18,-0.24],[0.46,0.24],[0.46,-0.24],[0.76,0.24],[0.76,-0.24],[0.98,-0.24]],
+                    // 1: INSTA
+                    [[-1.02,0.24],[-1.02,-0.24],[-0.68,-0.24],[-0.56,0.24],[-0.44,-0.24],[-0.06,0.24],[-0.10,0],[-0.14,-0.24],[0.24,0.24],[0.38,0.24],[0.31,-0.24],[0.68,-0.24],[0.80,0.24],[0.92,-0.24]],
+                    // 2: YOUTUBE
+                    [[-1.08,0.24],[-1.08,-0.18],[-0.74,0.16],[-0.74,-0.16],[-0.40,0.22],[-0.34,-0.20],[-0.04,0.24],[-0.04,-0.22],[0.28,0.22],[0.34,-0.20],[0.66,0.18],[0.66,-0.18],[1.00,0.22],[1.00,-0.22]]
+                ];
+                const pts = WORDS[contactIndexRef.current] || WORDS[0];
+                const pt = pts[i % pts.length];
+                // group.rotation.z = PI/2, so screenX = -localY and screenY = localX
+                const targetX = pt[1] + Math.sin(elapsed * 0.9 + i) * 0.015;
+                const targetY = -pt[0] + Math.cos(elapsed * 0.8 + i) * 0.015;
+                const targetZ = 0.18 + Math.sin(elapsed * 1.1 + i * 0.7) * 0.03;
+                chunk.mesh.position.x += (targetX - chunk.mesh.position.x) * 0.12;
+                chunk.mesh.position.y += (targetY - chunk.mesh.position.y) * 0.12;
+                chunk.mesh.position.z += (targetZ - chunk.mesh.position.z) * 0.12;
             } else if (modeRef.current === 'about') {
                 const elapsed = clockRef.current?.elapsedTime ?? 0;
                 const isInnerOrbit = i < 5;
@@ -727,7 +729,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
         if (fractalGroupRef.current && settings.autoRotate && modeRef.current === 'home') {
             fractalGroupRef.current.rotation.y += Math.PI * 0.03 * delta;
         }
-        if (fractalGroupRef.current && (modeRef.current === 'about' || modeRef.current === 'contact')) {
+        if (fractalGroupRef.current && (modeRef.current === 'about' || (modeRef.current === 'contact' && window.innerWidth >= 640))) {
             fractalGroupRef.current.rotation.y += (modeRef.current === 'about' ? -1 : 1) * Math.PI * 0.008 * delta;
         }
 
