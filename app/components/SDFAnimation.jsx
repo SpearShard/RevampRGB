@@ -152,7 +152,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             return { scale: base * (mobile ? 0.48 : 0.9), x: mobile ? 0 : w * 0.25, y: mobile ? h * 0.04 : h * 0.06, rotationZ: Math.PI / 2 };
         }
         if (nextMode === 'contact') {
-            return { scale: base * (mobile ? 0.78 : 0.58), x: mobile ? 0 : w * 0.39, y: mobile ? h * 0.04 : 0, rotationZ: Math.PI / 2 };
+            return { scale: base * (mobile ? 0.62 : 0.58), x: mobile ? 0 : w * 0.39, y: mobile ? h * 0.08 : 0, rotationZ: Math.PI / 2 };
         }
         if (nextMode === 'about') {
             return { scale: base * (mobile ? 0.34 : 0.62), x: mobile ? 0 : w * 0.38, y: mobile ? -h * 0.1 : 0, rotationZ: Math.PI / 2 };
@@ -728,10 +728,12 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             const targetOpen = (baseSplit + cursorBoost) * expand;
 
             const isMobileContact = modeRef.current === 'contact' && window.innerWidth < 640;
-            chunk.openVal += (targetOpen - chunk.openVal) * 0.12;
-            chunk.mesh.position.copy(chunk.dir).multiplyScalar(chunk.openVal * (isMobileContact ? 0.42 : 0.72));
+            const isContactColorMatch = isMobileContact && (chunk.index % 3 === contactIndexRef.current);
+            const contactPop = isContactColorMatch ? 0.22 : 0;
+            chunk.openVal += (targetOpen + contactPop - chunk.openVal) * 0.12;
+            chunk.mesh.position.copy(chunk.dir).multiplyScalar(chunk.openVal * (isMobileContact ? 0.64 : 0.72));
 
-            const targetHover = modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : isMobileContact ? 0.92 : isHovered ? 0.95 : 0.34;
+            const targetHover = modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : isMobileContact ? (isContactColorMatch ? 1.0 : 0.18) : isHovered ? 0.95 : 0.34;
             chunk.hoverMix += (targetHover - chunk.hoverMix) * 0.16;
             if (modeRef.current === 'about') {
                 const elapsed = clockRef.current?.elapsedTime ?? 0;

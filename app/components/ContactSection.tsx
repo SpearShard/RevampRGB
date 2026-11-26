@@ -40,21 +40,21 @@ const CHANNELS = [
 const MOBILE_CHANNELS = [
   {
     label: "Email",
-    stencilWord: "EMAIL",
+    
     subtitle: STUDIO_EMAIL,
     href: `mailto:${STUDIO_EMAIL}`,
     external: false,
   },
   {
     label: "Instagram",
-    stencilWord: "INSTAGRAM",
+    
     subtitle: "@rgbdesign",
     href: "https://instagram.com",
     external: true,
   },
   {
     label: "YouTube",
-    stencilWord: "YOUTUBE",
+    
     subtitle: "RGB Design Studio",
     href: "https://youtube.com",
     external: true,
@@ -115,63 +115,11 @@ export default function ContactSection() {
     window.setTimeout(() => setSubmitted(false), 4000);
   };
 
-  const activeMobile = MOBILE_CHANNELS[mobileChannelIndex] ?? MOBILE_CHANNELS[0];
-  const stencilFontSize = activeMobile.stencilWord.length > 7 ? 56 : 78;
 
   return (
     <>
       {/* Mobile-only Stencil Cutout Contact Stage (3D Fractal shines through the word stencil) */}
       <main className="pointer-events-none relative z-10 flex h-[100svh] min-h-[560px] w-full flex-col justify-between overflow-hidden bg-transparent text-white sm:hidden">
-        {/* Foreground SVG Stencil Mask: dark obsidian sheet with the word cut out so the 3D fractal shows through */}
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 390 844"
-          preserveAspectRatio="xMidYMid slice"
-          className="pointer-events-none fixed inset-0 z-10 h-full w-full"
-        >
-          <defs>
-            <mask id="rgb-contact-word-stencil">
-              <rect x="0" y="0" width="390" height="844" fill="white" />
-              <text
-                x="195"
-                y="375"
-                textAnchor="middle"
-                dominantBaseline="central"
-                fill="black"
-                fontFamily="system-ui, -apple-system, BlinkMacSystemFont, sans-serif"
-                fontWeight="800"
-                fontSize={stencilFontSize}
-                letterSpacing="-0.04em"
-              >
-                {activeMobile.stencilWord}
-              </text>
-            </mask>
-          </defs>
-          <rect
-            x="0"
-            y="0"
-            width="390"
-            height="844"
-            fill="#06070b"
-            fillOpacity="0.93"
-            mask="url(#rgb-contact-word-stencil)"
-          />
-          <text
-            x="195"
-            y="375"
-            textAnchor="middle"
-            dominantBaseline="central"
-            fill="none"
-            stroke="rgba(255,255,255,0.16)"
-            strokeWidth="0.9"
-            fontFamily="system-ui, -apple-system, BlinkMacSystemFont, sans-serif"
-            fontWeight="800"
-            fontSize={stencilFontSize}
-            letterSpacing="-0.04em"
-          >
-            {activeMobile.stencilWord}
-          </text>
-        </svg>
 
         <header className="relative z-20 px-5 pt-20">
           <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-white/45">
