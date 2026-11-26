@@ -17,8 +17,7 @@ import {
     Group,
     BufferGeometry,
     BufferAttribute,
-    Raycaster,
-    Points
+    Raycaster
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import gsap from 'gsap';
@@ -56,9 +55,6 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
     const activeHrefRef = useRef(activeHref);
     const indexHoverHrefRef = useRef(null);
     const contactIndexRef = useRef(0);
-    const wordPointsRef = useRef(null);
-    const wordTargetsRef = useRef(null);
-    const wordCurrentRef = useRef(null);
 
     const centeredRef = useRef(centered);
     const expandRef = useRef({ value: centered ? 1 : 0 });
@@ -156,7 +152,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             return { scale: base * (mobile ? 0.48 : 0.9), x: mobile ? 0 : w * 0.25, y: mobile ? h * 0.04 : h * 0.06, rotationZ: Math.PI / 2 };
         }
         if (nextMode === 'contact') {
-            return { scale: base * (mobile ? 0.56 : 0.58), x: mobile ? 0 : w * 0.39, y: mobile ? h * 0.08 : 0, rotationZ: Math.PI / 2 };
+            return { scale: base * (mobile ? 0.78 : 0.58), x: mobile ? 0 : w * 0.39, y: mobile ? h * 0.04 : 0, rotationZ: Math.PI / 2 };
         }
         if (nextMode === 'about') {
             return { scale: base * (mobile ? 0.34 : 0.62), x: mobile ? 0 : w * 0.38, y: mobile ? -h * 0.1 : 0, rotationZ: Math.PI / 2 };
@@ -733,15 +729,11 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
 
             const isMobileContact = modeRef.current === 'contact' && window.innerWidth < 640;
             chunk.openVal += (targetOpen - chunk.openVal) * 0.12;
-            if (!isMobileContact) {
-                chunk.mesh.position.copy(chunk.dir).multiplyScalar(chunk.openVal * 0.72);
-            }
+            chunk.mesh.position.copy(chunk.dir).multiplyScalar(chunk.openVal * (isMobileContact ? 0.42 : 0.72));
 
-            const targetHover = modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : isMobileContact ? 0.9 : isHovered ? 0.95 : 0.34;
+            const targetHover = modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : isMobileContact ? 0.92 : isHovered ? 0.95 : 0.34;
             chunk.hoverMix += (targetHover - chunk.hoverMix) * 0.16;
-            if (isMobileContact) {
-                chunk.mesh.position.lerp(new Vector3(0, 0, 0), 0.14);
-            } else if (modeRef.current === 'about') {
+            if (modeRef.current === 'about') {
                 const elapsed = clockRef.current?.elapsedTime ?? 0;
                 const isInnerOrbit = i < 5;
                 const orbitIndex = isInnerOrbit ? i : i - 5;
@@ -767,9 +759,8 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
 
             const detailSelected = modeRef.current === 'detail' && chunk.targetOpacity === 1;
             const detailScale = detailSelected ? (window.innerWidth < 640 ? 1.32 : 1.58) : 1;
-            const contactChunkScale = isMobileContact ? 0.01 : 1;
-            chunk.mesh.scale.setScalar(detailScale * (1 + chunk.hoverMix * 0.08) * contactChunkScale);
-            chunk.mesh.visible = !isMobileContact && (modeRef.current !== 'detail' || chunk.targetOpacity === 1);
+            chunk.mesh.scale.setScalar(detailScale * (1 + chunk.hoverMix * 0.08));
+            chunk.mesh.visible = modeRef.current !== 'detail' || chunk.targetOpacity === 1;
             chunk.material.uniforms.uHoverMix.value = chunk.hoverMix;
         }
 
@@ -810,7 +801,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
         if (fractalGroupRef.current && settings.autoRotate && modeRef.current === 'home') {
             fractalGroupRef.current.rotation.y += Math.PI * 0.03 * delta;
         }
-        if (fractalGroupRef.current && (modeRef.current === 'about' || (modeRef.current === 'contact' && window.innerWidth >= 640))) {
+        if (fractalGroupRef.current && (modeRef.current === 'about' || modeRef.current === 'contact')) {
             fractalGroupRef.current.rotation.y += (modeRef.current === 'about' ? -1 : 1) * Math.PI * 0.008 * delta;
         }
 

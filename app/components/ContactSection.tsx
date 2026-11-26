@@ -40,22 +40,22 @@ const CHANNELS = [
 const MOBILE_CHANNELS = [
   {
     label: "Email",
+    stencilWord: "EMAIL",
     subtitle: STUDIO_EMAIL,
-    actionLabel: "Send mail",
     href: `mailto:${STUDIO_EMAIL}`,
     external: false,
   },
   {
     label: "Instagram",
+    stencilWord: "INSTAGRAM",
     subtitle: "@rgbdesign",
-    actionLabel: "Open Instagram",
     href: "https://instagram.com",
     external: true,
   },
   {
     label: "YouTube",
+    stencilWord: "YOUTUBE",
     subtitle: "RGB Design Studio",
-    actionLabel: "Watch channel",
     href: "https://youtube.com",
     external: true,
   },
@@ -89,17 +89,6 @@ export default function ContactSection() {
     return () => ctx.revert();
   }, []);
 
-  useEffect(() => {
-    const onClusterTap = (event: Event) => {
-      const idx = Number((event as CustomEvent<{ index?: number }>).detail?.index);
-      if (!Number.isNaN(idx)) {
-        setMobileChannelIndex(((idx % MOBILE_CHANNELS.length) + MOBILE_CHANNELS.length) % MOBILE_CHANNELS.length);
-      }
-    };
-    window.addEventListener("rgb:contact-cluster-tap", onClusterTap);
-    return () => window.removeEventListener("rgb:contact-cluster-tap", onClusterTap);
-  }, []);
-
   const selectMobileChannel = (idx: number) => {
     setMobileChannelIndex(idx);
     window.dispatchEvent(new CustomEvent("rgb:contact-select", { detail: { index: idx } }));
@@ -126,11 +115,65 @@ export default function ContactSection() {
     window.setTimeout(() => setSubmitted(false), 4000);
   };
 
+  const activeMobile = MOBILE_CHANNELS[mobileChannelIndex] ?? MOBILE_CHANNELS[0];
+  const stencilFontSize = activeMobile.stencilWord.length > 7 ? 56 : 78;
+
   return (
     <>
-      {/* Mobile-only Liquid Glass Contact Stage (Fractal transforms into Email, Instagram, YouTube) */}
+      {/* Mobile-only Stencil Cutout Contact Stage (3D Fractal shines through the word stencil) */}
       <main className="pointer-events-none relative z-10 flex h-[100svh] min-h-[560px] w-full flex-col justify-between overflow-hidden bg-transparent text-white sm:hidden">
-        <header className="px-5 pt-20">
+        {/* Foreground SVG Stencil Mask: dark obsidian sheet with the word cut out so the 3D fractal shows through */}
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 390 844"
+          preserveAspectRatio="xMidYMid slice"
+          className="pointer-events-none fixed inset-0 z-10 h-full w-full"
+        >
+          <defs>
+            <mask id="rgb-contact-word-stencil">
+              <rect x="0" y="0" width="390" height="844" fill="white" />
+              <text
+                x="195"
+                y="375"
+                textAnchor="middle"
+                dominantBaseline="central"
+                fill="black"
+                fontFamily="system-ui, -apple-system, BlinkMacSystemFont, sans-serif"
+                fontWeight="800"
+                fontSize={stencilFontSize}
+                letterSpacing="-0.04em"
+              >
+                {activeMobile.stencilWord}
+              </text>
+            </mask>
+          </defs>
+          <rect
+            x="0"
+            y="0"
+            width="390"
+            height="844"
+            fill="#06070b"
+            fillOpacity="0.93"
+            mask="url(#rgb-contact-word-stencil)"
+          />
+          <text
+            x="195"
+            y="375"
+            textAnchor="middle"
+            dominantBaseline="central"
+            fill="none"
+            stroke="rgba(255,255,255,0.16)"
+            strokeWidth="0.9"
+            fontFamily="system-ui, -apple-system, BlinkMacSystemFont, sans-serif"
+            fontWeight="800"
+            fontSize={stencilFontSize}
+            letterSpacing="-0.04em"
+          >
+            {activeMobile.stencilWord}
+          </text>
+        </svg>
+
+        <header className="relative z-20 px-5 pt-20">
           <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-white/45">
             Contact
           </p>
@@ -161,8 +204,35 @@ export default function ContactSection() {
                     <div className="flex items-center justify-between gap-2">
                       <span className="flex items-center gap-1.5 text-xs font-medium text-white">
                         {idx === 0 && <Mail className="h-3.5 w-3.5 text-white/80" />}
-                        {idx === 1 && (<svg className="h-3.5 w-3.5 text-white/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" /></svg>)}
-                        {idx === 2 && (<svg className="h-3.5 w-3.5 text-white/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17" /><path d="m10 15 5-3-5-3z" /></svg>)}
+                        {idx === 1 && (
+                          <svg
+                            className="h-3.5 w-3.5 text-white/80"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                            <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+                          </svg>
+                        )}
+                        {idx === 2 && (
+                          <svg
+                            className="h-3.5 w-3.5 text-white/80"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17" />
+                            <path d="m10 15 5-3-5-3z" />
+                          </svg>
+                        )}
                         <span>{channel.label}</span>
                       </span>
                       {idx === 0 && (
