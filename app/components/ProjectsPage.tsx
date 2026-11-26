@@ -184,7 +184,7 @@ export default function ProjectsPage() {
       {mobileActiveEntry && (
         <section
           aria-label="Mobile project scale"
-          className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex flex-col items-center px-4 sm:hidden"
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex flex-col items-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:hidden"
         >
           <div className="relative flex w-full max-w-[356px] flex-col items-center">
             {/* Subtle Auroric RGB Glow */}
@@ -198,20 +198,21 @@ export default function ProjectsPage() {
               type="button"
               onClick={() => openProject(mobileActiveEntry.href)}
               aria-label={`Open ${mobileActiveEntry.title}`}
-              className="pointer-events-auto group relative z-10 -mb-px w-[168px] overflow-hidden rounded-t-[20px] border border-b-0 border-white/[0.22] bg-white/[0.07] p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.32),0_-14px_38px_rgba(0,0,0,0.5)] backdrop-blur-[36px] backdrop-saturate-150 transition-transform duration-150 active:scale-[0.98]"
+              className="pointer-events-auto group relative z-10 -mb-px w-[168px] overflow-hidden rounded-t-[20px] border border-b-0 border-white/[0.22] bg-white/[0.07] p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.32),0_-14px_38px_rgba(0,0,0,0.5)] backdrop-blur-xl backdrop-saturate-150 transition-transform duration-150 active:scale-[0.98]"
             >
               <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[13px] bg-black/40">
                 <div
                   className="flex h-full w-full transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
                   style={{ transform: `translate3d(-${mobileIndex * 100}%, 0, 0)` }}
                 >
-                  {entries.map((entry) => (
+                  {entries.map((entry, idx) => (
                     <div key={entry.href} className="relative h-full w-full shrink-0">
                       <Image
                         src={entry.cover}
                         alt={entry.title}
                         fill
                         sizes="168px"
+                        loading={Math.abs(idx - mobileIndex) <= 1 ? "eager" : "lazy"}
                         className="object-cover"
                       />
                     </div>
@@ -222,7 +223,7 @@ export default function ProjectsPage() {
             </button>
 
             {/* Bottom Liquid Glass Scale Dock */}
-            <div className="pointer-events-auto relative w-full overflow-hidden rounded-[22px] border border-white/[0.22] bg-white/[0.07] pb-3 pt-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(255,255,255,0.08),0_20px_50px_rgba(0,0,0,0.65)] backdrop-blur-[40px] backdrop-saturate-150">
+            <div className="pointer-events-auto relative w-full overflow-hidden rounded-[22px] border border-white/[0.22] bg-white/[0.07] pb-3 pt-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(255,255,255,0.08),0_20px_50px_rgba(0,0,0,0.65)] backdrop-blur-xl backdrop-saturate-150">
               {/* Specular Glass Sheen */}
               <div
                 aria-hidden="true"

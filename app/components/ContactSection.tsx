@@ -132,7 +132,7 @@ export default function ContactSection() {
 
         <section
           aria-label="Mobile contact channels"
-          className="pointer-events-none relative inset-x-0 bottom-0 z-20 flex flex-col items-center px-4 pb-4"
+          className="pointer-events-none relative inset-x-0 bottom-0 z-20 flex flex-col items-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
         >
           <div className="relative flex w-full max-w-[356px] flex-col items-center">
             {/* Subtle Auroric RGB Glow */}
@@ -142,7 +142,7 @@ export default function ContactSection() {
             />
 
             {/* Top-Middle Sliding Liquid Glass Protrusion */}
-            <div className="pointer-events-auto relative z-10 -mb-px w-[224px] overflow-hidden rounded-t-[20px] border border-b-0 border-white/[0.22] bg-white/[0.07] shadow-[inset_0_1px_0_rgba(255,255,255,0.32),0_-14px_38px_rgba(0,0,0,0.5)] backdrop-blur-[36px] backdrop-saturate-150">
+            <div className="pointer-events-auto relative z-10 -mb-px w-[224px] overflow-hidden rounded-t-[20px] border border-b-0 border-white/[0.22] bg-white/[0.07] shadow-[inset_0_1px_0_rgba(255,255,255,0.32),0_-14px_38px_rgba(0,0,0,0.5)] backdrop-blur-xl backdrop-saturate-150">
               <div
                 className="flex w-full transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
                 style={{ transform: `translate3d(-${mobileChannelIndex * 100}%, 0, 0)` }}
@@ -210,7 +210,7 @@ export default function ContactSection() {
             </div>
 
             {/* Bottom Liquid Glass Switcher Dock */}
-            <div className="pointer-events-auto relative grid w-full grid-cols-3 gap-1 overflow-hidden rounded-[22px] border border-white/[0.22] bg-white/[0.07] p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(255,255,255,0.08),0_20px_50px_rgba(0,0,0,0.65)] backdrop-blur-[40px] backdrop-saturate-150">
+            <div className="pointer-events-auto relative grid w-full grid-cols-3 gap-1 overflow-hidden rounded-[22px] border border-white/[0.22] bg-white/[0.07] p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(255,255,255,0.08),0_20px_50px_rgba(0,0,0,0.65)] backdrop-blur-xl backdrop-saturate-150">
               <div
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.12] via-white/[0.02] to-transparent"

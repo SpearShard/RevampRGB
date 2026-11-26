@@ -97,10 +97,6 @@ export default function LandingPage() {
             ref={sectionRef} 
             className="relative w-full h-screen bg-[#060608] overflow-hidden flex items-center justify-center p-6 md:p-16 select-none"
         >
-            {/* GOOGLE FONTS INJECTION: RAW ARCHITECTURAL MONO + SANS */}
-            <link rel="preconnect" href="https://fonts.googleapis.com" />
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-            <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Space+Mono:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
 
             {/* ABSOLUTE VIEWPORT RENDER ENGINE LAYER (FRACTAL IS MOUNTED PERSISTENTLY IN LAYOUT) */}
             <div 

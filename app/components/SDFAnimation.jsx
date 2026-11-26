@@ -456,6 +456,15 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
         controls.autoRotateSpeed = 0.4;
         controlsRef.current = controls;
 
+        const onVisibilityChange = () => {
+            if (!rendererRef.current || !isStarted) return;
+            if (document.hidden) {
+                rendererRef.current.setAnimationLoop(null);
+            } else {
+                rendererRef.current.setAnimationLoop(animate);
+            }
+        };
+        document.addEventListener('visibilitychange', onVisibilityChange);
         window.addEventListener('resize', onWindowResize);
     }
 
@@ -757,6 +766,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
 
         return () => {
             window.removeEventListener('home-loader:reveal', startAnimation);
+            document.removeEventListener('visibilitychange', onVisibilityChange);
             window.removeEventListener('resize', onWindowResize);
             if (rendererRef.current) {
                 rendererRef.current.setAnimationLoop(null);
@@ -789,9 +799,6 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
                 cursor: isCenterTarget ? (hoveredInfo ? 'pointer' : 'grab') : 'default',
             }}
         >
-            <link rel="preconnect" href="https://fonts.googleapis.com" />
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-            <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
 
             {/* Soft Ambient Backdrop Aura */}
             <div style={{

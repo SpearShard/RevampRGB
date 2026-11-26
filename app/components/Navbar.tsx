@@ -270,7 +270,7 @@ export default function Navbar() {
           onClick={() => setMobileMenuOpen((open) => !open)}
           aria-expanded={mobileMenuOpen}
           aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-          className={`relative ml-auto flex h-10 w-10 items-center justify-center rounded-[13px] border border-white/[0.22] bg-white/[0.07] backdrop-blur-[40px] backdrop-saturate-150 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(255,255,255,0.08),0_12px_32px_rgba(0,0,0,0.65)] transition-all duration-300 active:scale-95 ${
+          className={`relative ml-auto flex h-10 w-10 items-center justify-center rounded-[13px] border border-white/[0.22] bg-white/[0.07] backdrop-blur-xl backdrop-saturate-150 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(255,255,255,0.08),0_12px_32px_rgba(0,0,0,0.65)] transition-all duration-300 active:scale-95 ${
             mobileMenuOpen ? 'opacity-0 pointer-events-none scale-75' : 'opacity-100 scale-100'
           }`}
         >
@@ -283,7 +283,7 @@ export default function Navbar() {
 
         {/* Expanded Rounded Rectangular Menu */}
         <div
-          className={`origin-top-right overflow-hidden rounded-[20px] border border-white/[0.22] bg-white/[0.07] backdrop-blur-[40px] backdrop-saturate-150 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(255,255,255,0.08),0_20px_50px_rgba(0,0,0,0.7)] transition-all duration-300 ease-out ${
+          className={`origin-top-right overflow-hidden rounded-[20px] border border-white/[0.22] bg-white/[0.07] backdrop-blur-xl backdrop-saturate-150 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(255,255,255,0.08),0_20px_50px_rgba(0,0,0,0.7)] transition-all duration-300 ease-out ${
             mobileMenuOpen
               ? 'pointer-events-auto -mt-10 w-[212px] scale-100 opacity-100'
               : 'pointer-events-none -mt-10 w-[212px] scale-75 opacity-0'

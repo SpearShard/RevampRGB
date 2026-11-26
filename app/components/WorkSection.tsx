@@ -132,7 +132,7 @@ export default function WorksPage() {
     <main className="relative flex min-h-screen items-center overflow-hidden bg-[#050505] text-white">
       {/* Noise */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.025]"
+        className="pointer-events-none absolute inset-0 hidden opacity-[0.025] md:block"
         style={{
           backgroundImage:
             "url('https://grainy-gradients.vercel.app/noise.svg')",

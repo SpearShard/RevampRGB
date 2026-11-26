@@ -71,7 +71,7 @@ export default function AboutPageSection() {
 
         {/* Centered Sliding Card Window (fractal pokes out on all 4 sides behind it) */}
         <div className="pointer-events-none relative z-20 flex flex-1 items-center justify-center px-6">
-          <div className="pointer-events-auto w-[268px] overflow-hidden rounded-[24px] border border-white/[0.18] bg-[#0c0d13]/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_24px_56px_rgba(0,0,0,0.85)] backdrop-blur-[32px] backdrop-saturate-150">
+          <div className="pointer-events-auto w-[268px] overflow-hidden rounded-[24px] border border-white/[0.18] bg-[#0c0d13]/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_24px_56px_rgba(0,0,0,0.85)] backdrop-blur-xl backdrop-saturate-150">
             <div
               className="flex w-full transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
               style={{ transform: `translate3d(-${mobileIndex * 100}%, 0, 0)` }}
@@ -107,7 +107,7 @@ export default function AboutPageSection() {
         {/* Lower Liquid Glass Scale Dock */}
         <section
           aria-label="About pillars scale"
-          className="pointer-events-none relative z-20 flex flex-col items-center px-4 pb-4"
+          className="pointer-events-none relative z-20 flex flex-col items-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
         >
           <div className="relative flex w-full max-w-[356px] flex-col items-center">
             {/* Subtle Auroric RGB Glow */}
@@ -116,7 +116,7 @@ export default function AboutPageSection() {
               className="pointer-events-none absolute -inset-x-4 -bottom-2 h-24 rounded-full bg-gradient-to-r from-[#ff2433]/18 via-[#1ff261]/12 to-[#0056e6]/18 blur-2xl"
             />
 
-            <div className="pointer-events-auto relative w-full overflow-hidden rounded-[22px] border border-white/[0.22] bg-white/[0.07] pb-3 pt-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(255,255,255,0.08),0_20px_50px_rgba(0,0,0,0.65)] backdrop-blur-[40px] backdrop-saturate-150">
+            <div className="pointer-events-auto relative w-full overflow-hidden rounded-[22px] border border-white/[0.22] bg-white/[0.07] pb-3 pt-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(255,255,255,0.08),0_20px_50px_rgba(0,0,0,0.65)] backdrop-blur-xl backdrop-saturate-150">
               <div
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.12] via-white/[0.02] to-transparent"
