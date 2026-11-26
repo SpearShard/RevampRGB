@@ -250,7 +250,7 @@ export default function Navbar() {
           }}
           className="relative w-20 h-7 sm:w-24 sm:h-8 flex items-center pointer-events-auto transition-transform hover:scale-105 duration-300"
         >
-          <Image src="/logo.svg" alt="Logo" fill priority className="object-contain object-left filter brightness-0 invert" />
+          <Image src="/logo.svg" alt="Logo" fill priority className="object-contain object-left" />
         </Link>
       </header>
 
@@ -270,7 +270,7 @@ export default function Navbar() {
           onClick={() => setMobileMenuOpen((open) => !open)}
           aria-expanded={mobileMenuOpen}
           aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-          className={`relative ml-auto flex h-11 w-11 items-center justify-center rounded-[14px] border border-white/[0.14] bg-[#08090d]/85 backdrop-blur-2xl shadow-[0_12px_32px_rgba(0,0,0,0.75)] transition-all duration-300 active:scale-95 ${
+          className={`relative ml-auto flex h-11 w-11 items-center justify-center rounded-[14px] border border-white/[0.22] bg-white/[0.07] backdrop-blur-[40px] backdrop-saturate-150 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(255,255,255,0.08),0_12px_32px_rgba(0,0,0,0.65)] transition-all duration-300 active:scale-95 ${
             mobileMenuOpen ? 'opacity-0 pointer-events-none scale-75' : 'opacity-100 scale-100'
           }`}
         >
@@ -283,7 +283,7 @@ export default function Navbar() {
 
         {/* Expanded Rounded Rectangular Menu */}
         <div
-          className={`origin-top-right overflow-hidden rounded-[20px] border border-white/[0.14] bg-[#08090d]/92 backdrop-blur-2xl shadow-[0_24px_64px_rgba(0,0,0,0.9)] transition-all duration-300 ease-out ${
+          className={`origin-top-right overflow-hidden rounded-[20px] border border-white/[0.22] bg-white/[0.07] backdrop-blur-[40px] backdrop-saturate-150 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(255,255,255,0.08),0_20px_50px_rgba(0,0,0,0.7)] transition-all duration-300 ease-out ${
             mobileMenuOpen
               ? 'pointer-events-auto -mt-11 w-[212px] scale-100 opacity-100'
               : 'pointer-events-none -mt-11 w-[212px] scale-75 opacity-0'

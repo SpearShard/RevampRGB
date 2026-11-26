@@ -230,11 +230,11 @@ export default function ProjectsPage() {
               />
 
               {/* Minimalist Readout */}
-              <div className="relative flex items-baseline justify-between gap-3 px-4 pb-2">
+              <div className="relative flex h-7 items-center justify-between gap-3 px-4 pb-1">
                 <p className="min-w-0 truncate text-[13px] font-medium tracking-tight text-white">
                   {mobileActiveEntry.title}
                 </p>
-                <span className="shrink-0 font-mono text-[10px] text-white/55">
+                <span className="w-10 shrink-0 text-right font-mono text-[10px] tabular-nums text-white/55">
                   {String(mobileIndex + 1).padStart(2, "0")}/{String(entries.length).padStart(2, "0")}
                 </span>
               </div>
@@ -259,7 +259,7 @@ export default function ProjectsPage() {
                   onTouchEnd={() => {
                     isTouchingRulerRef.current = false;
                   }}
-                  className="flex snap-x snap-proximity items-end overflow-x-auto px-[calc(50%-26px)] [mask-image:linear-gradient(to_right,transparent,black_14%,black_86%,transparent)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  className="flex h-8 items-end overflow-x-auto px-[calc(50%-26px)] [mask-image:linear-gradient(to_right,transparent,black_14%,black_86%,transparent)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 >
                   {entries.map((entry, idx) => {
                     const isActive = idx === mobileIndex;
@@ -269,7 +269,7 @@ export default function ProjectsPage() {
                         type="button"
                         onClick={() => scrollToProject(idx)}
                         aria-label={`Select ${entry.title}`}
-                        className="flex w-[52px] shrink-0 snap-center items-end justify-between px-1 pt-2 focus:outline-none"
+                        className="flex h-8 w-[52px] shrink-0 items-end justify-between px-1 focus:outline-none"
                       >
                         <span className="h-2 w-px bg-white/20" />
                         <span className="h-3 w-px bg-white/30" />
