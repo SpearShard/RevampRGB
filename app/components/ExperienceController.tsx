@@ -263,7 +263,7 @@ export default function ExperienceController({ children }: ExperienceControllerP
 
       <div
         ref={aboutRef}
-        className="relative w-full z-10"
+        className="relative w-full"
         style={{
           display: pathname === "/about" ? "block" : "none",
           visibility: pathname === "/about" ? "visible" : "hidden",
