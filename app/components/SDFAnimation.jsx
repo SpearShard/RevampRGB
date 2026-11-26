@@ -786,7 +786,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             }}></div>
 
             {mode === 'project' && hoveredInfo && (
-                <div className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-y-1/2 translate-x-8 rounded-full border border-white/20 bg-black/65 px-3 py-1.5 font-mono text-[9px] tracking-[0.16em] text-white/75 backdrop-blur-md">
+                <div className="pointer-events-none hidden sm:block absolute left-1/2 top-1/2 z-20 -translate-y-1/2 translate-x-8 rounded-full border border-white/20 bg-black/65 px-3 py-1.5 font-mono text-[9px] tracking-[0.16em] text-white/75 backdrop-blur-md">
                     <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full" style={{ backgroundColor: hoveredInfo.accentHex }} />
                     {({ '#ff2433': '(255, 36, 51)', '#1ff261': '(31, 242, 97)', '#0056e6': '(0, 86, 230)' })[hoveredInfo.accentHex] ?? hoveredInfo.accentHex}
                 </div>

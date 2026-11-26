@@ -17,8 +17,10 @@ export default function ProjectsPage() {
   const [indexOpen, setIndexOpen] = useState(true);
   const [activeHref, setActiveHref] = useState<string | null>(null);
   const [mobileIndex, setMobileIndex] = useState(0);
+  const [showMobileHint, setShowMobileHint] = useState(true);
   const rulerRef = useRef<HTMLDivElement>(null);
   const isProgrammaticScrollRef = useRef(false);
+  const isTouchingRulerRef = useRef(false);
 
   const categories = useMemo(
     () =>
@@ -63,20 +65,34 @@ export default function ProjectsPage() {
   }, [entries, hoverProject]);
 
   useEffect(() => {
+    const showHint = () => {
+      setShowMobileHint(true);
+    };
+    window.addEventListener("rgb:enter-project", showHint);
+    return () => window.removeEventListener("rgb:enter-project", showHint);
+  }, []);
+
+  useEffect(() => {
+    if (!showMobileHint) return;
+    const timer = window.setTimeout(() => setShowMobileHint(false), 5500);
+    return () => window.clearTimeout(timer);
+  }, [showMobileHint]);
+
+  useEffect(() => {
     const onFractalHover = (event: Event) => {
       const href = (event as CustomEvent<{ href?: string }>).detail?.href ?? null;
       setActiveHref(href);
 
-      if (!href) return;
+      if (!href || isTouchingRulerRef.current) return;
       const idx = entries.findIndex((entry) => entry.href === href);
-      if (idx !== -1) {
+      if (idx !== -1 && idx !== mobileIndex) {
         setMobileIndex(idx);
         if (rulerRef.current) {
           isProgrammaticScrollRef.current = true;
           rulerRef.current.scrollTo({ left: idx * RULER_STEP, behavior: "smooth" });
           window.setTimeout(() => {
             isProgrammaticScrollRef.current = false;
-          }, 320);
+          }, 360);
         }
       }
     };
@@ -87,7 +103,7 @@ export default function ProjectsPage() {
       window.removeEventListener("rgb:fractal-hover", onFractalHover);
       window.removeEventListener("rgb:fractal-clear", onFractalClear);
     };
-  }, [entries]);
+  }, [entries, mobileIndex]);
 
   const handleRulerScroll = () => {
     const el = rulerRef.current;
@@ -115,7 +131,7 @@ export default function ProjectsPage() {
       rulerRef.current.scrollTo({ left: idx * RULER_STEP, behavior: "smooth" });
       window.setTimeout(() => {
         isProgrammaticScrollRef.current = false;
-      }, 320);
+      }, 360);
     }
   };
 
@@ -149,7 +165,22 @@ export default function ProjectsPage() {
         </div>
       </section>
 
-      {/* Mobile-only Minimalist Ruler Scale + Top-Middle Image Protrusion */}
+      {/* Mobile Top-Middle Pill Hint */}
+      <div
+        className={`pointer-events-none fixed left-1/2 top-16 z-30 w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 transition-all duration-500 sm:hidden ${
+          showMobileHint ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0"
+        }`}
+      >
+        <button
+          type="button"
+          onClick={() => setShowMobileHint(false)}
+          className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/[0.2] bg-white/[0.08] px-4 py-1.5 text-[11px] font-medium tracking-tight text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_12px_32px_rgba(0,0,0,0.45)] backdrop-blur-2xl backdrop-saturate-150"
+        >
+          <span>Slide the scale to explore · Tap preview to open</span>
+        </button>
+      </div>
+
+      {/* Mobile-only Liquid Glass Scale + Top-Middle Sliding Image Protrusion */}
       {mobileActiveEntry && (
         <section
           aria-label="Mobile project scale"
@@ -159,36 +190,51 @@ export default function ProjectsPage() {
             {/* Subtle Auroric RGB Glow */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -inset-x-3 -bottom-2 h-28 rounded-full bg-gradient-to-r from-[#ff2433]/18 via-[#1ff261]/12 to-[#0056e6]/18 blur-2xl"
+              className="pointer-events-none absolute -inset-x-4 -bottom-2 h-28 rounded-full bg-gradient-to-r from-[#ff2433]/18 via-[#1ff261]/12 to-[#0056e6]/18 blur-2xl"
             />
 
-            {/* Top-Middle Protruding Project Image */}
+            {/* Top-Middle Protruding Sliding Image Frame (Liquid Glass) */}
             <button
               type="button"
               onClick={() => openProject(mobileActiveEntry.href)}
               aria-label={`Open ${mobileActiveEntry.title}`}
-              className="pointer-events-auto group relative z-10 -mb-px w-[162px] overflow-hidden rounded-t-[18px] border border-b-0 border-white/[0.12] bg-[#090a0e]/92 p-1.5 backdrop-blur-2xl shadow-[0_-12px_36px_rgba(0,0,0,0.65)] transition-transform duration-150 active:scale-[0.98]"
+              className="pointer-events-auto group relative z-10 -mb-px w-[168px] overflow-hidden rounded-t-[20px] border border-b-0 border-white/[0.22] bg-white/[0.07] p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.32),0_-14px_38px_rgba(0,0,0,0.5)] backdrop-blur-[36px] backdrop-saturate-150 transition-transform duration-150 active:scale-[0.98]"
             >
-              <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[12px] bg-[#13151d]">
-                <Image
-                  src={mobileActiveEntry.cover}
-                  alt={mobileActiveEntry.title}
-                  fill
-                  sizes="162px"
-                  className="object-cover transition-transform duration-300 group-active:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+              <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[13px] bg-black/40">
+                <div
+                  className="flex h-full w-full transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
+                  style={{ transform: `translate3d(-${mobileIndex * 100}%, 0, 0)` }}
+                >
+                  {entries.map((entry) => (
+                    <div key={entry.href} className="relative h-full w-full shrink-0">
+                      <Image
+                        src={entry.cover}
+                        alt={entry.title}
+                        fill
+                        sizes="168px"
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-white/[0.08]" />
               </div>
             </button>
 
-            {/* Bottom Scale Dock */}
-            <div className="pointer-events-auto relative w-full overflow-hidden rounded-[20px] border border-white/[0.12] bg-[#090a0e]/88 pb-3 pt-2.5 shadow-[0_18px_48px_rgba(0,0,0,0.88)] backdrop-blur-2xl">
+            {/* Bottom Liquid Glass Scale Dock */}
+            <div className="pointer-events-auto relative w-full overflow-hidden rounded-[22px] border border-white/[0.22] bg-white/[0.07] pb-3 pt-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(255,255,255,0.08),0_20px_50px_rgba(0,0,0,0.65)] backdrop-blur-[40px] backdrop-saturate-150">
+              {/* Specular Glass Sheen */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.12] via-white/[0.02] to-transparent"
+              />
+
               {/* Minimalist Readout */}
-              <div className="flex items-baseline justify-between gap-3 px-4 pb-2">
+              <div className="relative flex items-baseline justify-between gap-3 px-4 pb-2">
                 <p className="min-w-0 truncate text-[13px] font-medium tracking-tight text-white">
                   {mobileActiveEntry.title}
                 </p>
-                <span className="shrink-0 font-mono text-[10px] text-white/40">
+                <span className="shrink-0 font-mono text-[10px] text-white/55">
                   {String(mobileIndex + 1).padStart(2, "0")}/{String(entries.length).padStart(2, "0")}
                 </span>
               </div>
@@ -200,24 +246,20 @@ export default function ProjectsPage() {
                   aria-hidden="true"
                   className="pointer-events-none absolute bottom-0 left-1/2 top-0 z-20 -translate-x-1/2"
                 >
-                  <span className="block h-7 w-[1.5px] rounded-full bg-white/95 shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+                  <span className="block h-7 w-[1.5px] rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.6)]" />
                 </div>
 
-                {/* Edge Fades */}
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-[#090a0e] to-transparent"
-                />
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-[#090a0e] to-transparent"
-                />
-
-                {/* Scrollable Tick Track */}
+                {/* Scrollable Tick Track (no snap-mandatory bounce) */}
                 <div
                   ref={rulerRef}
                   onScroll={handleRulerScroll}
-                  className="flex snap-x snap-mandatory items-end overflow-x-auto px-[calc(50%-26px)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  onTouchStart={() => {
+                    isTouchingRulerRef.current = true;
+                  }}
+                  onTouchEnd={() => {
+                    isTouchingRulerRef.current = false;
+                  }}
+                  className="flex snap-x snap-proximity items-end overflow-x-auto px-[calc(50%-26px)] [mask-image:linear-gradient(to_right,transparent,black_14%,black_86%,transparent)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 >
                   {entries.map((entry, idx) => {
                     const isActive = idx === mobileIndex;
@@ -229,15 +271,15 @@ export default function ProjectsPage() {
                         aria-label={`Select ${entry.title}`}
                         className="flex w-[52px] shrink-0 snap-center items-end justify-between px-1 pt-2 focus:outline-none"
                       >
-                        <span className="h-2 w-px bg-white/15" />
-                        <span className="h-3 w-px bg-white/25" />
+                        <span className="h-2 w-px bg-white/20" />
+                        <span className="h-3 w-px bg-white/30" />
                         <span
                           className={`w-[1.5px] rounded-full transition-all duration-150 ${
-                            isActive ? "h-6 bg-white" : "h-4 bg-white/40"
+                            isActive ? "h-6 bg-white" : "h-4 bg-white/45"
                           }`}
                         />
-                        <span className="h-3 w-px bg-white/25" />
-                        <span className="h-2 w-px bg-white/15" />
+                        <span className="h-3 w-px bg-white/30" />
+                        <span className="h-2 w-px bg-white/20" />
                       </button>
                     );
                   })}
