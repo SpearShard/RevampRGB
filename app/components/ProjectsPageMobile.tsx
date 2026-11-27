@@ -262,86 +262,70 @@ export default function ProjectsPage() {
   const activeCategoryTitle = mobileActiveEntry?.category ?? "";
   const activeProjectTitle = mobileActiveEntry?.title ?? "";
 
-  // Letter-by-letter GSAP transition for Category Title
+  // Blurry reveal transition for Category Title
   useEffect(() => {
     if (!activeCategoryTitle || activeCategoryTitle === prevCategoryRef.current) return;
     prevCategoryRef.current = activeCategoryTitle;
 
-    const container = categoryTitleRef.current;
-    if (!container) {
+    const el = categoryTitleRef.current;
+    if (!el) {
       const frame = requestAnimationFrame(() => setDisplayedCategory(activeCategoryTitle));
       return () => cancelAnimationFrame(frame);
     }
 
-    const oldChars = container.querySelectorAll(".cat-char");
-    gsap.killTweensOf(oldChars);
-
-    if (oldChars.length > 0) {
-      gsap.to(oldChars, {
-        y: -7,
-        opacity: 0,
-        duration: 0.13,
-        stagger: 0.01,
-        ease: "power2.in",
-        onComplete: () => {
-          setDisplayedCategory(activeCategoryTitle);
-          requestAnimationFrame(() => {
-            const newChars = categoryTitleRef.current?.querySelectorAll(".cat-char");
-            if (newChars && newChars.length > 0) {
-              gsap.fromTo(
-                newChars,
-                { y: 8, opacity: 0 },
-                { y: 0, opacity: 1, duration: 0.24, stagger: 0.014, ease: "power3.out" }
-              );
-            }
-          });
-        },
-      });
-    } else {
-      const frame = requestAnimationFrame(() => setDisplayedCategory(activeCategoryTitle));
-      return () => cancelAnimationFrame(frame);
-    }
+    gsap.killTweensOf(el);
+    gsap.to(el, {
+      opacity: 0,
+      filter: "blur(6px)",
+      y: -4,
+      duration: 0.14,
+      ease: "power2.in",
+      onComplete: () => {
+        setDisplayedCategory(activeCategoryTitle);
+        requestAnimationFrame(() => {
+          if (categoryTitleRef.current) {
+            gsap.fromTo(
+              categoryTitleRef.current,
+              { opacity: 0, filter: "blur(8px)", y: 5 },
+              { opacity: 1, filter: "blur(0px)", y: 0, duration: 0.28, ease: "power3.out" }
+            );
+          }
+        });
+      },
+    });
   }, [activeCategoryTitle]);
 
-  // Letter-by-letter GSAP transition for Sub-Project Title
+  // Blurry reveal transition for Sub-Project Title
   useEffect(() => {
     if (!activeProjectTitle || activeProjectTitle === prevTitleRef.current) return;
     prevTitleRef.current = activeProjectTitle;
 
-    const container = projectTitleRef.current;
-    if (!container) {
+    const el = projectTitleRef.current;
+    if (!el) {
       const frame = requestAnimationFrame(() => setDisplayedTitle(activeProjectTitle));
       return () => cancelAnimationFrame(frame);
     }
 
-    const oldChars = container.querySelectorAll(".title-char");
-    gsap.killTweensOf(oldChars);
-
-    if (oldChars.length > 0) {
-      gsap.to(oldChars, {
-        y: -6,
-        opacity: 0,
-        duration: 0.11,
-        stagger: 0.007,
-        ease: "power2.in",
-        onComplete: () => {
-          setDisplayedTitle(activeProjectTitle);
-          requestAnimationFrame(() => {
-            const newChars = projectTitleRef.current?.querySelectorAll(".title-char");
-            if (newChars && newChars.length > 0) {
-              gsap.fromTo(
-                newChars,
-                { y: 7, opacity: 0 },
-                { y: 0, opacity: 1, duration: 0.2, stagger: 0.01, ease: "power3.out" }
-              );
-            }
-          });
-        },
-      });
-    } else {
-      const frame = requestAnimationFrame(() => setDisplayedTitle(activeProjectTitle));
-      return () => cancelAnimationFrame(frame);
-    }
+    gsap.killTweensOf(el);
+    gsap.to(el, {
+      opacity: 0,
+      filter: "blur(6px)",
+      y: -4,
+      duration: 0.12,
+      ease: "power2.in",
+      onComplete: () => {
+        setDisplayedTitle(activeProjectTitle);
+        requestAnimationFrame(() => {
+          if (projectTitleRef.current) {
+            gsap.fromTo(
+              projectTitleRef.current,
+              { opacity: 0, filter: "blur(8px)", y: 5 },
+              { opacity: 1, filter: "blur(0px)", y: 0, duration: 0.26, ease: "power3.out" }
+            );
+          }
+        });
+      },
+    });
   }, [activeProjectTitle]);
 
   return (
@@ -386,40 +370,32 @@ export default function ProjectsPage() {
         </button>
       </div>
 
-      {/* Mobile-only Borderless Liquid Glass Scale + Seamless Protruding Image Tab */}
+      {/* Mobile-only Unified Borderless Liquid Glass Scale + Protruding Image Tab */}
       {mobileActiveEntry && (
         <section
           aria-label="Mobile project scale"
           className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex flex-col items-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:hidden"
         >
-          <div className="relative flex w-full max-w-[356px] flex-col items-center">
+          <div className="relative flex w-full max-w-[356px] flex-col items-center drop-shadow-[0_18px_40px_rgba(0,0,0,0.65)]">
             {/* Subtle Auroric RGB Glow */}
             <div
               aria-hidden="true"
               className="pointer-events-none absolute -inset-x-4 -bottom-2 h-28 rounded-full bg-gradient-to-r from-[#ff2433]/18 via-[#1ff261]/12 to-[#0056e6]/18 blur-2xl"
             />
 
-            {/* Seamless Top-Middle Protruding Sliding Image Frame (Borderless) */}
-            <div className="relative z-20 -mb-px flex items-end justify-center">
-              {/* Left Concave Fillet */}
-              <svg
+            {/* Seamless Top-Middle Protruding Sliding Image Frame */}
+            <div className="relative z-20 flex items-end justify-center">
+              {/* Left Concave Fillet (identical blur + fill, masked to curve) */}
+              <div
                 aria-hidden="true"
-                width="14"
-                height="14"
-                viewBox="0 0 14 14"
-                className="pointer-events-none shrink-0"
-              >
-                <path
-                  d="M 14 0 L 14 14 L 0 14 A 14 14 0 0 0 14 0 Z"
-                  fill="rgba(255,255,255,0.07)"
-                />
-              </svg>
+                className="pointer-events-none h-[14px] w-[14px] shrink-0 bg-white/[0.08] backdrop-blur-xl backdrop-saturate-150 [mask-image:radial-gradient(circle_at_0_0,transparent_13.5px,black_14px)]"
+              />
 
               <button
                 type="button"
                 onClick={() => openProject(mobileActiveEntry.href)}
                 aria-label={`Open ${mobileActiveEntry.title}`}
-                className="pointer-events-auto group relative w-[168px] overflow-hidden rounded-t-[20px] bg-white/[0.07] p-1.5 pb-1 shadow-[0_-14px_38px_rgba(0,0,0,0.45)] backdrop-blur-xl backdrop-saturate-150 transition-transform duration-150 active:scale-[0.98]"
+                className="pointer-events-auto group relative w-[168px] overflow-hidden rounded-t-[20px] bg-white/[0.08] p-1.5 pb-1 backdrop-blur-xl backdrop-saturate-150 transition-transform duration-150 active:scale-[0.98]"
               >
                 <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[13px] bg-black/40">
                   <div
@@ -443,71 +419,38 @@ export default function ProjectsPage() {
                 </div>
               </button>
 
-              {/* Right Concave Fillet */}
-              <svg
-                aria-hidden="true"
-                width="14"
-                height="14"
-                viewBox="0 0 14 14"
-                className="pointer-events-none shrink-0"
-              >
-                <path
-                  d="M 0 0 L 0 14 L 14 14 A 14 14 0 0 1 0 0 Z"
-                  fill="rgba(255,255,255,0.07)"
-                />
-              </svg>
-            </div>
-
-            {/* Bottom Borderless Liquid Glass Scale Dock */}
-            <div className="pointer-events-auto relative w-full overflow-hidden rounded-[22px] bg-white/[0.07] pb-3 pt-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.65)] backdrop-blur-xl backdrop-saturate-150">
-              {/* Specular Glass Sheen */}
+              {/* Right Concave Fillet (identical blur + fill, masked to curve) */}
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.08] via-white/[0.02] to-transparent"
+                className="pointer-events-none h-[14px] w-[14px] shrink-0 bg-white/[0.08] backdrop-blur-xl backdrop-saturate-150 [mask-image:radial-gradient(circle_at_100%_0,transparent_13.5px,black_14px)]"
               />
+            </div>
 
-              {/* Top-Left Category Title (GSAP letter-by-letter) + Counter */}
+            {/* Bottom Borderless Liquid Glass Scale Dock (matching exact fill & blur) */}
+            <div className="pointer-events-auto relative w-full overflow-hidden rounded-[22px] bg-white/[0.08] pb-3 pt-2.5 backdrop-blur-xl backdrop-saturate-150">
+              {/* Top-Left Category Title (Blurry Reveal) + Counter */}
               <div className="relative flex items-center justify-between gap-3 px-4">
                 <div
                   ref={categoryTitleRef}
-                  aria-label={displayedCategory}
-                  className="min-w-0 truncate font-mono text-[9.5px] font-medium uppercase tracking-[0.2em] text-white/65"
+                  className="min-w-0 truncate font-mono text-[9.5px] font-medium uppercase tracking-[0.2em] text-white/65 will-change-[transform,opacity,filter]"
                 >
-                  {displayedCategory.split("").map((char, idx) => (
-                    <span key={`${displayedCategory}-${idx}`} className="cat-char inline-block">
-                      {char === " " ? "\u00A0" : char}
-                    </span>
-                  ))}
+                  {displayedCategory}
                 </div>
                 <span className="w-10 shrink-0 text-right font-mono text-[10px] tabular-nums text-white/55">
                   {String(mobileIndex + 1).padStart(2, "0")}/{String(entries.length).padStart(2, "0")}
                 </span>
               </div>
 
-              {/* Sub-Project Title (GSAP letter-by-letter) */}
+              {/* Sub-Project Title (Blurry Reveal) */}
               <div
                 ref={projectTitleRef}
-                aria-label={displayedTitle}
-                className="relative mt-0.5 min-w-0 truncate px-4 pb-2 text-[13px] font-medium tracking-tight text-white"
+                className="relative mt-0.5 min-w-0 truncate px-4 pb-2 text-[13px] font-medium tracking-tight text-white will-change-[transform,opacity,filter]"
               >
-                {displayedTitle.split("").map((char, idx) => (
-                  <span key={`${displayedTitle}-${idx}`} className="title-char inline-block">
-                    {char === " " ? "\u00A0" : char}
-                  </span>
-                ))}
+                {displayedTitle}
               </div>
 
-              {/* Grouped Vertical-Line Ruler */}
+              {/* Grouped Vertical-Line Ruler (active line grows taller, no separate needle) */}
               <div className="relative pt-1">
-                {/* Center Hairline Needle */}
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute bottom-0 left-1/2 top-0 z-20 -translate-x-1/2"
-                >
-                  <span className="block h-7 w-[1.5px] rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.6)]" />
-                </div>
-
-                {/* Scrollable Tick Track with Padded & Spaced Category Group Borders */}
                 <div
                   ref={rulerRef}
                   onScroll={handleRulerScroll}
@@ -540,13 +483,15 @@ export default function ProjectsPage() {
                               type="button"
                               onClick={() => scrollToProject(idx)}
                               aria-label={`Select ${entry.title}`}
-                              className="flex h-8 w-[52px] shrink-0 items-end justify-between px-1.5 focus:outline-none"
+                              className="flex h-9 w-[52px] shrink-0 items-end justify-between px-1.5 focus:outline-none"
                             >
                               <span className="h-2 w-px bg-white/20" />
                               <span className="h-3 w-px bg-white/30" />
                               <span
-                                className={`w-[1.5px] rounded-full transition-all duration-150 ${
-                                  isActive ? "h-6 bg-white" : "h-4 bg-white/45"
+                                className={`rounded-full transition-all duration-200 ${
+                                  isActive
+                                    ? "h-7 w-[2px] bg-white shadow-[0_0_10px_rgba(255,255,255,0.65)]"
+                                    : "h-3.5 w-[1.5px] bg-white/40"
                                 }`}
                               />
                               <span className="h-3 w-px bg-white/30" />
