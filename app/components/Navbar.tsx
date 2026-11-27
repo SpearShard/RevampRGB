@@ -139,7 +139,11 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!isDesktop || !dockRef.current) return;
-    gsap.fromTo(logoShellRef.current, { y: -24, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.7, ease: 'power3.out' });
+    gsap.fromTo(
+      [logoShellRef.current, dockShellRef.current, enterShellRef.current],
+      { scale: 0.15, y: 80, autoAlpha: 0 },
+      { scale: 1, y: 0, autoAlpha: 1, duration: 0.9, stagger: 0.1, ease: 'power3.out' }
+    );
     gsap.fromTo(dockShellRef.current, { y: -48, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.85, delay: 0.08, ease: 'power3.out' });
     gsap.fromTo(enterShellRef.current, { scale: 0.25, y: 40, autoAlpha: 0 }, { scale: 1, y: 0, autoAlpha: 1, duration: 0.85, delay: 0.14, ease: 'power3.out' });
     return () => {
@@ -396,53 +400,37 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Desktop Top-Center Notch Navbar with WebGL Aurora Background */}
+      {/* Bottom Notch Navigation (from cms-migration + contained WebGL aurora) */}
       {isDesktop && (
         <div
           ref={dockShellRef}
-          className="fixed top-0 left-1/2 -translate-x-1/2 z-50 hidden sm:flex items-start select-none"
+          className="hidden md:block fixed bottom-0 left-1/2 -translate-x-1/2 z-50 select-none max-w-[96vw]"
         >
-          {/* Left Top-Edge Concave Fillet */}
-          <svg
-            aria-hidden="true"
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            className="pointer-events-none shrink-0"
-          >
-            <path d="M 0 0 L 16 0 L 16 16 A 16 16 0 0 0 0 0 Z" fill="#050507" />
-            <path d="M 0 0 A 16 16 0 0 1 16 16" fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="1" />
-          </svg>
-
+          <div className="pointer-events-none absolute -inset-x-8 -top-8 h-20 rounded-full bg-gradient-to-r from-red-500/30 via-emerald-500/30 to-blue-500/30 opacity-40 blur-2xl" />
           <div
             ref={dockRef}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
-            className="relative flex items-center gap-1 rounded-b-[22px] border-x border-b border-white/[0.14] bg-[#050507] px-3 py-2 shadow-[0_18px_50px_rgba(0,0,0,0.85)] overflow-hidden"
+            className="group/notch relative flex items-center justify-center gap-2 sm:gap-3 px-3 sm:px-5 pt-3 pb-[max(0.7rem,env(safe-area-inset-bottom))] bg-[#08080c]/95 backdrop-blur-3xl rounded-t-[26px] sm:rounded-t-[30px] border border-b-0 border-white/[0.16] shadow-[0_-12px_45px_rgba(0,0,0,0.38)] overflow-hidden transition-[padding,background-color] duration-300 ease-out hover:bg-[#0b0b10]/[0.98] hover:pt-4"
           >
-            {/* Contained WebGL RGB Aurora Background */}
             <RgbAuraBackground contained />
-
+            <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
             <div
               ref={auraRef}
-              className="pointer-events-none absolute w-[200px] h-[200px] rounded-full opacity-0"
+              className="absolute top-0 left-0 w-52 h-52 rounded-full pointer-events-none opacity-0 scale-50 z-0 mix-blend-screen"
               style={{
-                background:
-                  'radial-gradient(circle, rgba(255,0,60,0.35) 0%, rgba(0,255,102,0.22) 45%, rgba(0,102,255,0.28) 80%, transparent 100%)',
-                filter: 'url(#rgb-aura-displacement) blur(18px)',
+                filter: 'url(#rgb-aura-displacement)',
+                background: 'radial-gradient(circle, rgba(239,68,68,0.5) 0%, rgba(16,185,129,0.4) 40%, rgba(37,99,235,0.4) 70%, transparent 100%)',
               }}
             />
-
-            <nav className="relative z-10 flex items-center gap-1">
+            <nav aria-label="Main navigation" className="relative z-10 flex items-center gap-0.5 sm:gap-1">
               {LINKS.map((link, idx) => {
                 const isActive = pathname === link.href || (link.href === '/project' && isDetailRoute);
                 return (
                   <Link
                     key={link.label}
+                    ref={(el) => { linksRef.current[idx] = el; }}
                     href={link.href}
-                    ref={(el) => {
-                      linksRef.current[idx] = el;
-                    }}
                     onClick={(e) => {
                       if (link.href === '/project') {
                         e.preventDefault();
@@ -453,33 +441,24 @@ export default function Navbar() {
                     }}
                     onMouseMove={(e) => handleLinkMouseMove(e, linksRef.current[idx])}
                     onMouseLeave={() => handleLinkMouseLeave(linksRef.current[idx])}
-                    className={`group relative flex items-center gap-2 rounded-full px-4 py-1.5 transition-colors duration-300 no-underline cursor-pointer ${
-                      isActive ? 'bg-white/10' : 'hover:bg-white/[0.05]'
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`group relative flex items-baseline gap-1.5 sm:gap-2 py-2 px-3.5 sm:py-2.5 sm:px-6 rounded-xl transition-colors duration-300 no-underline cursor-pointer ${
+                      isActive ? 'bg-white/[0.11]' : 'hover:bg-white/[0.065]'
                     }`}
                   >
-                    <span className={`text-[10px] font-mono transition-colors ${isActive ? 'text-cyan-400' : 'text-neutral-500 group-hover:text-cyan-400'}`}>
+                    <span className={`text-[9px] sm:text-[10px] font-mono transition-colors ${isActive ? 'text-white/75' : 'text-neutral-500 group-hover:text-white/75'}`}>
                       {link.code}
                     </span>
-                    <span className={`text-xs font-medium uppercase tracking-[0.15em] transition-colors ${isActive ? 'text-white' : 'text-neutral-300 group-hover:text-white'}`}>
+                    <span className={`text-[11px] sm:text-xs font-sans uppercase tracking-wider sm:tracking-widest font-medium transition-colors ${isActive ? 'text-white' : 'text-neutral-300 group-hover:text-white'}`}>
                       {link.label}
                     </span>
+                    {isActive && <span className="absolute bottom-1 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-white/75" />}
                   </Link>
                 );
               })}
             </nav>
+            <div className="pointer-events-none absolute bottom-0 left-1/2 h-px w-1/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
           </div>
-
-          {/* Right Top-Edge Concave Fillet */}
-          <svg
-            aria-hidden="true"
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            className="pointer-events-none shrink-0"
-          >
-            <path d="M 0 0 L 16 0 A 16 16 0 0 0 0 16 Z" fill="#050507" />
-            <path d="M 16 0 A 16 16 0 0 0 0 16" fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="1" />
-          </svg>
         </div>
       )}
       {/* ISO Enter Button */}
