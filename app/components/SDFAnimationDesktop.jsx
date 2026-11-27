@@ -422,6 +422,16 @@ export default function SDFAnimation({ mode = 'home', centered = false, projects
             }
         };
 
+        const onVisibilityChange = () => {
+            if (!isStarted || !rendererRef.current) return;
+            if (document.visibilityState === "hidden") {
+                rendererRef.current.setAnimationLoop(null);
+            } else {
+                rendererRef.current.setAnimationLoop(animate);
+            }
+        };
+        document.addEventListener("visibilitychange", onVisibilityChange);
+
         init();
 
         if (hasLoader) {
@@ -432,6 +442,7 @@ export default function SDFAnimation({ mode = 'home', centered = false, projects
 
         return () => {
             window.removeEventListener('home-loader:reveal', startAnimation);
+            document.removeEventListener("visibilitychange", onVisibilityChange);
             window.removeEventListener('resize', onWindowResize);
             if (rendererRef.current) {
                 rendererRef.current.setAnimationLoop(null);

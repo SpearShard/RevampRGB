@@ -1,8 +1,14 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import SDFAnimationDesktop from "./SDFAnimationDesktop";
-import SDFAnimationMobile from "./SDFAnimationMobile";
+
+const SDFAnimationDesktop = dynamic(() => import("./SDFAnimationDesktop"), {
+  ssr: false,
+});
+const SDFAnimationMobile = dynamic(() => import("./SDFAnimationMobile"), {
+  ssr: false,
+});
 
 /**
  * @param {{
@@ -20,7 +26,7 @@ export default function SDFAnimation({
   selectedChunkIndex = null,
   activeHref = null,
 }) {
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 640px)");
@@ -29,6 +35,8 @@ export default function SDFAnimation({
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
   }, []);
+
+  if (isDesktop === null) return null;
 
   return isDesktop ? (
     <SDFAnimationDesktop

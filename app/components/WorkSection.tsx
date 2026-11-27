@@ -11,16 +11,17 @@ type WorkCategory = {
   id: string;
   title: string;
   image: string;
+  thumbImage: string;
   projectCount: number;
   href: string;
 };
 
 // Google Drive's export=view URLs are unreliable as embedded image sources.
 // Use its thumbnail endpoint so the representative covers load consistently.
-const getDisplayImage = (url: string) => {
+const getDisplayImage = (url: string, size = "w1600") => {
   const driveFileId = url.match(/[?&]id=([^&]+)/)?.[1];
   return driveFileId
-    ? `https://drive.google.com/thumbnail?id=${driveFileId}&sz=w1600`
+    ? `https://drive.google.com/thumbnail?id=${driveFileId}&sz=${size}`
     : url;
 };
 
@@ -39,7 +40,8 @@ const projects = Object.entries(projectsData)
     return {
       id: String(index + 1).padStart(2, "0"),
       title: category.title,
-      image: getDisplayImage(representativeProject.cover),
+      image: getDisplayImage(representativeProject.cover, "w1600"),
+      thumbImage: getDisplayImage(representativeProject.cover, "w600"),
       projectCount: category.projects?.length ?? 0,
       href: "/project",
     };
@@ -202,9 +204,7 @@ export default function WorksPage() {
           >
             <img
               src={
-                projects[
-                  (active - 1 + projects.length) % projects.length
-                ].image
+                projects[(active - 1 + projects.length) % projects.length].thumbImage
               }
               className="h-full w-full object-cover"
             />
@@ -216,7 +216,7 @@ export default function WorksPage() {
             className="absolute right-[3%] hidden h-[320px] w-[220px] overflow-hidden rounded-[28px] opacity-35 blur-md lg:block"
           >
             <img
-              src={projects[(active + 1) % projects.length].image}
+              src={projects[(active + 1) % projects.length].thumbImage}
               className="h-full w-full object-cover"
             />
           </div>

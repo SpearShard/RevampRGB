@@ -1,13 +1,15 @@
 'use client'
+import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
-import GalleryShader from "./BgShader";
+
+const GalleryShader = dynamic(() => import("./BgShader"), { ssr: false });
 
 export default function LandingPage() {
     const sectionRef = useRef<HTMLDivElement>(null);
     const canvasContainerRef = useRef<HTMLDivElement>(null);
     const textGroupRef = useRef<HTMLDivElement>(null);
-    const [isDesktop, setIsDesktop] = useState(false);
+    const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
 
     useEffect(() => {
         const mq = window.matchMedia("(min-width: 640px)");
@@ -118,7 +120,7 @@ export default function LandingPage() {
                 className="fixed inset-0 w-full h-screen z-0 overflow-hidden pointer-events-none"
             >
                 {/* Full-bleed Red Green Blue liquid base matrix shader */}
-                {isDesktop && <GalleryShader />}
+                {isDesktop === true && <GalleryShader />}
             </div>
 
             {/* HIGH-END INDUSTRIAL ARCHITECTURE LAYOUT */}
