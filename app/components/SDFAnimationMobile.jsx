@@ -680,14 +680,62 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             const isMobileAbout = modeRef.current === 'about' && window.innerWidth < 640;
             const isContactColorMatch = isMobileContact && (chunk.index % 3 === contactIndexRef.current);
             const isAboutColorMatch = isMobileAbout && (chunk.index % 3 === aboutIndexRef.current);
-            const contactPop = isContactColorMatch ? 0.22 : 0;
-            const aboutPop = isAboutColorMatch ? 0.18 : 0;
-            const projectPop = (modeRef.current === 'project' && isHovered) ? 0.16 : 0;
-            const effectiveOpen = isMobileAbout ? aboutPop : (targetOpen + contactPop + projectPop);
-            chunk.openVal += (effectiveOpen - chunk.openVal) * 0.12;
-            chunk.mesh.position.copy(chunk.dir).multiplyScalar(chunk.openVal * (isMobileContact ? 0.64 : 0.72));
+            const elapsed = clockRef.current?.elapsedTime ?? 0;
+            let targetHover = isHovered ? 1.0 : (modeRef.current === 'project' ? 0.08 : 0.34);
+            let formationScale = 1.0;
 
-            const targetHover = modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : (isMobileContact || isMobileAbout) ? ((isContactColorMatch || isAboutColorMatch) ? 1.0 : 0.18) : isHovered ? 1.0 : (modeRef.current === 'project' ? 0.08 : 0.34);
+            if (modeRef.current === 'detail' && chunk.targetOpacity === 1) {
+                targetHover = 1.0;
+            }
+
+            if (isMobileAbout) {
+                // Tri-Axis Gyroscope: 3 intersecting orbital rings (1 per pillar)
+                const ringId = chunk.index % 3;
+                const ringMembers = Math.max(1, Math.ceil(chunks.length / 3));
+                const posInRing = Math.floor(chunk.index / 3);
+                const baseAngle = (posInRing / ringMembers) * Math.PI * 2 + elapsed * (ringId === aboutIndexRef.current ? 0.38 : 0.16);
+                const ringRadius = isAboutColorMatch ? 1.05 : 0.72;
+                const rx = Math.cos(baseAngle) * ringRadius;
+                const ry = Math.sin(baseAngle) * ringRadius;
+                const tilt = isAboutColorMatch ? 0.15 : (ringId === 0 ? 0.95 : ringId === 1 ? -0.95 : 1.35);
+                const yaw = isAboutColorMatch ? 0.0 : (ringId * 1.05);
+                const ty = ry * Math.cos(tilt);
+                const tz = ry * Math.sin(tilt);
+                const tx = rx * Math.cos(yaw) - tz * Math.sin(yaw);
+                const fz = rx * Math.sin(yaw) + tz * Math.cos(yaw) + (isAboutColorMatch ? 0.25 : -0.15);
+                chunk.mesh.position.x += (tx - chunk.mesh.position.x) * 0.1;
+                chunk.mesh.position.y += (ty - chunk.mesh.position.y) * 0.1;
+                chunk.mesh.position.z += (fz - chunk.mesh.position.z) * 0.1;
+                targetHover = isAboutColorMatch ? 1.0 : 0.10;
+                formationScale = isAboutColorMatch ? 1.12 : 0.82;
+            } else if (isMobileContact) {
+                // Parabolic Signal Dish: concentric Fibonacci dish with radial ripple wave
+                const total = Math.max(1, chunks.length);
+                const norm = (i + 0.5) / total;
+                const r = Math.sqrt(norm) * 1.18;
+                const theta = i * 2.3999632 + elapsed * 0.18;
+                const dishX = Math.cos(theta) * r;
+                const dishY = Math.sin(theta) * r * 0.78 + 0.14;
+                const wave = Math.sin(r * 5.0 - elapsed * 4.2) * 0.12;
+                const dishZ = (r * r) * 0.55 - 0.35 + wave;
+                chunk.mesh.position.x += (dishX - chunk.mesh.position.x) * 0.1;
+                chunk.mesh.position.y += (dishY - chunk.mesh.position.y) * 0.1;
+                chunk.mesh.position.z += (dishZ - chunk.mesh.position.z) * 0.1;
+                const pulse = 0.5 + 0.5 * Math.sin(r * 5.0 - elapsed * 4.2);
+                targetHover = isContactColorMatch ? (0.65 + 0.35 * pulse) : (0.08 + 0.22 * pulse);
+                formationScale = isContactColorMatch ? (1.08 + 0.08 * pulse) : 0.86;
+            } else {
+                const projectPop = (modeRef.current === 'project' && isHovered) ? 0.16 : 0;
+                const effectiveOpen = targetOpen + projectPop;
+                chunk.openVal += (effectiveOpen - chunk.openVal) * 0.12;
+                const tx = chunk.dir.x * chunk.openVal * 0.72;
+                const ty = chunk.dir.y * chunk.openVal * 0.72;
+                const tz = chunk.dir.z * chunk.openVal * 0.72;
+                chunk.mesh.position.x += (tx - chunk.mesh.position.x) * 0.18;
+                chunk.mesh.position.y += (ty - chunk.mesh.position.y) * 0.18;
+                chunk.mesh.position.z += (tz - chunk.mesh.position.z) * 0.18;
+            }
+
             chunk.hoverMix += (targetHover - chunk.hoverMix) * 0.16;
             if (modeRef.current === 'about' && window.innerWidth >= 640) {
                 const elapsed = clockRef.current?.elapsedTime ?? 0;
@@ -716,7 +764,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             const detailSelected = modeRef.current === 'detail' && chunk.targetOpacity === 1;
             const detailScale = detailSelected ? (window.innerWidth < 640 ? 1.32 : 1.58) : 1;
             const projectHoverScale = (modeRef.current === 'project' && isHovered) ? 1.16 : 1.0;
-            chunk.mesh.scale.setScalar(detailScale * projectHoverScale * (1 + chunk.hoverMix * 0.06));
+            chunk.mesh.scale.setScalar(detailScale * projectHoverScale * formationScale * (1 + chunk.hoverMix * 0.06));
             chunk.mesh.visible = modeRef.current !== 'detail' || chunk.targetOpacity === 1;
             chunk.material.uniforms.uHoverMix.value = chunk.hoverMix;
         }

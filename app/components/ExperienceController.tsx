@@ -9,6 +9,7 @@ import PremiumWorkSection from "./WorkSection";
 import ProjectsPage from "./ProjectsPage";
 import ContactSection from "./ContactSection";
 import AboutPageSection from "./AboutPageSection";
+import MobileDock from "./MobileDock";
 
 type BaseExperienceRoute = "/" | "/project" | "/contact" | "/about";
 
@@ -287,6 +288,8 @@ export default function ExperienceController({ children }: ExperienceControllerP
       >
         <AboutPageSection />
       </div>
+
+      <MobileDock />
 
       <div
         ref={detailRef}
