@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
-import { ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import projectsData from "@/app/data/projects.json";
@@ -192,82 +192,32 @@ export default function WorksPage() {
   const leftCardRef = useRef<HTMLDivElement | null>(null);
   const rightCardRef = useRef<HTMLDivElement | null>(null);
 
-  const animateSlide = (direction: "next" | "prev") => {
-    const tl = gsap.timeline();
-
-    gsap.set(mainCardRef.current, {
-      scale: 0.92,
-      opacity: 0,
-      x: direction === "next" ? 120 : -120,
-      rotate: direction === "next" ? 3 : -3,
-    });
-
-    gsap.set(leftCardRef.current, {
-      x: direction === "next" ? -40 : 40,
-    });
-
-    gsap.set(rightCardRef.current, {
-      x: direction === "next" ? 40 : -40,
-    });
-
-    tl.to(
-      mainCardRef.current,
-      {
-        x: 0,
-        opacity: 1,
-        scale: 1,
-        rotate: 0,
-        duration: 1.2,
-        ease: "expo.out",
-      },
-      0
-    )
-      .to(
+  const selectDesktopSlide = (nextIdx: number) => {
+    if (nextIdx === active) return;
+    const direction = nextIdx > active ? 1 : -1;
+    setActive(nextIdx);
+    requestAnimationFrame(() => {
+      gsap.fromTo(
         [leftCardRef.current, rightCardRef.current],
-        {
-          x: 0,
-          duration: 1,
-          ease: "expo.out",
-        },
-        0
-      )
-      .fromTo(
-        ".title",
-        {
-          y: 30,
-          opacity: 0,
-        },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.9,
-          ease: "power4.out",
-        },
-        0.2
+        { x: direction * 26, opacity: 0.16 },
+        { x: 0, opacity: 0.35, duration: 0.75, ease: "power3.out", overwrite: "auto" }
       );
+      gsap.fromTo(
+        ".desktop-work-title",
+        { y: 14, opacity: 0, filter: "blur(6px)" },
+        { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.55, ease: "power3.out", overwrite: "auto" }
+      );
+    });
   };
 
   useEffect(() => {
     if (!isDesktop) return;
-    animateSlide("next");
+    gsap.fromTo(
+      mainCardRef.current,
+      { opacity: 0, y: 24, scale: 0.96 },
+      { opacity: 1, y: 0, scale: 1, duration: 0.9, ease: "expo.out" }
+    );
   }, [isDesktop]);
-
-  const nextSlide = () => {
-    setActive((prev) => (prev + 1) % projects.length);
-
-    requestAnimationFrame(() => {
-      animateSlide("next");
-    });
-  };
-
-  const prevSlide = () => {
-    setActive((prev) => (prev - 1 + projects.length) % projects.length);
-
-    requestAnimationFrame(() => {
-      animateSlide("prev");
-    });
-  };
-
   return (
     <main className="relative flex min-h-screen items-center overflow-hidden bg-[#050505] md:bg-transparent text-white">
       <section className="relative z-10 w-full px-6 md:px-10">
@@ -465,45 +415,59 @@ export default function WorksPage() {
             />
           </div>
 
-          {/* MAIN PROJECT CARD */}
+          {/* MAIN PROJECT CARD (Smooth GPU Push-Slide) */}
           <div
             ref={mainCardRef}
-            className="group relative h-[460px] w-full max-w-[820px] overflow-hidden rounded-[36px] border border-white/10"
+            className="group relative h-[460px] w-full max-w-[820px] overflow-hidden rounded-[36px] border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.75)]"
           >
-            <img
-              src={projects[active].image}
-              alt={projects[active].title}
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-            />
+            <div
+              className="flex h-full w-full transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
+              style={{ transform: `translate3d(-${active * 100}%, 0, 0)` }}
+            >
+              {projects.map((proj, idx) => (
+                <div key={proj.slug} className="relative h-full w-full shrink-0 overflow-hidden">
+                  <img
+                    src={proj.image}
+                    alt={proj.title}
+                    loading={Math.abs(idx - active) <= 1 ? "eager" : "lazy"}
+                    className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                  />
+                </div>
+              ))}
+            </div>
 
-            <div className="absolute inset-0 bg-black/35" />
-            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/85" />
+            <div className="pointer-events-none absolute inset-0 bg-black/35" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-transparent" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/85" />
 
             <Link
               href={projects[active].href}
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent("rgb:project-jump-category", { detail: { categorySlug: projects[active].slug } }));
+                window.dispatchEvent(new CustomEvent("rgb:enter-project"));
+              }}
               aria-label={`Explore ${projects[active].title}`}
               className="absolute inset-0 z-10"
             />
 
             <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-6 md:p-8">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase tracking-[0.3em] text-white/55">
+                <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/55">
                   {projects[active].id} / {String(projects.length).padStart(2, "0")}
                 </span>
-                <span className="text-[10px] uppercase tracking-[0.25em] text-white/55">
+                <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-white/55">
                   {projects[active].projectCount} PROJECTS
                 </span>
               </div>
 
-              <div>
-                <h2 className="title max-w-[560px] text-[2.8rem] font-[450] leading-[0.92] tracking-[-0.07em] text-white md:text-[4rem]">
+              <div className="desktop-work-title will-change-[transform,opacity,filter]">
+                <h2 className="max-w-[560px] text-[2.8rem] font-[450] leading-[0.92] tracking-[-0.07em] text-white md:text-[4rem]">
                   {projects[active].title}
                 </h2>
 
                 <div className="mt-6 flex items-center gap-3">
-                  <div className="h-[1px] w-12 bg-white/50" />
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-white/65">
+                  <div className="h-[1px] w-12 bg-white/50 transition-all duration-300 group-hover:w-16 group-hover:bg-white" />
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-white/65 transition-colors group-hover:text-white">
                     Explore category ↗
                   </p>
                 </div>
@@ -512,21 +476,50 @@ export default function WorksPage() {
           </div>
         </div>
 
-        {/* Navigation */}
-        <div className="mt-8 flex items-center gap-3">
-          <button
-            onClick={prevSlide}
-            className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 transition-all duration-300 hover:border-white/20"
-          >
-            <ChevronLeft size={18} />
-          </button>
-
-          <button
-            onClick={nextSlide}
-            className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 transition-all duration-300 hover:border-white/20"
-          >
-            <ChevronRight size={18} />
-          </button>
+        {/* Desktop Hover Scale (replaces prev/next arrows) */}
+        <div className="mt-8 flex justify-center">
+          <div className="flex flex-col items-center gap-2 rounded-[20px] bg-white/[0.06] px-5 py-3 shadow-[0_18px_45px_rgba(0,0,0,0.65)] backdrop-blur-xl backdrop-saturate-150">
+            <div className="flex w-full items-center justify-between gap-6 px-1">
+              <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/55">
+                {projects[active].title}
+              </span>
+              <span className="font-mono text-[10px] tabular-nums text-white/45">
+                {projects[active].id}/{String(projects.length).padStart(2, "0")}
+              </span>
+            </div>
+            <div className="flex items-end rounded-[12px] bg-white/[0.05] px-2.5 py-1.5 ring-1 ring-inset ring-white/20">
+              {projects.map((proj, idx) => {
+                const dist = Math.abs(idx - active);
+                const isTickActive = dist === 0;
+                const isNeighbor = dist === 1;
+                return (
+                  <button
+                    key={proj.slug}
+                    type="button"
+                    onMouseEnter={() => selectDesktopSlide(idx)}
+                    onFocus={() => selectDesktopSlide(idx)}
+                    onClick={() => selectDesktopSlide(idx)}
+                    aria-label={`Preview ${proj.title}`}
+                    className="group/tick flex h-9 w-[64px] items-end justify-between px-2 focus:outline-none cursor-pointer"
+                  >
+                    <span className="h-2 w-px bg-white/20" />
+                    <span className="h-3 w-px bg-white/30" />
+                    <span
+                      className={`rounded-full transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                        isTickActive
+                          ? "h-7 w-[2.5px] bg-white shadow-[0_0_12px_rgba(255,255,255,0.8)]"
+                          : isNeighbor
+                            ? "h-5 w-[1.5px] bg-white/60"
+                            : "h-3.5 w-[1.5px] bg-white/35 group-hover/tick:bg-white/65"
+                      }`}
+                    />
+                    <span className="h-3 w-px bg-white/30" />
+                    <span className="h-2 w-px bg-white/20" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
         </div>
         )}

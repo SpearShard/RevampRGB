@@ -1,12 +1,10 @@
 'use client';
 
 import React, { useRef, useEffect, useCallback, useState } from 'react';
-import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import gsap from 'gsap';
-const RgbAuraBackground = dynamic(() => import('./bgwebglshaders/RgbAuraBackground'), { ssr: false });
 
 interface NavLink {
   label: string;
@@ -413,7 +411,6 @@ export default function Navbar() {
             onMouseLeave={handleMouseLeave}
             className="group/notch relative flex items-center justify-center gap-2 sm:gap-3 px-3 sm:px-5 pt-3 pb-[max(0.7rem,env(safe-area-inset-bottom))] bg-[#08080c]/95 backdrop-blur-3xl rounded-t-[26px] sm:rounded-t-[30px] border border-b-0 border-white/[0.16] shadow-[0_-12px_45px_rgba(0,0,0,0.38)] overflow-hidden transition-[padding,background-color] duration-300 ease-out hover:bg-[#0b0b10]/[0.98] hover:pt-4"
           >
-            <RgbAuraBackground contained />
             <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
             <div
               ref={auraRef}
