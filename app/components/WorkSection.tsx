@@ -55,47 +55,127 @@ export default function WorksPage() {
   const router = useRouter();
   const [active, setActive] = useState(0);
   const [mobileActive, setMobileActive] = useState(0);
-  const mobileSectionRef = useRef<HTMLDivElement>(null);
+  const [displayedCatTitle, setDisplayedCatTitle] = useState(() => projects[0]?.title ?? "");
+  const prevCatTitleRef = useRef(projects[0]?.title ?? "");
+  const inlineDockRef = useRef<HTMLDivElement>(null);
+  const inlineRulerRef = useRef<HTMLDivElement>(null);
+  const inlineTickRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const inlineTitleRef = useRef<HTMLDivElement>(null);
   const touchStartXRef = useRef<number | null>(null);
+  const isInlineProgScrollRef = useRef(false);
+  const isInlineTouchingRef = useRef(false);
+  const inlineSnapTweenRef = useRef<gsap.core.Tween | null>(null);
+  const inlineIdleTimerRef = useRef<number | null>(null);
+  const mobileActiveRef = useRef(0);
 
   useEffect(() => {
-    const el = mobileSectionRef.current;
-    if (!el || typeof window === "undefined" || window.innerWidth >= 768) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = Boolean(entries[0]?.isIntersecting);
-        window.dispatchEvent(new CustomEvent("rgb:works-inview", { detail: { active: visible } }));
+    mobileActiveRef.current = mobileActive;
+  }, [mobileActive]);
+
+  const getInlineTargetScrollLeft = (idx: number) => {
+    const el = inlineRulerRef.current;
+    const tick = inlineTickRefs.current[idx];
+    if (!el || !tick) return 0;
+    return tick.offsetLeft + tick.offsetWidth / 2 - el.clientWidth / 2;
+  };
+
+  const inlineSpringSnapTo = (idx: number) => {
+    const el = inlineRulerRef.current;
+    if (!el) return;
+    inlineSnapTweenRef.current?.kill();
+    isInlineProgScrollRef.current = true;
+    inlineSnapTweenRef.current = gsap.to(el, {
+      scrollLeft: getInlineTargetScrollLeft(idx),
+      duration: 0.54,
+      ease: "elastic.out(1, 0.72)",
+      onComplete: () => {
+        isInlineProgScrollRef.current = false;
+        inlineSnapTweenRef.current = null;
       },
-      { threshold: 0.28 }
-    );
-    observer.observe(el);
-    return () => {
-      observer.disconnect();
-      window.dispatchEvent(new CustomEvent("rgb:works-inview", { detail: { active: false } }));
-    };
-  }, []);
+      onInterrupt: () => {
+        isInlineProgScrollRef.current = false;
+      },
+    });
+  };
 
   useEffect(() => {
-    const onWorksSelect = (e: Event) => {
-      const idx = (e as CustomEvent<{ index?: number }>).detail?.index;
-      if (typeof idx === "number") {
-        setMobileActive(Math.max(0, Math.min(projects.length - 1, idx)));
+    if (typeof window === "undefined" || window.innerWidth >= 768) return;
+    const frame = requestAnimationFrame(() => {
+      const el = inlineRulerRef.current;
+      if (el) {
+        isInlineProgScrollRef.current = true;
+        el.scrollLeft = getInlineTargetScrollLeft(0);
+        requestAnimationFrame(() => {
+          isInlineProgScrollRef.current = false;
+        });
       }
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      inlineSnapTweenRef.current?.kill();
+      if (inlineIdleTimerRef.current !== null) window.clearTimeout(inlineIdleTimerRef.current);
     };
-    window.addEventListener("rgb:works-select", onWorksSelect);
-    return () => window.removeEventListener("rgb:works-select", onWorksSelect);
   }, []);
 
-  const setMobileCard = (idx: number) => {
+  const activeMobileTitle = projects[mobileActive]?.title ?? "";
+  useEffect(() => {
+    if (!activeMobileTitle || activeMobileTitle === prevCatTitleRef.current) return;
+    prevCatTitleRef.current = activeMobileTitle;
+    const el = inlineTitleRef.current;
+    if (!el) {
+      const f = requestAnimationFrame(() => setDisplayedCatTitle(activeMobileTitle));
+      return () => cancelAnimationFrame(f);
+    }
+    gsap.killTweensOf(el);
+    gsap.to(el, {
+      opacity: 0,
+      filter: "blur(6px)",
+      y: -4,
+      duration: 0.12,
+      ease: "power2.in",
+      onComplete: () => {
+        setDisplayedCatTitle(activeMobileTitle);
+        requestAnimationFrame(() => {
+          if (inlineTitleRef.current) {
+            gsap.fromTo(
+              inlineTitleRef.current,
+              { opacity: 0, filter: "blur(8px)", y: 5 },
+              { opacity: 1, filter: "blur(0px)", y: 0, duration: 0.25, ease: "power3.out" }
+            );
+          }
+        });
+      },
+    });
+  }, [activeMobileTitle]);
+
+  const findClosestInlineIndex = () => {
+    const el = inlineRulerRef.current;
+    if (!el || projects.length === 0) return 0;
+    const center = el.scrollLeft + el.clientWidth / 2;
+    let bestIdx = 0;
+    let bestDist = Infinity;
+    for (let i = 0; i < projects.length; i++) {
+      const tick = inlineTickRefs.current[i];
+      if (!tick) continue;
+      const dist = Math.abs(tick.offsetLeft + tick.offsetWidth / 2 - center);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = i;
+      }
+    }
+    return bestIdx;
+  };
+
+  const selectMobileCard = (idx: number, snap = true) => {
     const clamped = Math.max(0, Math.min(projects.length - 1, idx));
     setMobileActive(clamped);
-    window.dispatchEvent(new CustomEvent("rgb:works-card-change", { detail: { index: clamped } }));
+    if (snap) inlineSpringSnapTo(clamped);
   };
 
   const openCategoryInProjects = (slug: string) => {
-    window.dispatchEvent(new CustomEvent("rgb:works-inview", { detail: { active: false } }));
+    const fromRectTop = inlineDockRef.current?.getBoundingClientRect().top;
     window.dispatchEvent(new CustomEvent("rgb:project-jump-category", { detail: { categorySlug: slug } }));
-    window.dispatchEvent(new CustomEvent("rgb:enter-project"));
+    window.dispatchEvent(new CustomEvent("rgb:enter-project", { detail: { fromRectTop } }));
     router.push("/project");
   };
   const [isDesktop, setIsDesktop] = useState(false);
@@ -202,23 +282,22 @@ export default function WorksPage() {
           </h1>
         </div>
 
-        {/* Mobile single-frame push-slide Works box (matches /project dock preview) */}
-        <div
-          ref={mobileSectionRef}
-          onTouchStart={(e) => {
-            touchStartXRef.current = e.touches[0]?.clientX ?? null;
-          }}
-          onTouchEnd={(e) => {
-            if (touchStartXRef.current === null) return;
-            const dx = (e.changedTouches[0]?.clientX ?? touchStartXRef.current) - touchStartXRef.current;
-            touchStartXRef.current = null;
-            if (Math.abs(dx) > 36) {
-              setMobileCard(mobileActive + (dx < 0 ? 1 : -1));
-            }
-          }}
-          className="relative flex justify-center pb-20 md:hidden"
-        >
-          <div className="relative w-full max-w-[330px] overflow-hidden rounded-[26px] border border-white/15 bg-[#111] shadow-[0_24px_60px_rgba(0,0,0,0.85)]">
+        {/* Mobile single-frame push-slide Works box + inline Liquid Glass scale */}
+        <div className="flex flex-col items-center gap-4 pb-6 md:hidden">
+          <div
+            onTouchStart={(e) => {
+              touchStartXRef.current = e.touches[0]?.clientX ?? null;
+            }}
+            onTouchEnd={(e) => {
+              if (touchStartXRef.current === null) return;
+              const dx = (e.changedTouches[0]?.clientX ?? touchStartXRef.current) - touchStartXRef.current;
+              touchStartXRef.current = null;
+              if (Math.abs(dx) > 36) {
+                selectMobileCard(mobileActive + (dx < 0 ? 1 : -1));
+              }
+            }}
+            className="relative w-full max-w-[330px] overflow-hidden rounded-[26px] border border-white/15 bg-[#111] shadow-[0_24px_60px_rgba(0,0,0,0.85)]"
+          >
             <div
               className="flex w-full transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
               style={{ transform: `translate3d(-${mobileActive * 100}%, 0, 0)` }}
@@ -228,7 +307,7 @@ export default function WorksPage() {
                   key={cat.slug}
                   type="button"
                   onClick={() => openCategoryInProjects(cat.slug)}
-                  className="relative flex h-[320px] w-full shrink-0 flex-col justify-between overflow-hidden p-5 text-left active:opacity-95"
+                  className="relative flex h-[300px] w-full shrink-0 flex-col justify-between overflow-hidden p-5 text-left active:opacity-95"
                 >
                   <img
                     src={cat.image}
@@ -255,6 +334,87 @@ export default function WorksPage() {
                   </div>
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Inline Borderless Liquid Glass Scale (morphs into /project dock on tap) */}
+          <div
+            ref={inlineDockRef}
+            className="relative w-full max-w-[330px] overflow-hidden rounded-[22px] bg-white/[0.08] pb-3 pt-2.5 shadow-[0_18px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl backdrop-saturate-150"
+          >
+            <div className="flex items-center justify-between gap-3 px-4">
+              <span className="font-mono text-[9.5px] font-medium uppercase tracking-[0.2em] text-white/65">
+                Selected Works
+              </span>
+              <span className="w-10 shrink-0 text-right font-mono text-[10px] tabular-nums text-white/55">
+                {String(mobileActive + 1).padStart(2, "0")}/{String(projects.length).padStart(2, "0")}
+              </span>
+            </div>
+            <div
+              ref={inlineTitleRef}
+              className="mt-0.5 min-w-0 truncate px-4 pb-2 text-[13px] font-medium tracking-tight text-white will-change-[transform,opacity,filter]"
+            >
+              {displayedCatTitle}
+            </div>
+            <div className="pt-1">
+              <div
+                ref={inlineRulerRef}
+                onScroll={() => {
+                  if (isInlineProgScrollRef.current) return;
+                  const closest = findClosestInlineIndex();
+                  if (closest !== mobileActiveRef.current) setMobileActive(closest);
+                  if (inlineIdleTimerRef.current !== null) window.clearTimeout(inlineIdleTimerRef.current);
+                  if (!isInlineTouchingRef.current) {
+                    inlineIdleTimerRef.current = window.setTimeout(() => {
+                      inlineSpringSnapTo(findClosestInlineIndex());
+                    }, 95);
+                  }
+                }}
+                onTouchStart={() => {
+                  isInlineTouchingRef.current = true;
+                  isInlineProgScrollRef.current = false;
+                  inlineSnapTweenRef.current?.kill();
+                  if (inlineIdleTimerRef.current !== null) window.clearTimeout(inlineIdleTimerRef.current);
+                }}
+                onTouchEnd={() => {
+                  isInlineTouchingRef.current = false;
+                  if (inlineIdleTimerRef.current !== null) window.clearTimeout(inlineIdleTimerRef.current);
+                  inlineIdleTimerRef.current = window.setTimeout(() => {
+                    if (!isInlineTouchingRef.current) inlineSpringSnapTo(findClosestInlineIndex());
+                  }, 95);
+                }}
+                className="flex h-11 items-end overflow-x-auto px-[50%] [mask-image:linear-gradient(to_right,transparent,black_14%,black_86%,transparent)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
+                <div className="flex shrink-0 items-end rounded-[12px] bg-white/[0.08] px-2 py-1 ring-1 ring-inset ring-white/35 shadow-[0_0_14px_rgba(255,255,255,0.12)]">
+                  {projects.map((cat, idx) => {
+                    const isActiveTick = idx === mobileActive;
+                    return (
+                      <button
+                        key={cat.slug}
+                        ref={(el) => {
+                          inlineTickRefs.current[idx] = el;
+                        }}
+                        type="button"
+                        onClick={() => selectMobileCard(idx)}
+                        aria-label={`Select ${cat.title}`}
+                        className="flex h-9 w-[52px] shrink-0 items-end justify-between px-1.5 focus:outline-none"
+                      >
+                        <span className="h-2 w-px bg-white/20" />
+                        <span className="h-3 w-px bg-white/30" />
+                        <span
+                          className={`rounded-full transition-all duration-200 ${
+                            isActiveTick
+                              ? "h-7 w-[2px] bg-white shadow-[0_0_10px_rgba(255,255,255,0.65)]"
+                              : "h-3.5 w-[1.5px] bg-white/40"
+                          }`}
+                        />
+                        <span className="h-3 w-px bg-white/30" />
+                        <span className="h-2 w-px bg-white/20" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         </div>

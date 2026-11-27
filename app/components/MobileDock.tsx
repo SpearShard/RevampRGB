@@ -25,13 +25,12 @@ const CONTACT_CHANNELS = [
   { label: "YouTube", subtitle: "RGB Design Studio", href: "https://youtube.com", external: true, category: "Motion & Film" },
 ] as const;
 
-type DockMode = "project" | "about" | "contact" | "works" | "hidden";
+type DockMode = "project" | "about" | "contact" | "hidden";
 
-function resolveDockMode(path: string, worksInView: boolean): DockMode {
+function resolveDockMode(path: string): DockMode {
   if (path === "/project") return "project";
   if (path === "/about") return "about";
   if (path === "/contact") return "contact";
-  if (path === "/" && worksInView) return "works";
   return "hidden";
 }
 
@@ -39,7 +38,7 @@ export default function MobileDock() {
   const pathname = usePathname();
   const router = useRouter();
   const [overrideMode, setOverrideMode] = useState<DockMode | null>(null);
-  const [worksInView, setWorksInView] = useState(false);
+  const dockShellRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setOverrideMode(null));
@@ -47,36 +46,44 @@ export default function MobileDock() {
   }, [pathname]);
 
   useEffect(() => {
-    const toProject = () => setOverrideMode("project");
+    const toProject = (e: Event) => {
+      setOverrideMode("project");
+      const fromTop = (e as CustomEvent<{ fromRectTop?: number }>).detail?.fromRectTop;
+      if (typeof fromTop === "number" && dockShellRef.current) {
+        requestAnimationFrame(() => {
+          const el = dockShellRef.current;
+          if (!el) return;
+          const targetTop = el.getBoundingClientRect().top;
+          const deltaY = fromTop - targetTop;
+          gsap.fromTo(
+            el,
+            { y: deltaY, scale: 0.96 },
+            { y: 0, scale: 1, duration: 0.62, ease: "power3.out", clearProps: "transform" }
+          );
+        });
+      }
+    };
     const toAbout = () => setOverrideMode("about");
     const toContact = () => setOverrideMode("contact");
-    const toLeaveProject = () => setOverrideMode(null);
-    const toDetail = () => setOverrideMode("hidden");
-    const onWorksInView = (e: Event) => {
-      const active = Boolean((e as CustomEvent<{ active?: boolean }>).detail?.active);
-      setWorksInView(active);
-    };
+    const toHidden = () => setOverrideMode("hidden");
 
     window.addEventListener("rgb:enter-project", toProject);
     window.addEventListener("rgb:enter-about", toAbout);
     window.addEventListener("rgb:enter-contact", toContact);
-    window.addEventListener("rgb:leave-project", toLeaveProject);
-    window.addEventListener("rgb:enter-detail", toDetail);
-    window.addEventListener("rgb:works-inview", onWorksInView);
+    window.addEventListener("rgb:leave-project", toHidden);
+    window.addEventListener("rgb:enter-detail", toHidden);
     return () => {
       window.removeEventListener("rgb:enter-project", toProject);
       window.removeEventListener("rgb:enter-about", toAbout);
       window.removeEventListener("rgb:enter-contact", toContact);
-      window.removeEventListener("rgb:leave-project", toLeaveProject);
-      window.removeEventListener("rgb:enter-detail", toDetail);
-      window.removeEventListener("rgb:works-inview", onWorksInView);
+      window.removeEventListener("rgb:leave-project", toHidden);
+      window.removeEventListener("rgb:enter-detail", toHidden);
     };
   }, []);
 
-  const mode: DockMode = overrideMode ?? resolveDockMode(pathname, worksInView);
+  const mode: DockMode = overrideMode ?? resolveDockMode(pathname);
 
   const [projectIndex, setProjectIndex] = useState(0);
-  const [worksIndex, setWorksIndex] = useState(0);
   const [aboutIndex, setAboutIndex] = useState(0);
   const [contactIndex, setContactIndex] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -129,22 +136,9 @@ export default function MobileDock() {
   }, [categories, entries]);
 
   const activeIndex =
-    mode === "project"
-      ? projectIndex
-      : mode === "works"
-        ? worksIndex
-        : mode === "about"
-          ? aboutIndex
-          : contactIndex;
-
+    mode === "project" ? projectIndex : mode === "about" ? aboutIndex : contactIndex;
   const totalCount =
-    mode === "project"
-      ? entries.length
-      : mode === "works"
-        ? categoryGroups.length
-        : mode === "about"
-          ? ABOUT_PILLARS.length
-          : CONTACT_CHANNELS.length;
+    mode === "project" ? entries.length : mode === "about" ? ABOUT_PILLARS.length : CONTACT_CHANNELS.length;
 
   const activeIndexRef = useRef(activeIndex);
   useEffect(() => {
@@ -154,20 +148,16 @@ export default function MobileDock() {
   const activeCategoryText =
     mode === "project"
       ? entries[projectIndex]?.category ?? ""
-      : mode === "works"
-        ? "Selected Works"
-        : mode === "about"
-          ? ABOUT_PILLARS[aboutIndex]?.category ?? ""
-          : CONTACT_CHANNELS[contactIndex]?.category ?? "";
+      : mode === "about"
+        ? ABOUT_PILLARS[aboutIndex]?.category ?? ""
+        : CONTACT_CHANNELS[contactIndex]?.category ?? "";
 
   const activeItemText =
     mode === "project"
       ? entries[projectIndex]?.title ?? ""
-      : mode === "works"
-        ? categoryGroups[worksIndex]?.title ?? ""
-        : mode === "about"
-          ? ABOUT_PILLARS[aboutIndex]?.title ?? ""
-          : CONTACT_CHANNELS[contactIndex]?.label ?? "";
+      : mode === "about"
+        ? ABOUT_PILLARS[aboutIndex]?.title ?? ""
+        : CONTACT_CHANNELS[contactIndex]?.label ?? "";
 
   const [displayedCategory, setDisplayedCategory] = useState(activeCategoryText);
   const prevCategoryRef = useRef(activeCategoryText);
@@ -206,7 +196,7 @@ export default function MobileDock() {
     });
   }, [activeCategoryText]);
 
-  // Blurry reveal for sub-project / discipline / pillar / channel title
+  // Blurry reveal for sub-project / pillar / channel title
   useEffect(() => {
     if (!activeItemText || activeItemText === prevTitleRef.current) return;
     prevTitleRef.current = activeItemText;
@@ -274,8 +264,6 @@ export default function MobileDock() {
         if (entry) {
           window.dispatchEvent(new CustomEvent("rgb:index-hover", { detail: { href: entry.href } }));
         }
-      } else if (targetMode === "works") {
-        window.dispatchEvent(new CustomEvent("rgb:works-select", { detail: { index: idx } }));
       } else if (targetMode === "about") {
         window.dispatchEvent(new CustomEvent("rgb:about-select", { detail: { index: idx } }));
       } else if (targetMode === "contact") {
@@ -288,14 +276,7 @@ export default function MobileDock() {
   // Sync ruler position and emit selection when mode changes
   useEffect(() => {
     if (mode === "hidden" || typeof window === "undefined" || window.innerWidth >= 640) return;
-    const idx =
-      mode === "project"
-        ? projectIndex
-        : mode === "works"
-          ? worksIndex
-          : mode === "about"
-            ? aboutIndex
-            : contactIndex;
+    const idx = mode === "project" ? projectIndex : mode === "about" ? aboutIndex : contactIndex;
     emitSelection(idx, mode);
     const frame = requestAnimationFrame(() => {
       const el = rulerRef.current;
@@ -308,9 +289,9 @@ export default function MobileDock() {
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [mode, projectIndex, worksIndex, aboutIndex, contactIndex, emitSelection, getTargetScrollLeft]);
+  }, [mode, projectIndex, aboutIndex, contactIndex, emitSelection, getTargetScrollLeft]);
 
-  // Listen to fractal tap/hover, works card swipes, and category jumps
+  // Listen to fractal tap/hover and category jumps from Works
   useEffect(() => {
     const onFractalHover = (event: Event) => {
       if (mode !== "project" || isTouchingRulerRef.current) return;
@@ -320,16 +301,6 @@ export default function MobileDock() {
       if (idx !== -1 && idx !== activeIndexRef.current) {
         setProjectIndex(idx);
         springSnapTo(idx);
-      }
-    };
-
-    const onWorksCardChange = (event: Event) => {
-      const idx = (event as CustomEvent<{ index?: number }>).detail?.index;
-      if (typeof idx === "number" && idx !== worksIndex && !isTouchingRulerRef.current) {
-        setWorksIndex(idx);
-        if (mode === "works") {
-          springSnapTo(idx);
-        }
       }
     };
 
@@ -343,14 +314,12 @@ export default function MobileDock() {
     };
 
     window.addEventListener("rgb:fractal-hover", onFractalHover);
-    window.addEventListener("rgb:works-card-change", onWorksCardChange);
     window.addEventListener("rgb:project-jump-category", onJumpCategory);
     return () => {
       window.removeEventListener("rgb:fractal-hover", onFractalHover);
-      window.removeEventListener("rgb:works-card-change", onWorksCardChange);
       window.removeEventListener("rgb:project-jump-category", onJumpCategory);
     };
-  }, [mode, entries, categoryGroups, worksIndex, springSnapTo]);
+  }, [mode, entries, categoryGroups, springSnapTo]);
 
   useEffect(() => {
     return () => {
@@ -383,7 +352,6 @@ export default function MobileDock() {
   const setModeIndex = useCallback(
     (idx: number) => {
       if (mode === "project") setProjectIndex(idx);
-      else if (mode === "works") setWorksIndex(idx);
       else if (mode === "about") setAboutIndex(idx);
       else if (mode === "contact") setContactIndex(idx);
       emitSelection(idx, mode);
@@ -455,18 +423,21 @@ export default function MobileDock() {
   return (
     <section
       aria-label="Mobile navigation dock"
-      className={`pointer-events-none fixed inset-x-0 bottom-0 z-30 flex flex-col items-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:hidden ${
-        isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
+      className={`pointer-events-none fixed inset-x-0 bottom-0 z-30 flex flex-col items-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] transition-opacity duration-300 sm:hidden ${
+        isVisible ? "opacity-100" : "opacity-0"
       }`}
     >
-      <div className="relative flex w-full max-w-[356px] flex-col items-center drop-shadow-[0_18px_40px_rgba(0,0,0,0.65)]">
+      <div
+        ref={dockShellRef}
+        className="relative flex w-full max-w-[356px] flex-col items-center drop-shadow-[0_18px_40px_rgba(0,0,0,0.65)]"
+      >
         {/* Subtle Auroric RGB Glow */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -inset-x-4 -bottom-2 h-28 rounded-full bg-gradient-to-r from-[#ff2433]/18 via-[#1ff261]/12 to-[#0056e6]/18 blur-2xl"
         />
 
-        {/* Morphing Top-Middle Protruding Tab (Projects preview <-> Contact card <-> Collapsed on Works/About) */}
+        {/* Morphing Top-Middle Protruding Tab (Projects preview <-> Contact card <-> Collapsed on About) */}
         <div
           className={`relative z-20 flex items-end justify-center overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
             hasProtrusion ? "max-h-[140px] opacity-100" : "max-h-0 opacity-0"
@@ -574,7 +545,7 @@ export default function MobileDock() {
           />
         </div>
 
-        {/* Bottom Borderless Liquid Glass Scale Dock (persistent across routes) */}
+        {/* Bottom Borderless Liquid Glass Scale Dock (persistent across /project, /about, /contact) */}
         <div className="pointer-events-auto relative w-full overflow-hidden rounded-[22px] bg-white/[0.08] pb-3 pt-2.5 backdrop-blur-xl backdrop-saturate-150">
           {/* Top-Left Category/Context Title (Blurry Reveal) + Counter */}
           <div className="relative flex items-center justify-between gap-3 px-4">
@@ -589,7 +560,7 @@ export default function MobileDock() {
             </span>
           </div>
 
-          {/* Sub-Project / Discipline / Pillar / Channel Title (Blurry Reveal) */}
+          {/* Sub-Project / Pillar / Channel Title (Blurry Reveal) */}
           <div
             ref={itemTitleRef}
             className="relative mt-0.5 min-w-0 truncate px-4 pb-2 text-[13px] font-medium tracking-tight text-white will-change-[transform,opacity,filter]"
@@ -651,38 +622,6 @@ export default function MobileDock() {
                     </div>
                   );
                 })}
-
-              {mode === "works" && (
-                <div className="flex shrink-0 items-end rounded-[12px] bg-white/[0.08] px-2 py-1 ring-1 ring-inset ring-white/35 shadow-[0_0_14px_rgba(255,255,255,0.12)]">
-                  {categoryGroups.map((group, idx) => {
-                    const isActive = idx === worksIndex;
-                    return (
-                      <button
-                        key={group.slug}
-                        ref={(el) => {
-                          tickRefs.current[idx] = el;
-                        }}
-                        type="button"
-                        onClick={() => selectTick(idx)}
-                        aria-label={`Select ${group.title}`}
-                        className="flex h-9 w-[52px] shrink-0 items-end justify-between px-1.5 focus:outline-none"
-                      >
-                        <span className="h-2 w-px bg-white/20" />
-                        <span className="h-3 w-px bg-white/30" />
-                        <span
-                          className={`rounded-full transition-all duration-200 ${
-                            isActive
-                              ? "h-7 w-[2px] bg-white shadow-[0_0_10px_rgba(255,255,255,0.65)]"
-                              : "h-3.5 w-[1.5px] bg-white/40"
-                          }`}
-                        />
-                        <span className="h-3 w-px bg-white/30" />
-                        <span className="h-2 w-px bg-white/20" />
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
 
               {mode === "about" && (
                 <div className="flex shrink-0 items-end rounded-[12px] bg-white/[0.08] px-2 py-1 ring-1 ring-inset ring-white/35 shadow-[0_0_14px_rgba(255,255,255,0.12)]">
