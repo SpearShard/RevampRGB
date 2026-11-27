@@ -202,7 +202,7 @@ export default function WorksPage() {
           </h1>
         </div>
 
-        {/* Mobile horizontal perspective carousel (centered sharp card + blurred scaled side cards) */}
+        {/* Mobile single-frame push-slide Works box (matches /project dock preview) */}
         <div
           ref={mobileSectionRef}
           onTouchStart={(e) => {
@@ -216,61 +216,47 @@ export default function WorksPage() {
               setMobileCard(mobileActive + (dx < 0 ? 1 : -1));
             }
           }}
-          className="relative -mx-6 flex h-[390px] items-center justify-center overflow-hidden pb-16 md:hidden"
+          className="relative flex justify-center pb-20 md:hidden"
         >
-          {projects.map((cat, index) => {
-            const offset = index - mobileActive;
-            const absOffset = Math.abs(offset);
-            const isFocused = offset === 0;
-            const isNeighbor = absOffset === 1;
-            return (
-              <button
-                key={cat.slug}
-                type="button"
-                onClick={() => {
-                  if (isFocused) {
-                    openCategoryInProjects(cat.slug);
-                  } else {
-                    setMobileCard(index);
-                  }
-                }}
-                style={{
-                  transform: `translate3d(${offset * 68}%, 0, 0) scale(${isFocused ? 1 : isNeighbor ? 0.84 : 0.72})`,
-                }}
-                className={`absolute flex h-[310px] w-[72vw] max-w-[276px] flex-col justify-between overflow-hidden rounded-[26px] border p-5 text-left transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform ${
-                  isFocused
-                    ? "z-20 border-white/20 bg-[#111] opacity-100 blur-0 shadow-[0_24px_60px_rgba(0,0,0,0.85)]"
-                    : isNeighbor
-                      ? "z-10 border-white/10 bg-[#111] opacity-40 blur-[4px]"
-                      : "pointer-events-none z-0 border-white/5 bg-[#111] opacity-0 blur-[6px]"
-                }`}
-              >
-                <img
-                  src={isFocused ? cat.image : cat.thumbImage}
-                  alt={cat.title}
-                  loading="lazy"
-                  className="absolute inset-0 h-full w-full object-cover opacity-75"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-black/15" />
-                <div className="relative z-10 flex items-center justify-between">
-                  <span className="font-mono text-[10px] tracking-[0.22em] text-white/65">
-                    {cat.id} / {String(projects.length).padStart(2, "0")}
-                  </span>
-                  <span className="rounded-full bg-white/10 px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.16em] text-white/80 backdrop-blur-md">
-                    {String(cat.projectCount).padStart(2, "0")} studies
-                  </span>
-                </div>
-                <div className="relative z-10 flex items-end justify-between gap-2">
-                  <span className="text-[1.75rem] font-light leading-[0.98] tracking-[-0.05em] text-white">
-                    {cat.title}
-                  </span>
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/25 bg-black/30 text-white">
-                    <ArrowUpRight size={15} />
-                  </span>
-                </div>
-              </button>
-            );
-          })}
+          <div className="relative w-full max-w-[330px] overflow-hidden rounded-[26px] border border-white/15 bg-[#111] shadow-[0_24px_60px_rgba(0,0,0,0.85)]">
+            <div
+              className="flex w-full transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
+              style={{ transform: `translate3d(-${mobileActive * 100}%, 0, 0)` }}
+            >
+              {projects.map((cat, idx) => (
+                <button
+                  key={cat.slug}
+                  type="button"
+                  onClick={() => openCategoryInProjects(cat.slug)}
+                  className="relative flex h-[320px] w-full shrink-0 flex-col justify-between overflow-hidden p-5 text-left active:opacity-95"
+                >
+                  <img
+                    src={cat.image}
+                    alt={cat.title}
+                    loading={Math.abs(idx - mobileActive) <= 1 ? "eager" : "lazy"}
+                    className="absolute inset-0 h-full w-full object-cover opacity-75"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-black/15" />
+                  <div className="relative z-10 flex w-full items-center justify-between">
+                    <span className="font-mono text-[10px] tracking-[0.22em] text-white/65">
+                      {cat.id} / {String(projects.length).padStart(2, "0")}
+                    </span>
+                    <span className="rounded-full bg-white/10 px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.16em] text-white/80 backdrop-blur-md">
+                      {String(cat.projectCount).padStart(2, "0")} studies
+                    </span>
+                  </div>
+                  <div className="relative z-10 flex w-full items-end justify-between gap-2">
+                    <span className="text-[1.75rem] font-light leading-[0.98] tracking-[-0.05em] text-white">
+                      {cat.title}
+                    </span>
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/25 bg-black/30 text-white">
+                      <ArrowUpRight size={15} />
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
         {/* Desktop slider remains unchanged */}
         {isDesktop && (
