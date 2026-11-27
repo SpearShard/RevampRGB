@@ -10,6 +10,9 @@ export default function Footer() {
   const previousPathRef = useRef(pathname);
   const hasMountedRef = useRef(false);
 
+  const hideMobileFooter =
+    pathname === "/project" || pathname === "/about" || pathname === "/contact";
+
   useLayoutEffect(() => {
     const footer = footerRef.current;
     if (!footer) return;
@@ -92,11 +95,34 @@ export default function Footer() {
         </div>
       </footer>
 
-      <footer className="relative z-[10] mt-[50px] md:hidden w-full bg-black px-4 py-5 text-center text-white">
-        <small className="block py-px text-[11px] text-white/75">
-          RGB Design - Roshni Gera © 2024
-        </small>
-      </footer>
+      {!hideMobileFooter && (
+        <footer className="relative z-[10] w-full overflow-hidden bg-[#050505] pt-10 text-white md:hidden">
+          {/* Subtle Noise */}
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.025]"
+            style={{
+              backgroundImage:
+                "url('https://grainy-gradients.vercel.app/noise.svg')",
+            }}
+          />
+
+          <div className="relative z-10 flex items-center justify-between px-5 pb-4 font-mono text-[9px] uppercase tracking-[0.22em] text-white/40">
+            <span>RGB Design Studio</span>
+            <span>Roshni Gera © 2024</span>
+          </div>
+
+          <div className="relative z-10 overflow-hidden">
+            <div className="translate-y-[16%]">
+              <h2 className="flex select-none justify-center text-center text-[36vw] font-[500] uppercase leading-[0.78] tracking-[-0.09em] text-white">
+                <span className="transition-colors duration-500 active:text-red-500">R</span>
+                <span className="transition-colors duration-500 active:text-green-500">G</span>
+                <span className="transition-colors duration-500 active:text-blue-500">B</span>
+              </h2>
+            </div>
+            <div className="pointer-events-none absolute bottom-0 left-0 h-20 w-full bg-gradient-to-t from-[#050505] to-transparent" />
+          </div>
+        </footer>
+      )}
     </>
   );
 }
