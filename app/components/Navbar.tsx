@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useRef, useEffect, useCallback, useState } from 'react';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import gsap from 'gsap';
+const RgbAuraBackground = dynamic(() => import('./bgwebglshaders/RgbAuraBackground'), { ssr: false });
 
 interface NavLink {
   label: string;
@@ -137,11 +139,9 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!isDesktop || !dockRef.current) return;
-    gsap.fromTo(
-      [logoShellRef.current, dockShellRef.current, enterShellRef.current],
-      { scale: 0.15, y: 80, autoAlpha: 0 },
-      { scale: 1, y: 0, autoAlpha: 1, duration: 0.9, stagger: 0.1, ease: 'power3.out' }
-    );
+    gsap.fromTo(logoShellRef.current, { y: -24, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.7, ease: 'power3.out' });
+    gsap.fromTo(dockShellRef.current, { y: -48, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.85, delay: 0.08, ease: 'power3.out' });
+    gsap.fromTo(enterShellRef.current, { scale: 0.25, y: 40, autoAlpha: 0 }, { scale: 1, y: 0, autoAlpha: 1, duration: 0.85, delay: 0.14, ease: 'power3.out' });
     return () => {
       gsap.killTweensOf([logoShellRef.current, dockShellRef.current, enterShellRef.current]);
     };
@@ -396,18 +396,33 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Desktop Bottom-Center Liquid Glass Dock */}
+      {/* Desktop Top-Center Notch Navbar with WebGL Aurora Background */}
       {isDesktop && (
         <div
           ref={dockShellRef}
-          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 hidden sm:block select-none"
+          className="fixed top-0 left-1/2 -translate-x-1/2 z-50 hidden sm:flex items-start select-none"
         >
+          {/* Left Top-Edge Concave Fillet */}
+          <svg
+            aria-hidden="true"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            className="pointer-events-none shrink-0"
+          >
+            <path d="M 0 0 L 16 0 L 16 16 A 16 16 0 0 0 0 0 Z" fill="#050507" />
+            <path d="M 0 0 A 16 16 0 0 1 16 16" fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="1" />
+          </svg>
+
           <div
             ref={dockRef}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
-            className="relative flex items-center gap-1 rounded-full border border-white/15 bg-black/55 px-2.5 py-2 shadow-[0_20px_60px_rgba(0,0,0,0.85)] backdrop-blur-2xl overflow-hidden"
+            className="relative flex items-center gap-1 rounded-b-[22px] border-x border-b border-white/[0.14] bg-[#050507] px-3 py-2 shadow-[0_18px_50px_rgba(0,0,0,0.85)] overflow-hidden"
           >
+            {/* Contained WebGL RGB Aurora Background */}
+            <RgbAuraBackground contained />
+
             <div
               ref={auraRef}
               className="pointer-events-none absolute w-[200px] h-[200px] rounded-full opacity-0"
@@ -438,26 +453,35 @@ export default function Navbar() {
                     }}
                     onMouseMove={(e) => handleLinkMouseMove(e, linksRef.current[idx])}
                     onMouseLeave={() => handleLinkMouseLeave(linksRef.current[idx])}
-                    className={`group relative flex items-center gap-2 rounded-full px-4 py-2 transition-colors duration-300 no-underline cursor-pointer ${
-                      isActive ? 'bg-white/10' : ''
+                    className={`group relative flex items-center gap-2 rounded-full px-4 py-1.5 transition-colors duration-300 no-underline cursor-pointer ${
+                      isActive ? 'bg-white/10' : 'hover:bg-white/[0.05]'
                     }`}
                   >
                     <span className={`text-[10px] font-mono transition-colors ${isActive ? 'text-cyan-400' : 'text-neutral-500 group-hover:text-cyan-400'}`}>
                       {link.code}
                     </span>
-                    <span className={`text-xs font-sans uppercase tracking-widest font-medium whitespace-nowrap transition-colors ${isActive ? 'text-white' : 'text-neutral-300 group-hover:text-white'}`}>
+                    <span className={`text-xs font-medium uppercase tracking-[0.15em] transition-colors ${isActive ? 'text-white' : 'text-neutral-300 group-hover:text-white'}`}>
                       {link.label}
                     </span>
-                    {isActive && <span className="absolute bottom-1 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-white/75" />}
                   </Link>
                 );
               })}
             </nav>
-            <div className="pointer-events-none absolute bottom-0 left-1/2 h-px w-1/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
           </div>
+
+          {/* Right Top-Edge Concave Fillet */}
+          <svg
+            aria-hidden="true"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            className="pointer-events-none shrink-0"
+          >
+            <path d="M 0 0 L 16 0 A 16 16 0 0 0 0 16 Z" fill="#050507" />
+            <path d="M 16 0 A 16 16 0 0 0 0 16" fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="1" />
+          </svg>
         </div>
       )}
-
       {/* ISO Enter Button */}
       {isDesktop && (
         <div ref={enterShellRef} className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-50 hidden sm:block select-none">
