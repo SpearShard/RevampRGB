@@ -45,7 +45,7 @@ export default function PrismInteriorSection() {
     return (
         <section 
             ref={containerRef} 
-            className="relative w-full min-h-screen bg-[#080808] text-[#ffffff] flex flex-col justify-center py-24 px-8 sm:px-16 lg:px-28 overflow-hidden select-none antialiased"
+            className="relative w-full min-h-screen  text-[#ffffff] flex flex-col justify-center py-24 px-8 sm:px-16 lg:px-28 overflow-hidden select-none antialiased"
         >
             {/* LUXURY DISPLAY TYPOGRAPHY */}
             <link rel="preconnect" href="https://fonts.googleapis.com" />

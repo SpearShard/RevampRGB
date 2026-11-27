@@ -2,46 +2,48 @@
 
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
+import Link from "next/link";
+import projectsData from "../data/projects.json";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-const projects = [
-  {
-    id: "01",
-    title: "Computational Design",
-    image:
-      "https://images.unsplash.com/photo-1518005020951-eccb494ad742?q=80&w=1600&auto=format&fit=crop",
-  },
-  {
-    id: "02",
-    title: "Material Experiments",
-    image:
-      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600&auto=format&fit=crop",
-  },
-  {
-    id: "03",
-    title: "Furniture Design",
-    image:
-      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1600&auto=format&fit=crop",
-  },
-  {
-    id: "04",
-    title: "Installation Design",
-    image:
-      "https://images.unsplash.com/photo-1494526585095-c41746248156?q=80&w=1600&auto=format&fit=crop",
-  },
-  {
-    id: "05",
-    title: "Interiors",
-    image:
-      "https://images.unsplash.com/photo-1484154218962-a197022b5858?q=80&w=1600&auto=format&fit=crop",
-  },
-  {
-    id: "06",
-    title: "Competitions",
-    image:
-      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1600&auto=format&fit=crop",
-  },
-];
+type WorkCategory = {
+  id: string;
+  title: string;
+  image: string;
+  projectCount: number;
+  href: string;
+};
+
+// Google Drive's export=view URLs are unreliable as embedded image sources.
+// Use its thumbnail endpoint so the representative covers load consistently.
+const getDisplayImage = (url: string) => {
+  const driveFileId = url.match(/[?&]id=([^&]+)/)?.[1];
+  return driveFileId
+    ? `https://drive.google.com/thumbnail?id=${driveFileId}&sz=w1600`
+    : url;
+};
+
+// One representative sub-project cover per category. The carousel itself
+// stays category-based; it does not expand into individual sub-project cards.
+const projects = Object.entries(projectsData)
+  .map(([, rawCategory], index) => {
+    const category = rawCategory as {
+      title: string;
+      projects?: { cover?: string }[];
+    };
+    const representativeProject = category.projects?.find((project) => project.cover);
+
+    if (!category.title || !representativeProject?.cover) return null;
+
+    return {
+      id: String(index + 1).padStart(2, "0"),
+      title: category.title,
+      image: getDisplayImage(representativeProject.cover),
+      projectCount: category.projects?.length ?? 0,
+      href: "/project",
+    };
+  })
+  .filter((category): category is WorkCategory => category !== null);
 
 export default function WorksPage() {
   const [active, setActive] = useState(0);
@@ -126,26 +128,7 @@ export default function WorksPage() {
   };
 
   return (
-    <main className="relative flex min-h-screen items-center overflow-hidden bg-[#050505] text-white">
-      {/* Noise */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.025]"
-        style={{
-          backgroundImage:
-            "url('https://grainy-gradients.vercel.app/noise.svg')",
-        }}
-      />
-
-      {/* Soft Grid */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)",
-          backgroundSize: "120px 120px",
-        }}
-      />
-
+    <main className="relative flex min-h-screen items-center overflow-hidden bg-transparent text-white">
       <section className="relative z-10 w-full px-6 md:px-10">
         {/* Hero */}
         <div className="mb-10">
@@ -204,32 +187,34 @@ export default function WorksPage() {
             />
           </div>
 
-          {/* MAIN CARD */}
+          {/* MAIN PROJECT CARD */}
           <div
             ref={mainCardRef}
-            className="relative h-[460px] w-full max-w-[820px] overflow-hidden rounded-[36px] border border-white/10"
+            className="group relative h-[460px] w-full max-w-[820px] overflow-hidden rounded-[36px] border border-white/10"
           >
-            {/* Image */}
             <img
               src={projects[active].image}
               alt={projects[active].title}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
             />
 
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-black/45" />
-
-            {/* Shine */}
+            <div className="absolute inset-0 bg-black/35" />
             <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/85" />
 
-            {/* Bottom Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/80" />
+            <Link
+              href={projects[active].href}
+              aria-label={`Explore ${projects[active].title}`}
+              className="absolute inset-0 z-10"
+            />
 
-            {/* Content */}
-            <div className="absolute inset-0 flex flex-col justify-between p-6 md:p-8">
+            <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-6 md:p-8">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase tracking-[0.3em] text-white/35">
-                  {projects[active].id}
+                <span className="text-[10px] uppercase tracking-[0.3em] text-white/55">
+                  {projects[active].id} / {String(projects.length).padStart(2, "0")}
+                </span>
+                <span className="text-[10px] uppercase tracking-[0.25em] text-white/55">
+                  {projects[active].projectCount} PROJECTS
                 </span>
               </div>
 
@@ -239,10 +224,9 @@ export default function WorksPage() {
                 </h2>
 
                 <div className="mt-6 flex items-center gap-3">
-                  <div className="h-[1px] w-12 bg-white/15" />
-
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-white/25">
-                    View Project
+                  <div className="h-[1px] w-12 bg-white/50" />
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-white/65">
+                    Explore category ↗
                   </p>
                 </div>
               </div>

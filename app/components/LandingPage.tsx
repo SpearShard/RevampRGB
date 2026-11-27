@@ -10,33 +10,38 @@ export default function LandingPage() {
 
     useEffect(() => {
         const isWaitingForLoader = Boolean(document.querySelector("[data-home-loader]"));
+        const revealDuration = 2.5;
+        const lineDuration = 1.8;
+        const itemDuration = 1.6;
+
         const tl = gsap.timeline({
             defaults: { ease: "expo.out" },
             paused: isWaitingForLoader,
         });
 
-        // 1. Smoothly fade in the background engine layer
         if (canvasContainerRef.current) {
-            tl.fromTo(canvasContainerRef.current,
+            tl.fromTo(
+                canvasContainerRef.current,
                 { opacity: 0 },
-                { opacity: 1, duration: 2.5 }
+                { opacity: 1, duration: revealDuration }
             );
         }
 
-        // 2. High-end clean reveal sequence for structural layout lines and blocks
         if (textGroupRef.current) {
-            const lines = textGroupRef.current.querySelectorAll('.editorial-line');
-            const items = textGroupRef.current.querySelectorAll('.editorial-item');
+            const lines = textGroupRef.current.querySelectorAll(".editorial-line");
+            const items = textGroupRef.current.querySelectorAll(".editorial-item");
 
-            tl.fromTo(lines,
+            tl.fromTo(
+                lines,
                 { scaleX: 0 },
-                { scaleX: 1, transformOrigin: "left center", duration: 1.8, stagger: 0.15 },
+                { scaleX: 1, transformOrigin: "left center", duration: lineDuration, stagger: 0.15 },
                 "-=1.8"
             );
 
-            tl.fromTo(items,
+            tl.fromTo(
+                items,
                 { opacity: 0, y: 30 },
-                { opacity: 1, y: 0, duration: 1.6, stagger: 0.1 },
+                { opacity: 1, y: 0, duration: itemDuration, stagger: 0.1 },
                 "-=1.4"
             );
         }
@@ -48,30 +53,8 @@ export default function LandingPage() {
             playReveal();
         }
 
-        const handleEnterProject = () => {
-            tl.kill();
-            if (textGroupRef.current) {
-                gsap.to(textGroupRef.current, {
-                    opacity: 0,
-                    y: -16,
-                    duration: 0.4,
-                    ease: "power2.inOut",
-                });
-            }
-            if (canvasContainerRef.current) {
-                gsap.to(canvasContainerRef.current, {
-                    opacity: 0,
-                    duration: 0.45,
-                    ease: "power2.inOut",
-                });
-            }
-        };
-
-        window.addEventListener("rgb:enter-project", handleEnterProject);
-
         return () => {
             window.removeEventListener("home-loader:reveal", playReveal);
-            window.removeEventListener("rgb:enter-project", handleEnterProject);
             tl.kill();
         };
     }, []);
@@ -79,7 +62,7 @@ export default function LandingPage() {
     return (
         <section 
             ref={sectionRef} 
-            className="relative w-full h-screen bg-[#060608] overflow-hidden flex items-center justify-center p-6 md:p-16 select-none"
+            className="relative w-full h-screen min-h-[100svh] bg-[#060608] overflow-hidden flex items-start md:items-center justify-center px-5 pt-28 pb-8 md:p-16 select-none"
         >
             {/* GOOGLE FONTS INJECTION: RAW ARCHITECTURAL MONO + SANS */}
             <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -89,7 +72,7 @@ export default function LandingPage() {
             {/* ABSOLUTE VIEWPORT RENDER ENGINE LAYER (FRACTAL IS MOUNTED PERSISTENTLY IN LAYOUT) */}
             <div 
                 ref={canvasContainerRef} 
-                className="absolute inset-0 w-full h-screen z-0 overflow-hidden pointer-events-none"
+                className="fixed inset-0 w-full h-screen z-0 overflow-hidden pointer-events-none"
             >
                 {/* Full-bleed Red Green Blue liquid base matrix shader */}
                 <GalleryShader/>
@@ -98,7 +81,7 @@ export default function LandingPage() {
             {/* HIGH-END INDUSTRIAL ARCHITECTURE LAYOUT */}
             <div 
                 ref={textGroupRef}
-                className="relative z-10 w-full max-w-[1600px] h-full max-h-[600px] mx-auto flex flex-col justify-between pointer-events-none mix-blend-difference"
+                className="relative z-10 w-full max-w-[1600px] h-full max-h-[600px] max-md:!max-h-none mx-auto flex flex-col justify-between pointer-events-none mix-blend-difference"
                 style={{ fontFamily: "'Space Grotesk', sans-serif" }}
             >
                 

@@ -28,8 +28,8 @@ const RGB_ACCENTS = [
     { vec: new Vector3(0.18, 0.48, 1.0), hex: '#2e7aff' },  // Blue
 ];
 
-/** @param {{ centered?: boolean; projects?: import('./PersistentFractal').FractalProjectItem[] }} props */
-export default function SDFAnimation({ centered = false, projects = [] }) {
+/** @param {{ mode?: 'home' | 'project' | 'contact' | 'about' | 'detail'; centered?: boolean; projects?: import('./PersistentFractal').FractalProjectItem[]; selectedChunkIndex?: number | null }} props */
+export default function SDFAnimation({ mode = 'home', centered = false, projects = [], selectedChunkIndex = null }) {
     const router = useRouter();
     const [isCenterTarget, setIsCenterTarget] = useState(centered);
     const [hoveredInfo, setHoveredInfo] = useState(null);
@@ -47,7 +47,13 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
     const projectsRef = useRef(projects);
 
     const centeredRef = useRef(centered);
-    const expandRef = useRef({ value: centered ? 1 : 0 });
+    const modeRef = useRef(mode);
+    const selectedChunkIndexRef = useRef(selectedChunkIndex);
+    const previousModeRef = useRef(mode);
+    const indexHoveredIdxRef = useRef(null);
+    modeRef.current = mode;
+    selectedChunkIndexRef.current = selectedChunkIndex;
+    const expandRef = useRef({ value: centered || mode === 'contact' || mode === 'about' ? 1 : 0 });
     const hoveredIdxRef = useRef(null);
     const pointerDownPosRef = useRef({ x: 0, y: 0 });
     const raycasterRef = useRef(new Raycaster());
@@ -68,6 +74,46 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
     useEffect(() => {
         projectsRef.current = projects;
     }, [projects]);
+
+    useEffect(() => {
+        const handleIndexHover = (event) => {
+            const index = event.detail?.chunkIndex ?? null;
+            indexHoveredIdxRef.current = index;
+
+            if (index === null) {
+                setHoveredInfo(null);
+                return;
+            }
+
+            const chunk = chunksRef.current.find((item) => item.index === index);
+            if (!chunk?.project) return;
+
+            setHoveredInfo({
+                index: chunk.index,
+                project: chunk.project,
+                accentHex: chunk.accentHex,
+            });
+
+            if (previewRef.current) {
+                const x = Math.max(16, window.innerWidth - 244);
+                const y = Math.max(16, Math.min(window.innerHeight - 220, window.innerHeight * 0.5 - 90));
+                previewRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+            }
+        };
+
+        const handleIndexSelect = (event) => {
+            const index = event.detail?.chunkIndex;
+            const chunk = chunksRef.current.find((item) => item.index === index);
+            if (chunk?.project?.href) router.push(chunk.project.href);
+        };
+
+        window.addEventListener('rgb:index-hover', handleIndexHover);
+        window.addEventListener('rgb:index-select', handleIndexSelect);
+        return () => {
+            window.removeEventListener('rgb:index-hover', handleIndexHover);
+            window.removeEventListener('rgb:index-select', handleIndexSelect);
+        };
+    }, [router]);
 
     const settings = {
         res: 3,
@@ -128,20 +174,32 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
         }
     `;
 
-    function getTargetLayout(isCentered) {
+    function getTargetLayout(isCentered, pageMode = modeRef.current) {
         const w = window.innerWidth;
         const h = window.innerHeight;
         const mobile = w <= 480;
         const baseDimension = Math.min(w, h);
         const homeScale = mobile ? baseDimension * 0.9 : baseDimension * 0.85;
 
-        if (isCentered) {
+        if (pageMode === 'detail') {
+            return { scale: homeScale * 0.68, x: 0, y: 0, rotationZ: Math.PI / 2 };
+        }
+
+        if (isCentered || pageMode === 'project') {
             return {
                 scale: homeScale * 0.58,
                 x: 0,
                 y: 0,
                 rotationZ: Math.PI / 2,
             };
+        }
+
+        if (pageMode === 'about') {
+            return { scale: homeScale * (mobile ? 0.48 : 0.46), x: mobile ? -w * 0.30 : -w * 0.27, y: mobile ? -h * 0.08 : 0, rotationZ: 0 };
+        }
+
+        if (pageMode === 'contact') {
+            return { scale: homeScale * (mobile ? 0.46 : 0.50), x: mobile ? -w * 0.25 : -w * 0.27, y: mobile ? h * 0.12 : h * 0.04, rotationZ: 0 };
         }
 
         const horizontalShift = mobile ? w * 0.45 : w * 0.5;
@@ -160,7 +218,8 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
         const controls = controlsRef.current;
         if (!group) return;
 
-        const { scale, x, y, rotationZ } = getTargetLayout(isCentered);
+        const pageMode = modeRef.current;
+        const { scale, x, y, rotationZ } = getTargetLayout(isCentered, pageMode);
 
         gsap.killTweensOf(group.position);
         gsap.killTweensOf(group.scale);
@@ -177,7 +236,7 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
             group.position.set(x, y, 0);
             group.scale.set(scale, scale, scale);
             group.rotation.z = rotationZ;
-            expandRef.current.value = isCentered ? 1 : 0;
+            expandRef.current.value = (isCentered || pageMode === 'contact' || pageMode === 'about') ? 1 : 0;
             if (!isCentered && camera) {
                 camera.position.set(0, 0, 1100);
                 camera.lookAt(0, 0, 0);
@@ -202,10 +261,10 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
                 ease: 'power3.out',
             });
             gsap.to(expandRef.current, {
-                value: isCentered ? 1 : 0,
-                duration: isCentered ? 1.0 : 0.55,
+                value: (isCentered || pageMode === 'contact' || pageMode === 'about') ? 1 : 0,
+                duration: (isCentered || pageMode === 'contact' || pageMode === 'about') ? 1.0 : 0.55,
                 delay: isCentered ? 0.15 : 0,
-                ease: isCentered ? 'power3.out' : 'power2.out',
+                ease: (isCentered || pageMode === 'contact' || pageMode === 'about') ? 'power3.out' : 'power2.out',
             });
 
             if (!isCentered && camera) {
@@ -241,16 +300,30 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
     }
 
     useEffect(() => {
+        const previousMode = previousModeRef.current;
         centeredRef.current = centered;
         setIsCenterTarget(centered);
+
+        // Detail mode hides the other shards. On exit, let the normal
+        // per-page layout ease them out from their existing positions; do not
+        // scale them up from near-zero or run a second competing transition.
+        if (previousMode === 'detail' && mode !== 'detail') {
+            chunksRef.current.forEach((chunk) => {
+                chunk.mesh.visible = true;
+                chunk.openVal = 0;
+            });
+        }
+        previousModeRef.current = mode;
+
         if (!centered) {
             hoveredIdxRef.current = null;
+            indexHoveredIdxRef.current = null;
             setHoveredInfo(null);
             pointerNdcRef.current.set(-99, -99);
             cursorActiveTargetRef.current = 0;
         }
         animateGroupToTarget(centered, false);
-    }, [centered]);
+    }, [centered, mode]);
 
     useEffect(() => {
         const handleEnterProject = () => {
@@ -548,13 +621,67 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
         animateGroupToTarget(centeredRef.current, true);
     }
 
-    function updateSplitChunks() {
+    function updateSplitChunks(delta = 0.016) {
         const group = fractalGroupRef.current;
         const camera = cameraRef.current;
         const chunks = chunksRef.current;
         if (!group || !camera || !chunks.length) return;
 
         const expand = expandRef.current.value;
+        const pageMode = modeRef.current;
+        const positionEase = 1 - Math.exp(-Math.max(delta, 0.001) * 6);
+
+        if (pageMode === 'detail') {
+            const selectedIndex = selectedChunkIndexRef.current;
+            const elapsed = clockRef.current ? clockRef.current.elapsedTime : 0;
+            for (const chunk of chunks) {
+                const selected = selectedIndex !== null && chunk.index === selectedIndex;
+                chunk.mesh.visible = selected;
+                if (selected) {
+                    scratchChunkPos.current.set(Math.sin(elapsed * 0.32) * 0.075, Math.cos(elapsed * 0.24) * 0.055, Math.sin(elapsed * 0.19) * 0.035);
+                    chunk.mesh.position.lerp(scratchChunkPos.current, positionEase);
+                    chunk.mesh.scale.setScalar(chunk.mesh.scale.x + (1.28 - chunk.mesh.scale.x) * positionEase);
+                    chunk.mesh.rotation.x += (Math.sin(elapsed * 0.18) * 0.12 - chunk.mesh.rotation.x) * positionEase;
+                    chunk.mesh.rotation.y += (Math.cos(elapsed * 0.15) * 0.16 - chunk.mesh.rotation.y) * positionEase;
+                } else {
+                    chunk.mesh.position.lerp(scratchChunkPos.current.set(0, 0, 0), positionEase);
+                    chunk.mesh.scale.setScalar(1);
+                }
+                chunk.material.uniforms.uHoverMix.value = 0;
+            }
+            return;
+        }
+
+        for (const chunk of chunks) chunk.mesh.visible = true;
+
+        if (pageMode === 'contact') {
+            for (const chunk of chunks) {
+                chunk.openVal += (expand - chunk.openVal) * 0.12;
+                scratchChunkPos.current.copy(chunk.dir).multiplyScalar(chunk.openVal * 0.9);
+                chunk.mesh.position.lerp(scratchChunkPos.current, positionEase);
+                chunk.mesh.scale.setScalar(1);
+                chunk.material.uniforms.uHoverMix.value = 0;
+            }
+            return;
+        }
+
+        if (pageMode === 'about') {
+            const elapsed = clockRef.current ? clockRef.current.elapsedTime : 0;
+            const ringCount = 3;
+            const ringSizes = Array.from({ length: ringCount }, (_, ring) => chunks.filter((chunk) => chunk.index % ringCount === ring).length);
+            for (const chunk of chunks) {
+                chunk.openVal += (expand - chunk.openVal) * 0.12;
+                const ring = chunk.index % ringCount;
+                const slot = Math.floor(chunk.index / ringCount);
+                const angle = (slot / Math.max(1, ringSizes[ring])) * Math.PI * 2 + elapsed * (0.18 + ring * 0.055) * (ring % 2 === 0 ? 1 : -1);
+                const radius = (0.24 + ring * 0.19) * chunk.openVal;
+                scratchChunkPos.current.set(Math.cos(angle) * radius, Math.sin(angle) * radius, chunk.dir.z * 0.08);
+                chunk.mesh.position.lerp(scratchChunkPos.current, positionEase);
+                chunk.mesh.scale.setScalar(1);
+                chunk.material.uniforms.uHoverMix.value = 0;
+            }
+            return;
+        }
 
         if (pointerDirtyRef.current && centeredRef.current && expand > 0.65) {
             pointerDirtyRef.current = false;
@@ -570,19 +697,22 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
 
             if (nextHoveredIdx !== hoveredIdxRef.current) {
                 hoveredIdxRef.current = nextHoveredIdx;
-                if (nextHoveredIdx !== null) {
-                    const hitChunk = chunks.find((c) => c.index === nextHoveredIdx);
-                    setHoveredInfo(
-                        hitChunk?.project
-                            ? {
-                                  index: hitChunk.index,
-                                  project: hitChunk.project,
-                                  accentHex: hitChunk.accentHex,
-                              }
-                            : null
-                    );
-                } else {
-                    setHoveredInfo(null);
+                window.dispatchEvent(new CustomEvent('rgb:fractal-hover', { detail: { chunkIndex: nextHoveredIdx } }));
+                if (indexHoveredIdxRef.current === null) {
+                    if (nextHoveredIdx !== null) {
+                        const hitChunk = chunks.find((c) => c.index === nextHoveredIdx);
+                        setHoveredInfo(
+                            hitChunk?.project
+                                ? {
+                                      index: hitChunk.index,
+                                      project: hitChunk.project,
+                                      accentHex: hitChunk.accentHex,
+                                  }
+                                : null
+                        );
+                    } else {
+                        setHoveredInfo(null);
+                    }
                 }
                 if (controlsRef.current) {
                     controlsRef.current.autoRotate = centeredRef.current && nextHoveredIdx === null;
@@ -595,7 +725,8 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
 
         for (let i = 0; i < chunks.length; i++) {
             const chunk = chunks[i];
-            const isHovered = hoveredIdxRef.current === chunk.index;
+            const activeHoveredIndex = indexHoveredIdxRef.current ?? hoveredIdxRef.current;
+            const isHovered = activeHoveredIndex === chunk.index;
 
             if (expand < 0.01) {
                 chunk.openVal = 0;
@@ -620,7 +751,8 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
             const targetOpen = (baseSplit + cursorBoost) * expand;
 
             chunk.openVal += (targetOpen - chunk.openVal) * 0.12;
-            chunk.mesh.position.copy(chunk.dir).multiplyScalar(chunk.openVal * 0.72);
+            scratchChunkPos.current.copy(chunk.dir).multiplyScalar(chunk.openVal * 0.72);
+            chunk.mesh.position.lerp(scratchChunkPos.current, positionEase);
 
             const targetHover = isHovered ? 0.92 : 0.0;
             chunk.hoverMix += (targetHover - chunk.hoverMix) * 0.16;
@@ -642,7 +774,7 @@ export default function SDFAnimation({ centered = false, projects = [] }) {
             fractalGroupRef.current.rotation.y += Math.PI * 0.03 * delta;
         }
 
-        updateSplitChunks();
+        updateSplitChunks(delta);
 
         if (rendererRef.current && sceneRef.current && cameraRef.current) {
             rendererRef.current.render(sceneRef.current, cameraRef.current);

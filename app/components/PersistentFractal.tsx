@@ -13,6 +13,8 @@ export interface FractalProjectItem {
   href: string;
 }
 
+export type FractalMode = 'home' | 'project' | 'contact' | 'about' | 'detail';
+
 type RawProject = {
   title: string;
   dir: string;
@@ -26,8 +28,22 @@ type RawCategory = {
 
 export default function PersistentFractal() {
   const pathname = usePathname();
-  const isFractalRoute = pathname === '/' || pathname === '/project';
-  const isProjectPage = pathname === '/project';
+  const isDetailRoute = pathname.startsWith('/project/') && pathname !== '/project';
+
+  const mode: FractalMode | null =
+    pathname === '/'
+      ? 'home'
+      : pathname === '/project'
+        ? 'project'
+        : pathname === '/contact'
+          ? 'contact'
+          : pathname === '/about'
+            ? 'about'
+            : isDetailRoute
+              ? 'detail'
+              : null;
+
+  const isProjectPage = mode === 'project';
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const projects = useMemo<FractalProjectItem[]>(() => {
@@ -47,6 +63,10 @@ export default function PersistentFractal() {
     }
     return items;
   }, []);
+
+  const selectedChunkIndex = isDetailRoute
+    ? projects.findIndex((item) => item.href === pathname)
+    : null;
 
   useEffect(() => {
     const el = wrapperRef.current;
@@ -68,16 +88,22 @@ export default function PersistentFractal() {
     return () => window.removeEventListener('scroll', syncScroll);
   }, [pathname]);
 
-  if (!isFractalRoute) return null;
+  if (!mode) return null;
 
   return (
     <div
       ref={wrapperRef}
-      className={`fixed inset-0 z-[5] mix-blend-screen opacity-95 will-change-transform ${
-        isProjectPage ? 'pointer-events-auto' : 'pointer-events-none'
-      }`}
+      className={`fixed inset-0 z-[5] mix-blend-screen will-change-transform transition-opacity duration-700 ${
+        mode === 'contact'
+          ? 'opacity-65'
+          : mode === 'about'
+            ? 'opacity-75'
+            : mode === 'detail'
+              ? 'opacity-80'
+              : 'opacity-95'
+      } ${isProjectPage ? 'pointer-events-auto' : 'pointer-events-none'}`}
     >
-      <SDFAnimation centered={isProjectPage} projects={projects} />
+      <SDFAnimation mode={mode} centered={isProjectPage} projects={projects} selectedChunkIndex={selectedChunkIndex !== null && selectedChunkIndex >= 0 ? selectedChunkIndex : null} />
     </div>
   );
 }

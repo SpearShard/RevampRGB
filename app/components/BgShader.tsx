@@ -107,7 +107,9 @@ export default function AutonomousAuraShader() {
         const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
         
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0)); // Ultra-smooth color interpolation on high-DPI panels
+        // This shader performs several layered noise evaluations per pixel. Keep its drawing
+        // buffer close to CSS resolution; 2x DPI multiplies fragment work by four.
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.15));
         renderer.setSize(glContainer.clientWidth, glContainer.clientHeight);
         glContainer.appendChild(renderer.domElement);
 
@@ -140,29 +142,78 @@ export default function AutonomousAuraShader() {
 
         const clock = new THREE.Clock();
         const hasLoader = Boolean(document.querySelector("[data-home-loader]"));
-        let isLooping = false;
+        let loaderRevealed = !hasLoader;
+        let isInView = false;
+        let homeIsActive = document.documentElement.dataset.rgbHomeActive !== "false";
+        let pageIsVisible = document.visibilityState === "visible";
+        let disposed = false;
+        let shaderReady = false;
+        let elapsed = 0;
 
-        const startAnimationLoop = () => {
-            if (isLooping) return;
-            isLooping = true;
-            clock.start();
+        const stopLoop = () => {
+            renderer.setAnimationLoop(null);
+            clock.stop();
+        };
+
+        const syncLoop = () => {
+            if (disposed || !shaderReady || !loaderRevealed || !isInView || !homeIsActive || !pageIsVisible) {
+                stopLoop();
+                return;
+            }
+
+            if (!clock.running) clock.start();
             renderer.setAnimationLoop(() => {
-                uniforms.u_time.value = clock.getElapsedTime();
+                elapsed += clock.getDelta();
+                uniforms.u_time.value = elapsed;
                 renderer.render(scene, camera);
             });
         };
 
+        const handleHomeActive = (event: Event) => {
+            const customEvent = event as CustomEvent<{ active: boolean }>;
+            homeIsActive = Boolean(customEvent.detail?.active);
+            syncLoop();
+        };
+
+        const handleVisibilityChange = () => {
+            pageIsVisible = document.visibilityState === "visible";
+            syncLoop();
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            isInView = Boolean(entries[0]?.isIntersecting);
+            syncLoop();
+        }, { threshold: 0.01 });
+        observer.observe(glContainer);
+
+        window.addEventListener("rgb:home-active", handleHomeActive);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        const revealShader = async () => {
+            loaderRevealed = true;
+            try {
+                await renderer.compileAsync(scene, camera);
+            } catch (error) {
+                console.warn("Aura shader precompile failed; falling back to normal rendering.", error);
+            }
+            if (disposed) return;
+            shaderReady = true;
+            syncLoop();
+        };
+
         if (hasLoader) {
-            // Render a single static frame to warm up shader compiler, without churning GPU cycles
-            renderer.render(scene, camera);
-            window.addEventListener('home-loader:reveal', startAnimationLoop, { once: true });
+            window.addEventListener("home-loader:reveal", revealShader, { once: true });
         } else {
-            requestAnimationFrame(() => startAnimationLoop());
+            requestAnimationFrame(revealShader);
         }
 
         return () => {
+            disposed = true;
             window.removeEventListener('resize', handleResize);
-            window.removeEventListener('home-loader:reveal', startAnimationLoop);
+            window.removeEventListener("home-loader:reveal", revealShader);
+            window.removeEventListener("rgb:home-active", handleHomeActive);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            observer.disconnect();
             renderer.setAnimationLoop(null);
             geometry.dispose();
             material.dispose();
