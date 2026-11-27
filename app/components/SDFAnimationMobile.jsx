@@ -134,7 +134,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             float edgeFalloff = pow(1.0 - max(dot(vNormal, vec3(0.0, 0.0, 1.0)), 0.0), 2.0);
             mutedTone += vec3(0.02, 0.03, 0.05) * edgeFalloff;
 
-            vec3 finalColor = mix(mutedTone, uHoverColor, max(0.34, uHoverMix));
+            vec3 finalColor = mix(mutedTone * 0.42, uHoverColor * 1.15, clamp(uHoverMix, 0.0, 1.0));
             gl_FragColor = vec4(finalColor, 1.0);
         }
     `;
@@ -682,11 +682,12 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             const isAboutColorMatch = isMobileAbout && (chunk.index % 3 === aboutIndexRef.current);
             const contactPop = isContactColorMatch ? 0.22 : 0;
             const aboutPop = isAboutColorMatch ? 0.18 : 0;
-            const effectiveOpen = isMobileAbout ? aboutPop : (targetOpen + contactPop);
+            const projectPop = (modeRef.current === 'project' && isHovered) ? 0.16 : 0;
+            const effectiveOpen = isMobileAbout ? aboutPop : (targetOpen + contactPop + projectPop);
             chunk.openVal += (effectiveOpen - chunk.openVal) * 0.12;
             chunk.mesh.position.copy(chunk.dir).multiplyScalar(chunk.openVal * (isMobileContact ? 0.64 : 0.72));
 
-            const targetHover = modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : (isMobileContact || isMobileAbout) ? ((isContactColorMatch || isAboutColorMatch) ? 1.0 : 0.18) : isHovered ? 0.95 : 0.34;
+            const targetHover = modeRef.current === 'detail' && chunk.targetOpacity === 1 ? 1.0 : (isMobileContact || isMobileAbout) ? ((isContactColorMatch || isAboutColorMatch) ? 1.0 : 0.18) : isHovered ? 1.0 : (modeRef.current === 'project' ? 0.08 : 0.34);
             chunk.hoverMix += (targetHover - chunk.hoverMix) * 0.16;
             if (modeRef.current === 'about' && window.innerWidth >= 640) {
                 const elapsed = clockRef.current?.elapsedTime ?? 0;
@@ -714,7 +715,8 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
 
             const detailSelected = modeRef.current === 'detail' && chunk.targetOpacity === 1;
             const detailScale = detailSelected ? (window.innerWidth < 640 ? 1.32 : 1.58) : 1;
-            chunk.mesh.scale.setScalar(detailScale * (1 + chunk.hoverMix * 0.08));
+            const projectHoverScale = (modeRef.current === 'project' && isHovered) ? 1.16 : 1.0;
+            chunk.mesh.scale.setScalar(detailScale * projectHoverScale * (1 + chunk.hoverMix * 0.06));
             chunk.mesh.visible = modeRef.current !== 'detail' || chunk.targetOpacity === 1;
             chunk.material.uniforms.uHoverMix.value = chunk.hoverMix;
         }
