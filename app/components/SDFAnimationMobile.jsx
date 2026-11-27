@@ -126,6 +126,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
         varying vec3 vNormal;
         uniform vec3 uHoverColor;
         uniform float uHoverMix;
+        uniform float uBaseDim;
 
         void main() {
             vec3 normalColor = vNormal * 0.5 + 0.5;
@@ -134,7 +135,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             float edgeFalloff = pow(1.0 - max(dot(vNormal, vec3(0.0, 0.0, 1.0)), 0.0), 2.0);
             mutedTone += vec3(0.02, 0.03, 0.05) * edgeFalloff;
 
-            vec3 finalColor = mix(mutedTone * 0.42, uHoverColor * 1.15, clamp(uHoverMix, 0.0, 1.0));
+            vec3 finalColor = mix(mutedTone * uBaseDim, uHoverColor * 1.15, clamp(uHoverMix, 0.0, 1.0));
             gl_FragColor = vec4(finalColor, 1.0);
         }
     `;
@@ -543,6 +544,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
                 uniforms: {
                     uHoverColor: { value: accent.vec.clone() },
                     uHoverMix: { value: 0.34 },
+                    uBaseDim: { value: 1.0 },
                 },
             });
 
@@ -660,6 +662,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
                 chunk.mesh.position.set(0, 0, 0);
                 chunk.mesh.scale.setScalar(1);
                 chunk.material.uniforms.uHoverMix.value = 0;
+                chunk.material.uniforms.uBaseDim.value = 1.0;
                 continue;
             }
 
@@ -767,6 +770,7 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             chunk.mesh.scale.setScalar(detailScale * projectHoverScale * formationScale * (1 + chunk.hoverMix * 0.06));
             chunk.mesh.visible = modeRef.current !== 'detail' || chunk.targetOpacity === 1;
             chunk.material.uniforms.uHoverMix.value = chunk.hoverMix;
+            chunk.material.uniforms.uBaseDim.value = (modeRef.current === 'project' || isMobileAbout || isMobileContact) ? 0.42 : 1.0;
         }
     }
 
