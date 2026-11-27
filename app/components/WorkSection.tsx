@@ -4,11 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import projectsData from "@/app/data/projects.json";
 import { projectSlug } from "@/app/utils/projectSlugs";
 
 type WorkCategory = {
   id: string;
+  slug: string;
   title: string;
   image: string;
   thumbImage: string;
@@ -28,7 +30,7 @@ const getDisplayImage = (url: string, size = "w1600") => {
 // One representative sub-project cover per category. The carousel itself
 // stays category-based; it does not expand into individual sub-project cards.
 const projects = Object.entries(projectsData)
-  .map(([, rawCategory], index) => {
+  .map(([slug, rawCategory], index) => {
     const category = rawCategory as {
       title: string;
       projects?: { cover?: string }[];
@@ -39,6 +41,7 @@ const projects = Object.entries(projectsData)
 
     return {
       id: String(index + 1).padStart(2, "0"),
+      slug,
       title: category.title,
       image: getDisplayImage(representativeProject.cover, "w1600"),
       thumbImage: getDisplayImage(representativeProject.cover, "w600"),
@@ -49,7 +52,52 @@ const projects = Object.entries(projectsData)
   .filter((category): category is WorkCategory => category !== null);
 
 export default function WorksPage() {
+  const router = useRouter();
   const [active, setActive] = useState(0);
+  const [mobileActive, setMobileActive] = useState(0);
+  const mobileSectionRef = useRef<HTMLDivElement>(null);
+  const touchStartXRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const el = mobileSectionRef.current;
+    if (!el || typeof window === "undefined" || window.innerWidth >= 768) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = Boolean(entries[0]?.isIntersecting);
+        window.dispatchEvent(new CustomEvent("rgb:works-inview", { detail: { active: visible } }));
+      },
+      { threshold: 0.28 }
+    );
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      window.dispatchEvent(new CustomEvent("rgb:works-inview", { detail: { active: false } }));
+    };
+  }, []);
+
+  useEffect(() => {
+    const onWorksSelect = (e: Event) => {
+      const idx = (e as CustomEvent<{ index?: number }>).detail?.index;
+      if (typeof idx === "number") {
+        setMobileActive(Math.max(0, Math.min(projects.length - 1, idx)));
+      }
+    };
+    window.addEventListener("rgb:works-select", onWorksSelect);
+    return () => window.removeEventListener("rgb:works-select", onWorksSelect);
+  }, []);
+
+  const setMobileCard = (idx: number) => {
+    const clamped = Math.max(0, Math.min(projects.length - 1, idx));
+    setMobileActive(clamped);
+    window.dispatchEvent(new CustomEvent("rgb:works-card-change", { detail: { index: clamped } }));
+  };
+
+  const openCategoryInProjects = (slug: string) => {
+    window.dispatchEvent(new CustomEvent("rgb:works-inview", { detail: { active: false } }));
+    window.dispatchEvent(new CustomEvent("rgb:project-jump-category", { detail: { categorySlug: slug } }));
+    window.dispatchEvent(new CustomEvent("rgb:enter-project"));
+    router.push("/project");
+  };
   const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
@@ -154,26 +202,76 @@ export default function WorksPage() {
           </h1>
         </div>
 
-        {/* Mobile category cards use real archive covers and valid project routes */}
-        <div className="grid grid-cols-1 gap-3 md:hidden">
-          {Object.entries(projectsData).map(([categorySlug, category], index) => {
-            if (!("projects" in category) || !Array.isArray(category.projects)) return null;
-            const categoryData = category as unknown as { title: string; projects: Array<{ dir: string; cover: string }> };
-            const firstProject = categoryData.projects[0];
-            if (!firstProject) return null;
+        {/* Mobile horizontal perspective carousel (centered sharp card + blurred scaled side cards) */}
+        <div
+          ref={mobileSectionRef}
+          onTouchStart={(e) => {
+            touchStartXRef.current = e.touches[0]?.clientX ?? null;
+          }}
+          onTouchEnd={(e) => {
+            if (touchStartXRef.current === null) return;
+            const dx = (e.changedTouches[0]?.clientX ?? touchStartXRef.current) - touchStartXRef.current;
+            touchStartXRef.current = null;
+            if (Math.abs(dx) > 36) {
+              setMobileCard(mobileActive + (dx < 0 ? 1 : -1));
+            }
+          }}
+          className="relative -mx-6 flex h-[390px] items-center justify-center overflow-hidden pb-16 md:hidden"
+        >
+          {projects.map((cat, index) => {
+            const offset = index - mobileActive;
+            const absOffset = Math.abs(offset);
+            const isFocused = offset === 0;
+            const isNeighbor = absOffset === 1;
             return (
-              <Link key={categorySlug} href={"/project/" + categorySlug + "/" + projectSlug(firstProject.dir)} className="group relative flex min-h-[190px] items-end overflow-hidden rounded-[22px] border border-white/10 bg-[#111] p-5">
-                <img src={firstProject.cover} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-65 transition-transform duration-700 group-active:scale-[1.03]" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/10" />
-                <span className="absolute left-5 top-5 font-mono text-[9px] tracking-[0.22em] text-white/55">{String(index + 1).padStart(2, "0")}</span>
-                <span className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-full border border-white/25 bg-black/20 text-white"><ArrowUpRight size={16} /></span>
-                <span className="relative z-10 max-w-[85%] text-[clamp(1.7rem,8vw,2.5rem)] font-light leading-[0.95] tracking-[-0.06em] text-white">{categoryData.title}</span>
-              </Link>
+              <button
+                key={cat.slug}
+                type="button"
+                onClick={() => {
+                  if (isFocused) {
+                    openCategoryInProjects(cat.slug);
+                  } else {
+                    setMobileCard(index);
+                  }
+                }}
+                style={{
+                  transform: `translate3d(${offset * 68}%, 0, 0) scale(${isFocused ? 1 : isNeighbor ? 0.84 : 0.72})`,
+                }}
+                className={`absolute flex h-[310px] w-[72vw] max-w-[276px] flex-col justify-between overflow-hidden rounded-[26px] border p-5 text-left transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform ${
+                  isFocused
+                    ? "z-20 border-white/20 bg-[#111] opacity-100 blur-0 shadow-[0_24px_60px_rgba(0,0,0,0.85)]"
+                    : isNeighbor
+                      ? "z-10 border-white/10 bg-[#111] opacity-40 blur-[4px]"
+                      : "pointer-events-none z-0 border-white/5 bg-[#111] opacity-0 blur-[6px]"
+                }`}
+              >
+                <img
+                  src={isFocused ? cat.image : cat.thumbImage}
+                  alt={cat.title}
+                  loading="lazy"
+                  className="absolute inset-0 h-full w-full object-cover opacity-75"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-black/15" />
+                <div className="relative z-10 flex items-center justify-between">
+                  <span className="font-mono text-[10px] tracking-[0.22em] text-white/65">
+                    {cat.id} / {String(projects.length).padStart(2, "0")}
+                  </span>
+                  <span className="rounded-full bg-white/10 px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.16em] text-white/80 backdrop-blur-md">
+                    {String(cat.projectCount).padStart(2, "0")} studies
+                  </span>
+                </div>
+                <div className="relative z-10 flex items-end justify-between gap-2">
+                  <span className="text-[1.75rem] font-light leading-[0.98] tracking-[-0.05em] text-white">
+                    {cat.title}
+                  </span>
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/25 bg-black/30 text-white">
+                    <ArrowUpRight size={15} />
+                  </span>
+                </div>
+              </button>
             );
           })}
-          <Link href="/project" className="flex min-h-14 items-center justify-between border-y border-white/15 px-1 text-[10px] uppercase tracking-[0.22em] text-white/70">Explore the complete archive <ArrowUpRight size={16} /></Link>
         </div>
-
         {/* Desktop slider remains unchanged */}
         {isDesktop && (
         <div className="hidden md:block">

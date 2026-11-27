@@ -25,12 +25,13 @@ const CONTACT_CHANNELS = [
   { label: "YouTube", subtitle: "RGB Design Studio", href: "https://youtube.com", external: true, category: "Motion & Film" },
 ] as const;
 
-type DockMode = "project" | "about" | "contact" | "hidden";
+type DockMode = "project" | "about" | "contact" | "works" | "hidden";
 
-function resolveDockMode(path: string): DockMode {
+function resolveDockMode(path: string, worksInView: boolean): DockMode {
   if (path === "/project") return "project";
   if (path === "/about") return "about";
   if (path === "/contact") return "contact";
+  if (path === "/" && worksInView) return "works";
   return "hidden";
 }
 
@@ -38,6 +39,7 @@ export default function MobileDock() {
   const pathname = usePathname();
   const router = useRouter();
   const [overrideMode, setOverrideMode] = useState<DockMode | null>(null);
+  const [worksInView, setWorksInView] = useState(false);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setOverrideMode(null));
@@ -48,25 +50,33 @@ export default function MobileDock() {
     const toProject = () => setOverrideMode("project");
     const toAbout = () => setOverrideMode("about");
     const toContact = () => setOverrideMode("contact");
-    const toHidden = () => setOverrideMode("hidden");
+    const toLeaveProject = () => setOverrideMode(null);
+    const toDetail = () => setOverrideMode("hidden");
+    const onWorksInView = (e: Event) => {
+      const active = Boolean((e as CustomEvent<{ active?: boolean }>).detail?.active);
+      setWorksInView(active);
+    };
 
     window.addEventListener("rgb:enter-project", toProject);
     window.addEventListener("rgb:enter-about", toAbout);
     window.addEventListener("rgb:enter-contact", toContact);
-    window.addEventListener("rgb:leave-project", toHidden);
-    window.addEventListener("rgb:enter-detail", toHidden);
+    window.addEventListener("rgb:leave-project", toLeaveProject);
+    window.addEventListener("rgb:enter-detail", toDetail);
+    window.addEventListener("rgb:works-inview", onWorksInView);
     return () => {
       window.removeEventListener("rgb:enter-project", toProject);
       window.removeEventListener("rgb:enter-about", toAbout);
       window.removeEventListener("rgb:enter-contact", toContact);
-      window.removeEventListener("rgb:leave-project", toHidden);
-      window.removeEventListener("rgb:enter-detail", toHidden);
+      window.removeEventListener("rgb:leave-project", toLeaveProject);
+      window.removeEventListener("rgb:enter-detail", toDetail);
+      window.removeEventListener("rgb:works-inview", onWorksInView);
     };
   }, []);
 
-  const mode: DockMode = overrideMode ?? resolveDockMode(pathname);
+  const mode: DockMode = overrideMode ?? resolveDockMode(pathname, worksInView);
 
   const [projectIndex, setProjectIndex] = useState(0);
+  const [worksIndex, setWorksIndex] = useState(0);
   const [aboutIndex, setAboutIndex] = useState(0);
   const [contactIndex, setContactIndex] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -119,9 +129,22 @@ export default function MobileDock() {
   }, [categories, entries]);
 
   const activeIndex =
-    mode === "project" ? projectIndex : mode === "about" ? aboutIndex : contactIndex;
+    mode === "project"
+      ? projectIndex
+      : mode === "works"
+        ? worksIndex
+        : mode === "about"
+          ? aboutIndex
+          : contactIndex;
+
   const totalCount =
-    mode === "project" ? entries.length : mode === "about" ? ABOUT_PILLARS.length : CONTACT_CHANNELS.length;
+    mode === "project"
+      ? entries.length
+      : mode === "works"
+        ? categoryGroups.length
+        : mode === "about"
+          ? ABOUT_PILLARS.length
+          : CONTACT_CHANNELS.length;
 
   const activeIndexRef = useRef(activeIndex);
   useEffect(() => {
@@ -131,16 +154,20 @@ export default function MobileDock() {
   const activeCategoryText =
     mode === "project"
       ? entries[projectIndex]?.category ?? ""
-      : mode === "about"
-        ? ABOUT_PILLARS[aboutIndex]?.category ?? ""
-        : CONTACT_CHANNELS[contactIndex]?.category ?? "";
+      : mode === "works"
+        ? "Selected Works"
+        : mode === "about"
+          ? ABOUT_PILLARS[aboutIndex]?.category ?? ""
+          : CONTACT_CHANNELS[contactIndex]?.category ?? "";
 
   const activeItemText =
     mode === "project"
       ? entries[projectIndex]?.title ?? ""
-      : mode === "about"
-        ? ABOUT_PILLARS[aboutIndex]?.title ?? ""
-        : CONTACT_CHANNELS[contactIndex]?.label ?? "";
+      : mode === "works"
+        ? categoryGroups[worksIndex]?.title ?? ""
+        : mode === "about"
+          ? ABOUT_PILLARS[aboutIndex]?.title ?? ""
+          : CONTACT_CHANNELS[contactIndex]?.label ?? "";
 
   const [displayedCategory, setDisplayedCategory] = useState(activeCategoryText);
   const prevCategoryRef = useRef(activeCategoryText);
@@ -179,7 +206,7 @@ export default function MobileDock() {
     });
   }, [activeCategoryText]);
 
-  // Blurry reveal for sub-project / pillar / channel title
+  // Blurry reveal for sub-project / discipline / pillar / channel title
   useEffect(() => {
     if (!activeItemText || activeItemText === prevTitleRef.current) return;
     prevTitleRef.current = activeItemText;
@@ -247,6 +274,8 @@ export default function MobileDock() {
         if (entry) {
           window.dispatchEvent(new CustomEvent("rgb:index-hover", { detail: { href: entry.href } }));
         }
+      } else if (targetMode === "works") {
+        window.dispatchEvent(new CustomEvent("rgb:works-select", { detail: { index: idx } }));
       } else if (targetMode === "about") {
         window.dispatchEvent(new CustomEvent("rgb:about-select", { detail: { index: idx } }));
       } else if (targetMode === "contact") {
@@ -259,7 +288,14 @@ export default function MobileDock() {
   // Sync ruler position and emit selection when mode changes
   useEffect(() => {
     if (mode === "hidden" || typeof window === "undefined" || window.innerWidth >= 640) return;
-    const idx = mode === "project" ? projectIndex : mode === "about" ? aboutIndex : contactIndex;
+    const idx =
+      mode === "project"
+        ? projectIndex
+        : mode === "works"
+          ? worksIndex
+          : mode === "about"
+            ? aboutIndex
+            : contactIndex;
     emitSelection(idx, mode);
     const frame = requestAnimationFrame(() => {
       const el = rulerRef.current;
@@ -272,9 +308,9 @@ export default function MobileDock() {
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [mode, projectIndex, aboutIndex, contactIndex, emitSelection, getTargetScrollLeft]);
+  }, [mode, projectIndex, worksIndex, aboutIndex, contactIndex, emitSelection, getTargetScrollLeft]);
 
-  // Listen to fractal tap/hover in project mode
+  // Listen to fractal tap/hover, works card swipes, and category jumps
   useEffect(() => {
     const onFractalHover = (event: Event) => {
       if (mode !== "project" || isTouchingRulerRef.current) return;
@@ -286,9 +322,35 @@ export default function MobileDock() {
         springSnapTo(idx);
       }
     };
+
+    const onWorksCardChange = (event: Event) => {
+      const idx = (event as CustomEvent<{ index?: number }>).detail?.index;
+      if (typeof idx === "number" && idx !== worksIndex && !isTouchingRulerRef.current) {
+        setWorksIndex(idx);
+        if (mode === "works") {
+          springSnapTo(idx);
+        }
+      }
+    };
+
+    const onJumpCategory = (event: Event) => {
+      const slug = (event as CustomEvent<{ categorySlug?: string }>).detail?.categorySlug;
+      if (!slug) return;
+      const group = categoryGroups.find((g) => g.slug === slug);
+      if (group) {
+        setProjectIndex(group.startIndex);
+      }
+    };
+
     window.addEventListener("rgb:fractal-hover", onFractalHover);
-    return () => window.removeEventListener("rgb:fractal-hover", onFractalHover);
-  }, [mode, entries, springSnapTo]);
+    window.addEventListener("rgb:works-card-change", onWorksCardChange);
+    window.addEventListener("rgb:project-jump-category", onJumpCategory);
+    return () => {
+      window.removeEventListener("rgb:fractal-hover", onFractalHover);
+      window.removeEventListener("rgb:works-card-change", onWorksCardChange);
+      window.removeEventListener("rgb:project-jump-category", onJumpCategory);
+    };
+  }, [mode, entries, categoryGroups, worksIndex, springSnapTo]);
 
   useEffect(() => {
     return () => {
@@ -321,6 +383,7 @@ export default function MobileDock() {
   const setModeIndex = useCallback(
     (idx: number) => {
       if (mode === "project") setProjectIndex(idx);
+      else if (mode === "works") setWorksIndex(idx);
       else if (mode === "about") setAboutIndex(idx);
       else if (mode === "contact") setContactIndex(idx);
       emitSelection(idx, mode);
@@ -403,7 +466,7 @@ export default function MobileDock() {
           className="pointer-events-none absolute -inset-x-4 -bottom-2 h-28 rounded-full bg-gradient-to-r from-[#ff2433]/18 via-[#1ff261]/12 to-[#0056e6]/18 blur-2xl"
         />
 
-        {/* Morphing Top-Middle Protruding Tab (Projects preview <-> Contact card <-> Collapsed on About) */}
+        {/* Morphing Top-Middle Protruding Tab (Projects preview <-> Contact card <-> Collapsed on Works/About) */}
         <div
           className={`relative z-20 flex items-end justify-center overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
             hasProtrusion ? "max-h-[140px] opacity-100" : "max-h-0 opacity-0"
@@ -526,7 +589,7 @@ export default function MobileDock() {
             </span>
           </div>
 
-          {/* Sub-Project / Pillar / Channel Title (Blurry Reveal) */}
+          {/* Sub-Project / Discipline / Pillar / Channel Title (Blurry Reveal) */}
           <div
             ref={itemTitleRef}
             className="relative mt-0.5 min-w-0 truncate px-4 pb-2 text-[13px] font-medium tracking-tight text-white will-change-[transform,opacity,filter]"
@@ -588,6 +651,38 @@ export default function MobileDock() {
                     </div>
                   );
                 })}
+
+              {mode === "works" && (
+                <div className="flex shrink-0 items-end rounded-[12px] bg-white/[0.08] px-2 py-1 ring-1 ring-inset ring-white/35 shadow-[0_0_14px_rgba(255,255,255,0.12)]">
+                  {categoryGroups.map((group, idx) => {
+                    const isActive = idx === worksIndex;
+                    return (
+                      <button
+                        key={group.slug}
+                        ref={(el) => {
+                          tickRefs.current[idx] = el;
+                        }}
+                        type="button"
+                        onClick={() => selectTick(idx)}
+                        aria-label={`Select ${group.title}`}
+                        className="flex h-9 w-[52px] shrink-0 items-end justify-between px-1.5 focus:outline-none"
+                      >
+                        <span className="h-2 w-px bg-white/20" />
+                        <span className="h-3 w-px bg-white/30" />
+                        <span
+                          className={`rounded-full transition-all duration-200 ${
+                            isActive
+                              ? "h-7 w-[2px] bg-white shadow-[0_0_10px_rgba(255,255,255,0.65)]"
+                              : "h-3.5 w-[1.5px] bg-white/40"
+                          }`}
+                        />
+                        <span className="h-3 w-px bg-white/30" />
+                        <span className="h-2 w-px bg-white/20" />
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               {mode === "about" && (
                 <div className="flex shrink-0 items-end rounded-[12px] bg-white/[0.08] px-2 py-1 ring-1 ring-inset ring-white/35 shadow-[0_0_14px_rgba(255,255,255,0.12)]">
