@@ -8,7 +8,15 @@ export default function HomeLoader() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [isVisible, setIsVisible] = useState(() => pathname === "/");
+  const [isVisible, setIsVisible] = useState(() => {
+    if (pathname !== "/") return false;
+    if (typeof window !== "undefined") {
+      try {
+        if (window.sessionStorage.getItem("rgb:loader-seen") === "1") return false;
+      } catch {}
+    }
+    return true;
+  });
   const [isExiting, setIsExiting] = useState(false);
   const hasFinished = useRef(false);
 
@@ -25,6 +33,7 @@ export default function HomeLoader() {
       stallTimerRef.current = null;
     }
 
+    try { window.sessionStorage.setItem("rgb:loader-seen", "1"); } catch {}
     setIsExiting(true);
     window.dispatchEvent(new Event("home-loader:reveal"));
   }, []);

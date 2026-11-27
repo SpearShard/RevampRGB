@@ -51,9 +51,10 @@ export default function ExperienceController({ children }: ExperienceControllerP
   }, []);
 
   const applyLayerLayout = useCallback((targetPath: string) => {
+    const isDesktop = typeof window !== "undefined" && window.innerWidth >= 768;
     const layers: Array<{ match: (p: string) => boolean; el: HTMLDivElement | null; fixed: boolean }> = [
       { match: (p) => p === "/", el: homeRef.current, fixed: false },
-      { match: (p) => p === "/project", el: projectsRef.current, fixed: true },
+      { match: (p) => p === "/project", el: projectsRef.current, fixed: isDesktop },
       { match: (p) => p === "/contact", el: contactRef.current, fixed: false },
       { match: (p) => p === "/about", el: aboutRef.current, fixed: false },
       { match: isProjectDetailPath, el: detailRef.current, fixed: false },
@@ -62,9 +63,10 @@ export default function ExperienceController({ children }: ExperienceControllerP
     for (const { match, el, fixed } of layers) {
       if (!el) continue;
       const isTarget = match(targetPath);
+      const isProjectsLayer = el === projectsRef.current;
       el.style.display = isTarget ? "block" : "none";
       el.style.visibility = isTarget ? "visible" : "hidden";
-      el.style.pointerEvents = isTarget && !fixed ? "auto" : "none";
+      el.style.pointerEvents = isTarget && !isProjectsLayer ? "auto" : "none";
 
       if (fixed) {
         el.style.position = "fixed";
@@ -105,8 +107,9 @@ export default function ExperienceController({ children }: ExperienceControllerP
       transitionTweenRef.current?.kill();
       transitionTargetRef.current = targetPath;
 
-      const incomingIsFixed = targetPath === "/project";
-      const outgoingIsFixed = outgoingPath === "/project";
+      const isDesktop = typeof window !== "undefined" && window.innerWidth >= 768;
+      const incomingIsFixed = targetPath === "/project" && isDesktop;
+      const outgoingIsFixed = outgoingPath === "/project" && isDesktop;
       incoming.style.display = "block";
       outgoing.style.display = "block";
 
@@ -145,9 +148,6 @@ export default function ExperienceController({ children }: ExperienceControllerP
       gsap.set(incoming, { autoAlpha: 0 });
       gsap.set(outgoing, { autoAlpha: Number.isFinite(currentOutAlpha) ? currentOutAlpha : 1 });
 
-      // Every experience route uses the same overlapping crossfade. The
-      // persistent fractal animates independently, so page layers must not
-      // snap or use a shorter special-case detail transition.
       const outDur = 0.82;
       const inDur = 0.92;
 
@@ -185,8 +185,6 @@ export default function ExperienceController({ children }: ExperienceControllerP
     }
 
     if (!hasInitializedLayersRef.current) {
-      // Initialize only when the persistent experience layers are mounted.
-      // This also covers entering the experience from a non-experience route.
       activeRouteRef.current = pathname;
       applyLayerLayout(pathname);
       setHomeActive(pathname === "/");
@@ -234,7 +232,7 @@ export default function ExperienceController({ children }: ExperienceControllerP
   if (!isExperienceRoute) return <>{children}</>;
 
   return (
-    <div className={`relative min-h-screen w-full ${pathname === "/project" ? "h-screen overflow-hidden" : ""}`}>
+    <div className={`relative min-h-screen w-full ${pathname === "/project" ? "md:h-screen md:overflow-hidden" : ""}`}>
       <div
         ref={homeRef}
         className="relative w-full"
@@ -253,12 +251,12 @@ export default function ExperienceController({ children }: ExperienceControllerP
 
       <div
         ref={projectsRef}
-        className="fixed inset-0 z-[6] overflow-hidden"
+        className="relative z-[8] w-full overflow-visible md:fixed md:inset-0 md:z-[6] md:overflow-hidden md:pointer-events-auto"
         style={{
           display: pathname === "/project" ? "block" : "none",
           visibility: pathname === "/project" ? "visible" : "hidden",
           opacity: pathname === "/project" ? 1 : 0,
-          pointerEvents: pathname === "/project" ? "auto" : "none",
+          pointerEvents: "none",
         }}
       >
         <ProjectsPage />
@@ -279,7 +277,7 @@ export default function ExperienceController({ children }: ExperienceControllerP
 
       <div
         ref={aboutRef}
-        className="relative w-full z-10"
+        className="relative w-full md:z-10"
         style={{
           display: pathname === "/about" ? "block" : "none",
           visibility: pathname === "/about" ? "visible" : "hidden",

@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import GalleryShader from "./BgShader";
 
@@ -7,6 +7,15 @@ export default function LandingPage() {
     const sectionRef = useRef<HTMLDivElement>(null);
     const canvasContainerRef = useRef<HTMLDivElement>(null);
     const textGroupRef = useRef<HTMLDivElement>(null);
+    const [isDesktop, setIsDesktop] = useState(false);
+
+    useEffect(() => {
+        const mq = window.matchMedia("(min-width: 640px)");
+        const sync = () => setIsDesktop(mq.matches);
+        sync();
+        mq.addEventListener("change", sync);
+        return () => mq.removeEventListener("change", sync);
+    }, []);
 
     useEffect(() => {
         const isWaitingForLoader = Boolean(document.querySelector("[data-home-loader]"));
@@ -53,8 +62,46 @@ export default function LandingPage() {
             playReveal();
         }
 
+        const handleEnterProject = () => {
+            tl.kill();
+            if (textGroupRef.current) {
+                gsap.to(textGroupRef.current, {
+                    opacity: 0,
+                    y: -16,
+                    duration: 0.4,
+                    ease: "power2.inOut",
+                });
+            }
+            if (canvasContainerRef.current) {
+                gsap.to(canvasContainerRef.current, {
+                    opacity: 0,
+                    duration: 0.45,
+                    ease: "power2.inOut",
+                });
+            }
+        };
+
+        const handleReturnHome = () => {
+            if (textGroupRef.current) {
+                gsap.to(textGroupRef.current, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out", overwrite: "auto" });
+            }
+            if (canvasContainerRef.current) {
+                gsap.to(canvasContainerRef.current, { opacity: 1, duration: 0.6, ease: "power3.out", overwrite: "auto" });
+            }
+        };
+        const handleHomeActive = (e: Event) => {
+            if ((e as CustomEvent<{ active?: boolean }>).detail?.active) handleReturnHome();
+        };
+
+        window.addEventListener("rgb:enter-project", handleEnterProject);
+        window.addEventListener("rgb:leave-project", handleReturnHome);
+        window.addEventListener("rgb:home-active", handleHomeActive);
+
         return () => {
             window.removeEventListener("home-loader:reveal", playReveal);
+            window.removeEventListener("rgb:enter-project", handleEnterProject);
+            window.removeEventListener("rgb:leave-project", handleReturnHome);
+            window.removeEventListener("rgb:home-active", handleHomeActive);
             tl.kill();
         };
     }, []);
@@ -64,10 +111,6 @@ export default function LandingPage() {
             ref={sectionRef} 
             className="relative w-full h-screen min-h-[100svh] bg-[#060608] overflow-hidden flex items-start md:items-center justify-center px-5 pt-28 pb-8 md:p-16 select-none"
         >
-            {/* GOOGLE FONTS INJECTION: RAW ARCHITECTURAL MONO + SANS */}
-            <link rel="preconnect" href="https://fonts.googleapis.com" />
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-            <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Space+Mono:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
 
             {/* ABSOLUTE VIEWPORT RENDER ENGINE LAYER (FRACTAL IS MOUNTED PERSISTENTLY IN LAYOUT) */}
             <div 
@@ -75,7 +118,7 @@ export default function LandingPage() {
                 className="fixed inset-0 w-full h-screen z-0 overflow-hidden pointer-events-none"
             >
                 {/* Full-bleed Red Green Blue liquid base matrix shader */}
-                <GalleryShader/>
+                {isDesktop && <GalleryShader />}
             </div>
 
             {/* HIGH-END INDUSTRIAL ARCHITECTURE LAYOUT */}
