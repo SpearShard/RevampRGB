@@ -11,7 +11,6 @@ type ProjectItem = { title: string; dir: string; cover: string };
 type Category = { title: string; projects: ProjectItem[] };
 
 const RGB = ["#ff2433", "#1ff261", "#0056e6"];
-const RULER_STEP = 52;
 
 export default function ProjectsPage() {
   const router = useRouter();
@@ -19,10 +18,21 @@ export default function ProjectsPage() {
   const [activeHref, setActiveHref] = useState<string | null>(null);
   const [mobileIndex, setMobileIndex] = useState(0);
   const [showMobileHint, setShowMobileHint] = useState(true);
+
   const rulerRef = useRef<HTMLDivElement>(null);
+  const tickRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const categoryTitleRef = useRef<HTMLDivElement>(null);
+  const projectTitleRef = useRef<HTMLDivElement>(null);
+
   const isProgrammaticScrollRef = useRef(false);
   const isTouchingRulerRef = useRef(false);
+  const snapTweenRef = useRef<gsap.core.Tween | null>(null);
+  const scrollIdleTimerRef = useRef<number | null>(null);
+  const mobileIndexRef = useRef(0);
+
+  useEffect(() => {
+    mobileIndexRef.current = mobileIndex;
+  }, [mobileIndex]);
 
   const categories = useMemo(
     () =>
@@ -66,6 +76,11 @@ export default function ProjectsPage() {
   );
   const prevCategoryRef = useRef<string>(entries[0]?.category ?? "");
 
+  const [displayedTitle, setDisplayedTitle] = useState<string>(
+    () => entries[0]?.title ?? ""
+  );
+  const prevTitleRef = useRef<string>(entries[0]?.title ?? "");
+
   const hoverProject = useCallback((href: string | null) => {
     setActiveHref(href);
     window.dispatchEvent(
@@ -81,16 +96,57 @@ export default function ProjectsPage() {
     [router]
   );
 
+  const getTargetScrollLeft = useCallback((idx: number) => {
+    const el = rulerRef.current;
+    const tick = tickRefs.current[idx];
+    if (!el || !tick) return 0;
+    return tick.offsetLeft + tick.offsetWidth / 2 - el.clientWidth / 2;
+  }, []);
+
+  const springSnapTo = useCallback(
+    (idx: number) => {
+      const el = rulerRef.current;
+      if (!el) return;
+      const targetLeft = getTargetScrollLeft(idx);
+
+      snapTweenRef.current?.kill();
+      isProgrammaticScrollRef.current = true;
+
+      snapTweenRef.current = gsap.to(el, {
+        scrollLeft: targetLeft,
+        duration: 0.56,
+        ease: "elastic.out(1, 0.72)",
+        onComplete: () => {
+          isProgrammaticScrollRef.current = false;
+          snapTweenRef.current = null;
+        },
+        onInterrupt: () => {
+          isProgrammaticScrollRef.current = false;
+        },
+      });
+    },
+    [getTargetScrollLeft]
+  );
+
+  // Center the initial tick on mount
   useEffect(() => {
-    if (typeof window !== "undefined" && window.innerWidth < 640 && entries[0]) {
-      hoverProject(entries[0].href);
-    }
-  }, [entries, hoverProject]);
+    if (typeof window === "undefined" || window.innerWidth >= 640 || !entries[0]) return;
+    hoverProject(entries[0].href);
+    const frame = requestAnimationFrame(() => {
+      const el = rulerRef.current;
+      if (el) {
+        isProgrammaticScrollRef.current = true;
+        el.scrollLeft = getTargetScrollLeft(0);
+        requestAnimationFrame(() => {
+          isProgrammaticScrollRef.current = false;
+        });
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [entries, hoverProject, getTargetScrollLeft]);
 
   useEffect(() => {
-    const showHint = () => {
-      setShowMobileHint(true);
-    };
+    const showHint = () => setShowMobileHint(true);
     window.addEventListener("rgb:enter-project", showHint);
     return () => window.removeEventListener("rgb:enter-project", showHint);
   }, []);
@@ -108,15 +164,9 @@ export default function ProjectsPage() {
 
       if (!href || isTouchingRulerRef.current) return;
       const idx = entries.findIndex((entry) => entry.href === href);
-      if (idx !== -1 && idx !== mobileIndex) {
+      if (idx !== -1 && idx !== mobileIndexRef.current) {
         setMobileIndex(idx);
-        if (rulerRef.current) {
-          isProgrammaticScrollRef.current = true;
-          rulerRef.current.scrollTo({ left: idx * RULER_STEP, behavior: "smooth" });
-          window.setTimeout(() => {
-            isProgrammaticScrollRef.current = false;
-          }, 360);
-        }
+        springSnapTo(idx);
       }
     };
     const onFractalClear = () => setActiveHref(null);
@@ -126,22 +176,77 @@ export default function ProjectsPage() {
       window.removeEventListener("rgb:fractal-hover", onFractalHover);
       window.removeEventListener("rgb:fractal-clear", onFractalClear);
     };
-  }, [entries, mobileIndex]);
+  }, [entries, springSnapTo]);
+
+  useEffect(() => {
+    return () => {
+      snapTweenRef.current?.kill();
+      if (scrollIdleTimerRef.current !== null) {
+        window.clearTimeout(scrollIdleTimerRef.current);
+      }
+    };
+  }, []);
+
+  const findClosestIndex = useCallback(() => {
+    const el = rulerRef.current;
+    if (!el || entries.length === 0) return 0;
+    const center = el.scrollLeft + el.clientWidth / 2;
+    let bestIdx = 0;
+    let bestDist = Infinity;
+    for (let i = 0; i < entries.length; i++) {
+      const tick = tickRefs.current[i];
+      if (!tick) continue;
+      const tickCenter = tick.offsetLeft + tick.offsetWidth / 2;
+      const dist = Math.abs(tickCenter - center);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = i;
+      }
+    }
+    return bestIdx;
+  }, [entries.length]);
 
   const handleRulerScroll = () => {
-    const el = rulerRef.current;
-    if (!el || isProgrammaticScrollRef.current || entries.length === 0) return;
+    if (isProgrammaticScrollRef.current || entries.length === 0) return;
 
-    const rawIndex = Math.round(el.scrollLeft / RULER_STEP);
-    const clampedIndex = Math.max(0, Math.min(entries.length - 1, rawIndex));
-
-    if (clampedIndex !== mobileIndex) {
-      setMobileIndex(clampedIndex);
-      const target = entries[clampedIndex];
+    const closest = findClosestIndex();
+    if (closest !== mobileIndexRef.current) {
+      setMobileIndex(closest);
+      const target = entries[closest];
       if (target) {
         hoverProject(target.href);
       }
     }
+
+    if (scrollIdleTimerRef.current !== null) {
+      window.clearTimeout(scrollIdleTimerRef.current);
+    }
+    if (!isTouchingRulerRef.current) {
+      scrollIdleTimerRef.current = window.setTimeout(() => {
+        springSnapTo(findClosestIndex());
+      }, 95);
+    }
+  };
+
+  const handleRulerTouchStart = () => {
+    isTouchingRulerRef.current = true;
+    isProgrammaticScrollRef.current = false;
+    snapTweenRef.current?.kill();
+    if (scrollIdleTimerRef.current !== null) {
+      window.clearTimeout(scrollIdleTimerRef.current);
+    }
+  };
+
+  const handleRulerTouchEnd = () => {
+    isTouchingRulerRef.current = false;
+    if (scrollIdleTimerRef.current !== null) {
+      window.clearTimeout(scrollIdleTimerRef.current);
+    }
+    scrollIdleTimerRef.current = window.setTimeout(() => {
+      if (!isTouchingRulerRef.current) {
+        springSnapTo(findClosestIndex());
+      }
+    }, 95);
   };
 
   const scrollToProject = (idx: number) => {
@@ -149,20 +254,15 @@ export default function ProjectsPage() {
     if (!target) return;
     setMobileIndex(idx);
     hoverProject(target.href);
-    if (rulerRef.current) {
-      isProgrammaticScrollRef.current = true;
-      rulerRef.current.scrollTo({ left: idx * RULER_STEP, behavior: "smooth" });
-      window.setTimeout(() => {
-        isProgrammaticScrollRef.current = false;
-      }, 360);
-    }
+    springSnapTo(idx);
   };
 
   const featuredEntry = entries.find((entry) => entry.href === activeHref) ?? entries[0];
   const mobileActiveEntry = entries[mobileIndex] ?? entries[0];
   const activeCategoryTitle = mobileActiveEntry?.category ?? "";
+  const activeProjectTitle = mobileActiveEntry?.title ?? "";
 
-  // Letter-by-letter GSAP transition when crossing into a new category group
+  // Letter-by-letter GSAP transition for Category Title
   useEffect(() => {
     if (!activeCategoryTitle || activeCategoryTitle === prevCategoryRef.current) return;
     prevCategoryRef.current = activeCategoryTitle;
@@ -180,7 +280,7 @@ export default function ProjectsPage() {
       gsap.to(oldChars, {
         y: -7,
         opacity: 0,
-        duration: 0.14,
+        duration: 0.13,
         stagger: 0.01,
         ease: "power2.in",
         onComplete: () => {
@@ -191,7 +291,7 @@ export default function ProjectsPage() {
               gsap.fromTo(
                 newChars,
                 { y: 8, opacity: 0 },
-                { y: 0, opacity: 1, duration: 0.24, stagger: 0.015, ease: "power3.out" }
+                { y: 0, opacity: 1, duration: 0.24, stagger: 0.014, ease: "power3.out" }
               );
             }
           });
@@ -202,6 +302,47 @@ export default function ProjectsPage() {
       return () => cancelAnimationFrame(frame);
     }
   }, [activeCategoryTitle]);
+
+  // Letter-by-letter GSAP transition for Sub-Project Title
+  useEffect(() => {
+    if (!activeProjectTitle || activeProjectTitle === prevTitleRef.current) return;
+    prevTitleRef.current = activeProjectTitle;
+
+    const container = projectTitleRef.current;
+    if (!container) {
+      const frame = requestAnimationFrame(() => setDisplayedTitle(activeProjectTitle));
+      return () => cancelAnimationFrame(frame);
+    }
+
+    const oldChars = container.querySelectorAll(".title-char");
+    gsap.killTweensOf(oldChars);
+
+    if (oldChars.length > 0) {
+      gsap.to(oldChars, {
+        y: -6,
+        opacity: 0,
+        duration: 0.11,
+        stagger: 0.007,
+        ease: "power2.in",
+        onComplete: () => {
+          setDisplayedTitle(activeProjectTitle);
+          requestAnimationFrame(() => {
+            const newChars = projectTitleRef.current?.querySelectorAll(".title-char");
+            if (newChars && newChars.length > 0) {
+              gsap.fromTo(
+                newChars,
+                { y: 7, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.2, stagger: 0.01, ease: "power3.out" }
+              );
+            }
+          });
+        },
+      });
+    } else {
+      const frame = requestAnimationFrame(() => setDisplayedTitle(activeProjectTitle));
+      return () => cancelAnimationFrame(frame);
+    }
+  }, [activeProjectTitle]);
 
   return (
     <main className="pointer-events-none relative z-10 flex h-[100svh] min-h-[560px] w-full overflow-hidden bg-transparent text-white">
@@ -239,13 +380,13 @@ export default function ProjectsPage() {
         <button
           type="button"
           onClick={() => setShowMobileHint(false)}
-          className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/[0.2] bg-white/[0.08] px-4 py-1.5 text-[11px] font-medium tracking-tight text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_12px_32px_rgba(0,0,0,0.45)] backdrop-blur-2xl backdrop-saturate-150"
+          className="pointer-events-auto flex items-center gap-2 rounded-full bg-white/[0.08] px-4 py-1.5 text-[11px] font-medium tracking-tight text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_12px_32px_rgba(0,0,0,0.45)] backdrop-blur-2xl backdrop-saturate-150"
         >
           <span>Slide the scale to explore · Tap preview to open</span>
         </button>
       </div>
 
-      {/* Mobile-only Liquid Glass Scale + Seamless Protruding Image Tab */}
+      {/* Mobile-only Borderless Liquid Glass Scale + Seamless Protruding Image Tab */}
       {mobileActiveEntry && (
         <section
           aria-label="Mobile project scale"
@@ -258,7 +399,7 @@ export default function ProjectsPage() {
               className="pointer-events-none absolute -inset-x-4 -bottom-2 h-28 rounded-full bg-gradient-to-r from-[#ff2433]/18 via-[#1ff261]/12 to-[#0056e6]/18 blur-2xl"
             />
 
-            {/* Seamless Top-Middle Protruding Sliding Image Frame */}
+            {/* Seamless Top-Middle Protruding Sliding Image Frame (Borderless) */}
             <div className="relative z-20 -mb-px flex items-end justify-center">
               {/* Left Concave Fillet */}
               <svg
@@ -272,19 +413,13 @@ export default function ProjectsPage() {
                   d="M 14 0 L 14 14 L 0 14 A 14 14 0 0 0 14 0 Z"
                   fill="rgba(255,255,255,0.07)"
                 />
-                <path
-                  d="M 0 14 A 14 14 0 0 0 14 0"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.22)"
-                  strokeWidth="1"
-                />
               </svg>
 
               <button
                 type="button"
                 onClick={() => openProject(mobileActiveEntry.href)}
                 aria-label={`Open ${mobileActiveEntry.title}`}
-                className="pointer-events-auto group relative w-[168px] overflow-hidden rounded-t-[20px] border border-b-0 border-white/[0.22] bg-white/[0.07] p-1.5 pb-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.32),0_-14px_38px_rgba(0,0,0,0.45)] backdrop-blur-xl backdrop-saturate-150 transition-transform duration-150 active:scale-[0.98]"
+                className="pointer-events-auto group relative w-[168px] overflow-hidden rounded-t-[20px] bg-white/[0.07] p-1.5 pb-1 shadow-[0_-14px_38px_rgba(0,0,0,0.45)] backdrop-blur-xl backdrop-saturate-150 transition-transform duration-150 active:scale-[0.98]"
               >
                 <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[13px] bg-black/40">
                   <div
@@ -320,31 +455,15 @@ export default function ProjectsPage() {
                   d="M 0 0 L 0 14 L 14 14 A 14 14 0 0 1 0 0 Z"
                   fill="rgba(255,255,255,0.07)"
                 />
-                <path
-                  d="M 14 14 A 14 14 0 0 1 0 0"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.22)"
-                  strokeWidth="1"
-                />
               </svg>
             </div>
 
-            {/* Bottom Liquid Glass Scale Dock */}
-            <div className="pointer-events-auto relative w-full overflow-hidden rounded-[22px] border border-t-0 border-white/[0.22] bg-white/[0.07] pb-3 pt-2.5 shadow-[inset_0_-1px_0_rgba(255,255,255,0.08),0_20px_50px_rgba(0,0,0,0.65)] backdrop-blur-xl backdrop-saturate-150">
-              {/* Split Top Border Segments leaving the middle neck seamless */}
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute left-0 top-0 h-[1px] w-[calc(50%-97px)] bg-white/[0.22]"
-              />
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute right-0 top-0 h-[1px] w-[calc(50%-97px)] bg-white/[0.22]"
-              />
-
+            {/* Bottom Borderless Liquid Glass Scale Dock */}
+            <div className="pointer-events-auto relative w-full overflow-hidden rounded-[22px] bg-white/[0.07] pb-3 pt-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.65)] backdrop-blur-xl backdrop-saturate-150">
               {/* Specular Glass Sheen */}
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.1] via-white/[0.02] to-transparent"
+                className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.08] via-white/[0.02] to-transparent"
               />
 
               {/* Top-Left Category Title (GSAP letter-by-letter) + Counter */}
@@ -365,21 +484,17 @@ export default function ProjectsPage() {
                 </span>
               </div>
 
-              {/* Sliding Sub-Project Title Strip */}
-              <div className="relative mt-0.5 overflow-hidden px-4 pb-1.5">
-                <div
-                  className="flex transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
-                  style={{ transform: `translate3d(-${mobileIndex * 100}%, 0, 0)` }}
-                >
-                  {entries.map((entry) => (
-                    <p
-                      key={entry.href}
-                      className="w-full shrink-0 truncate text-[13px] font-medium tracking-tight text-white"
-                    >
-                      {entry.title}
-                    </p>
-                  ))}
-                </div>
+              {/* Sub-Project Title (GSAP letter-by-letter) */}
+              <div
+                ref={projectTitleRef}
+                aria-label={displayedTitle}
+                className="relative mt-0.5 min-w-0 truncate px-4 pb-2 text-[13px] font-medium tracking-tight text-white"
+              >
+                {displayedTitle.split("").map((char, idx) => (
+                  <span key={`${displayedTitle}-${idx}`} className="title-char inline-block">
+                    {char === " " ? "\u00A0" : char}
+                  </span>
+                ))}
               </div>
 
               {/* Grouped Vertical-Line Ruler */}
@@ -392,17 +507,14 @@ export default function ProjectsPage() {
                   <span className="block h-7 w-[1.5px] rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.6)]" />
                 </div>
 
-                {/* Scrollable Tick Track with Category Group Lit Borders */}
+                {/* Scrollable Tick Track with Padded & Spaced Category Group Borders */}
                 <div
                   ref={rulerRef}
                   onScroll={handleRulerScroll}
-                  onTouchStart={() => {
-                    isTouchingRulerRef.current = true;
-                  }}
-                  onTouchEnd={() => {
-                    isTouchingRulerRef.current = false;
-                  }}
-                  className="flex h-9 items-end overflow-x-auto px-[calc(50%-26px)] [mask-image:linear-gradient(to_right,transparent,black_14%,black_86%,transparent)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  onTouchStart={handleRulerTouchStart}
+                  onTouchEnd={handleRulerTouchEnd}
+                  onTouchCancel={handleRulerTouchEnd}
+                  className="flex h-11 items-end gap-2.5 overflow-x-auto px-[50%] [mask-image:linear-gradient(to_right,transparent,black_14%,black_86%,transparent)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 >
                   {categoryGroups.map((group) => {
                     const isGroupActive =
@@ -410,10 +522,10 @@ export default function ProjectsPage() {
                     return (
                       <div
                         key={group.slug}
-                        className={`flex shrink-0 items-end rounded-[10px] transition-all duration-300 ${
+                        className={`flex shrink-0 items-end rounded-[12px] px-2 py-1 transition-all duration-300 ${
                           isGroupActive
                             ? "bg-white/[0.08] ring-1 ring-inset ring-white/40 shadow-[0_0_14px_rgba(255,255,255,0.14)]"
-                            : "bg-white/[0.02] ring-1 ring-inset ring-white/[0.1]"
+                            : "bg-white/[0.02] ring-1 ring-inset ring-white/[0.12]"
                         }`}
                       >
                         {group.items.map((entry, localIdx) => {
@@ -422,10 +534,13 @@ export default function ProjectsPage() {
                           return (
                             <button
                               key={entry.href}
+                              ref={(el) => {
+                                tickRefs.current[idx] = el;
+                              }}
                               type="button"
                               onClick={() => scrollToProject(idx)}
                               aria-label={`Select ${entry.title}`}
-                              className="flex h-8 w-[52px] shrink-0 items-end justify-between px-1 focus:outline-none"
+                              className="flex h-8 w-[52px] shrink-0 items-end justify-between px-1.5 focus:outline-none"
                             >
                               <span className="h-2 w-px bg-white/20" />
                               <span className="h-3 w-px bg-white/30" />
