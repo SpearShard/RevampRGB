@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import gsap from "gsap";
 import projectsData from "../data/projects.json";
 import { projectSlug } from "../utils/projectSlugs";
 
@@ -19,6 +20,7 @@ export default function ProjectsPage() {
   const [mobileIndex, setMobileIndex] = useState(0);
   const [showMobileHint, setShowMobileHint] = useState(true);
   const rulerRef = useRef<HTMLDivElement>(null);
+  const categoryTitleRef = useRef<HTMLDivElement>(null);
   const isProgrammaticScrollRef = useRef(false);
   const isTouchingRulerRef = useRef(false);
 
@@ -42,6 +44,27 @@ export default function ProjectsPage() {
       }))
     );
   }, [categories]);
+
+  const categoryGroups = useMemo(() => {
+    let cursor = 0;
+    return categories.map(([slug, category]) => {
+      const startIndex = cursor;
+      const items = entries.slice(startIndex, startIndex + category.projects.length);
+      cursor += category.projects.length;
+      return {
+        slug,
+        title: category.title,
+        startIndex,
+        endIndex: startIndex + items.length - 1,
+        items,
+      };
+    });
+  }, [categories, entries]);
+
+  const [displayedCategory, setDisplayedCategory] = useState<string>(
+    () => entries[0]?.category ?? ""
+  );
+  const prevCategoryRef = useRef<string>(entries[0]?.category ?? "");
 
   const hoverProject = useCallback((href: string | null) => {
     setActiveHref(href);
@@ -137,6 +160,48 @@ export default function ProjectsPage() {
 
   const featuredEntry = entries.find((entry) => entry.href === activeHref) ?? entries[0];
   const mobileActiveEntry = entries[mobileIndex] ?? entries[0];
+  const activeCategoryTitle = mobileActiveEntry?.category ?? "";
+
+  // Letter-by-letter GSAP transition when crossing into a new category group
+  useEffect(() => {
+    if (!activeCategoryTitle || activeCategoryTitle === prevCategoryRef.current) return;
+    prevCategoryRef.current = activeCategoryTitle;
+
+    const container = categoryTitleRef.current;
+    if (!container) {
+      const frame = requestAnimationFrame(() => setDisplayedCategory(activeCategoryTitle));
+      return () => cancelAnimationFrame(frame);
+    }
+
+    const oldChars = container.querySelectorAll(".cat-char");
+    gsap.killTweensOf(oldChars);
+
+    if (oldChars.length > 0) {
+      gsap.to(oldChars, {
+        y: -7,
+        opacity: 0,
+        duration: 0.14,
+        stagger: 0.01,
+        ease: "power2.in",
+        onComplete: () => {
+          setDisplayedCategory(activeCategoryTitle);
+          requestAnimationFrame(() => {
+            const newChars = categoryTitleRef.current?.querySelectorAll(".cat-char");
+            if (newChars && newChars.length > 0) {
+              gsap.fromTo(
+                newChars,
+                { y: 8, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.24, stagger: 0.015, ease: "power3.out" }
+              );
+            }
+          });
+        },
+      });
+    } else {
+      const frame = requestAnimationFrame(() => setDisplayedCategory(activeCategoryTitle));
+      return () => cancelAnimationFrame(frame);
+    }
+  }, [activeCategoryTitle]);
 
   return (
     <main className="pointer-events-none relative z-10 flex h-[100svh] min-h-[560px] w-full overflow-hidden bg-transparent text-white">
@@ -180,7 +245,7 @@ export default function ProjectsPage() {
         </button>
       </div>
 
-      {/* Mobile-only Liquid Glass Scale + Top-Middle Sliding Image Protrusion */}
+      {/* Mobile-only Liquid Glass Scale + Seamless Protruding Image Tab */}
       {mobileActiveEntry && (
         <section
           aria-label="Mobile project scale"
@@ -193,54 +258,131 @@ export default function ProjectsPage() {
               className="pointer-events-none absolute -inset-x-4 -bottom-2 h-28 rounded-full bg-gradient-to-r from-[#ff2433]/18 via-[#1ff261]/12 to-[#0056e6]/18 blur-2xl"
             />
 
-            {/* Top-Middle Protruding Sliding Image Frame (Liquid Glass) */}
-            <button
-              type="button"
-              onClick={() => openProject(mobileActiveEntry.href)}
-              aria-label={`Open ${mobileActiveEntry.title}`}
-              className="pointer-events-auto group relative z-10 -mb-px w-[168px] overflow-hidden rounded-t-[20px] border border-b-0 border-white/[0.22] bg-white/[0.07] p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.32),0_-14px_38px_rgba(0,0,0,0.5)] backdrop-blur-xl backdrop-saturate-150 transition-transform duration-150 active:scale-[0.98]"
-            >
-              <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[13px] bg-black/40">
-                <div
-                  className="flex h-full w-full transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
-                  style={{ transform: `translate3d(-${mobileIndex * 100}%, 0, 0)` }}
-                >
-                  {entries.map((entry, idx) => (
-                    <div key={entry.href} className="relative h-full w-full shrink-0">
-                      <Image
-                        src={entry.cover}
-                        alt={entry.title}
-                        fill
-                        sizes="168px"
-                        loading={Math.abs(idx - mobileIndex) <= 1 ? "eager" : "lazy"}
-                        className="object-cover"
-                      />
-                    </div>
-                  ))}
+            {/* Seamless Top-Middle Protruding Sliding Image Frame */}
+            <div className="relative z-20 -mb-px flex items-end justify-center">
+              {/* Left Concave Fillet */}
+              <svg
+                aria-hidden="true"
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                className="pointer-events-none shrink-0"
+              >
+                <path
+                  d="M 14 0 L 14 14 L 0 14 A 14 14 0 0 0 14 0 Z"
+                  fill="rgba(255,255,255,0.07)"
+                />
+                <path
+                  d="M 0 14 A 14 14 0 0 0 14 0"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.22)"
+                  strokeWidth="1"
+                />
+              </svg>
+
+              <button
+                type="button"
+                onClick={() => openProject(mobileActiveEntry.href)}
+                aria-label={`Open ${mobileActiveEntry.title}`}
+                className="pointer-events-auto group relative w-[168px] overflow-hidden rounded-t-[20px] border border-b-0 border-white/[0.22] bg-white/[0.07] p-1.5 pb-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.32),0_-14px_38px_rgba(0,0,0,0.45)] backdrop-blur-xl backdrop-saturate-150 transition-transform duration-150 active:scale-[0.98]"
+              >
+                <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[13px] bg-black/40">
+                  <div
+                    className="flex h-full w-full transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
+                    style={{ transform: `translate3d(-${mobileIndex * 100}%, 0, 0)` }}
+                  >
+                    {entries.map((entry, idx) => (
+                      <div key={entry.href} className="relative h-full w-full shrink-0">
+                        <Image
+                          src={entry.cover}
+                          alt={entry.title}
+                          fill
+                          sizes="168px"
+                          loading={Math.abs(idx - mobileIndex) <= 1 ? "eager" : "lazy"}
+                          className="object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-white/[0.08]" />
                 </div>
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-white/[0.08]" />
-              </div>
-            </button>
+              </button>
+
+              {/* Right Concave Fillet */}
+              <svg
+                aria-hidden="true"
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                className="pointer-events-none shrink-0"
+              >
+                <path
+                  d="M 0 0 L 0 14 L 14 14 A 14 14 0 0 1 0 0 Z"
+                  fill="rgba(255,255,255,0.07)"
+                />
+                <path
+                  d="M 14 14 A 14 14 0 0 1 0 0"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.22)"
+                  strokeWidth="1"
+                />
+              </svg>
+            </div>
 
             {/* Bottom Liquid Glass Scale Dock */}
-            <div className="pointer-events-auto relative w-full overflow-hidden rounded-[22px] border border-white/[0.22] bg-white/[0.07] pb-3 pt-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(255,255,255,0.08),0_20px_50px_rgba(0,0,0,0.65)] backdrop-blur-xl backdrop-saturate-150">
+            <div className="pointer-events-auto relative w-full overflow-hidden rounded-[22px] border border-t-0 border-white/[0.22] bg-white/[0.07] pb-3 pt-2.5 shadow-[inset_0_-1px_0_rgba(255,255,255,0.08),0_20px_50px_rgba(0,0,0,0.65)] backdrop-blur-xl backdrop-saturate-150">
+              {/* Split Top Border Segments leaving the middle neck seamless */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-0 top-0 h-[1px] w-[calc(50%-97px)] bg-white/[0.22]"
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute right-0 top-0 h-[1px] w-[calc(50%-97px)] bg-white/[0.22]"
+              />
+
               {/* Specular Glass Sheen */}
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.12] via-white/[0.02] to-transparent"
+                className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.1] via-white/[0.02] to-transparent"
               />
 
-              {/* Minimalist Readout */}
-              <div className="relative flex h-7 items-center justify-between gap-3 px-4 pb-1">
-                <p className="min-w-0 truncate text-[13px] font-medium tracking-tight text-white">
-                  {mobileActiveEntry.title}
-                </p>
+              {/* Top-Left Category Title (GSAP letter-by-letter) + Counter */}
+              <div className="relative flex items-center justify-between gap-3 px-4">
+                <div
+                  ref={categoryTitleRef}
+                  aria-label={displayedCategory}
+                  className="min-w-0 truncate font-mono text-[9.5px] font-medium uppercase tracking-[0.2em] text-white/65"
+                >
+                  {displayedCategory.split("").map((char, idx) => (
+                    <span key={`${displayedCategory}-${idx}`} className="cat-char inline-block">
+                      {char === " " ? "\u00A0" : char}
+                    </span>
+                  ))}
+                </div>
                 <span className="w-10 shrink-0 text-right font-mono text-[10px] tabular-nums text-white/55">
                   {String(mobileIndex + 1).padStart(2, "0")}/{String(entries.length).padStart(2, "0")}
                 </span>
               </div>
 
-              {/* Minimal Vertical-Line Ruler */}
+              {/* Sliding Sub-Project Title Strip */}
+              <div className="relative mt-0.5 overflow-hidden px-4 pb-1.5">
+                <div
+                  className="flex transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
+                  style={{ transform: `translate3d(-${mobileIndex * 100}%, 0, 0)` }}
+                >
+                  {entries.map((entry) => (
+                    <p
+                      key={entry.href}
+                      className="w-full shrink-0 truncate text-[13px] font-medium tracking-tight text-white"
+                    >
+                      {entry.title}
+                    </p>
+                  ))}
+                </div>
+              </div>
+
+              {/* Grouped Vertical-Line Ruler */}
               <div className="relative pt-1">
                 {/* Center Hairline Needle */}
                 <div
@@ -250,7 +392,7 @@ export default function ProjectsPage() {
                   <span className="block h-7 w-[1.5px] rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.6)]" />
                 </div>
 
-                {/* Scrollable Tick Track (no snap-mandatory bounce) */}
+                {/* Scrollable Tick Track with Category Group Lit Borders */}
                 <div
                   ref={rulerRef}
                   onScroll={handleRulerScroll}
@@ -260,28 +402,44 @@ export default function ProjectsPage() {
                   onTouchEnd={() => {
                     isTouchingRulerRef.current = false;
                   }}
-                  className="flex h-8 items-end overflow-x-auto px-[calc(50%-26px)] [mask-image:linear-gradient(to_right,transparent,black_14%,black_86%,transparent)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  className="flex h-9 items-end overflow-x-auto px-[calc(50%-26px)] [mask-image:linear-gradient(to_right,transparent,black_14%,black_86%,transparent)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 >
-                  {entries.map((entry, idx) => {
-                    const isActive = idx === mobileIndex;
+                  {categoryGroups.map((group) => {
+                    const isGroupActive =
+                      mobileIndex >= group.startIndex && mobileIndex <= group.endIndex;
                     return (
-                      <button
-                        key={entry.href}
-                        type="button"
-                        onClick={() => scrollToProject(idx)}
-                        aria-label={`Select ${entry.title}`}
-                        className="flex h-8 w-[52px] shrink-0 items-end justify-between px-1 focus:outline-none"
+                      <div
+                        key={group.slug}
+                        className={`flex shrink-0 items-end rounded-[10px] transition-all duration-300 ${
+                          isGroupActive
+                            ? "bg-white/[0.08] ring-1 ring-inset ring-white/40 shadow-[0_0_14px_rgba(255,255,255,0.14)]"
+                            : "bg-white/[0.02] ring-1 ring-inset ring-white/[0.1]"
+                        }`}
                       >
-                        <span className="h-2 w-px bg-white/20" />
-                        <span className="h-3 w-px bg-white/30" />
-                        <span
-                          className={`w-[1.5px] rounded-full transition-all duration-150 ${
-                            isActive ? "h-6 bg-white" : "h-4 bg-white/45"
-                          }`}
-                        />
-                        <span className="h-3 w-px bg-white/30" />
-                        <span className="h-2 w-px bg-white/20" />
-                      </button>
+                        {group.items.map((entry, localIdx) => {
+                          const idx = group.startIndex + localIdx;
+                          const isActive = idx === mobileIndex;
+                          return (
+                            <button
+                              key={entry.href}
+                              type="button"
+                              onClick={() => scrollToProject(idx)}
+                              aria-label={`Select ${entry.title}`}
+                              className="flex h-8 w-[52px] shrink-0 items-end justify-between px-1 focus:outline-none"
+                            >
+                              <span className="h-2 w-px bg-white/20" />
+                              <span className="h-3 w-px bg-white/30" />
+                              <span
+                                className={`w-[1.5px] rounded-full transition-all duration-150 ${
+                                  isActive ? "h-6 bg-white" : "h-4 bg-white/45"
+                                }`}
+                              />
+                              <span className="h-3 w-px bg-white/30" />
+                              <span className="h-2 w-px bg-white/20" />
+                            </button>
+                          );
+                        })}
+                      </div>
                     );
                   })}
                 </div>
@@ -292,31 +450,23 @@ export default function ProjectsPage() {
       )}
 
       <aside
-        data-works-index
-        className={`pointer-events-auto absolute left-3 top-28 bottom-24 z-20 hidden w-[min(340px,calc(100vw-24px))] flex-col overflow-hidden rounded-[22px] border border-white/[0.11] bg-[#090a0e]/65 shadow-[0_24px_90px_rgba(0,0,0,.45)] backdrop-blur-xl transition-transform duration-500 sm:left-7 sm:top-24 sm:bottom-28 sm:flex sm:rounded-[28px] ${
-          indexOpen ? "translate-x-0" : "-translate-x-[calc(100%+40px)]"
+        className={`pointer-events-auto fixed bottom-6 left-4 top-28 z-20 hidden w-64 flex-col rounded-2xl border border-white/10 bg-[#090a0e]/85 backdrop-blur-xl transition-all duration-500 sm:left-7 sm:flex ${
+          indexOpen ? "translate-x-0 opacity-100" : "-translate-x-[120%] opacity-0"
         }`}
       >
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-          <div>
-            <p className="font-mono text-[9px] uppercase tracking-[0.28em] text-white/40">
-              RGB / Archive
-            </p>
-            <h1 className="mt-1 text-lg font-light tracking-tight">Works Index</h1>
-          </div>
-          <span className="font-mono text-[9px] text-white/35">
-            {String(entries.length).padStart(2, "0")} WORKS
+          <span className="text-[10px] uppercase tracking-[0.22em] text-white/40">Works Index</span>
+          <span className="font-mono text-[10px] text-white/30">
+            {String(entries.length).padStart(2, "0")}
           </span>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 [scrollbar-width:thin]">
-          {categories.map(([slug, category], categoryIndex) => (
-            <section key={slug} className="mb-6 last:mb-1">
-              <div className="mb-2 flex items-center gap-2 px-1">
-                <span
-                  className="h-1.5 w-1.5 rounded-full"
-                  style={{ backgroundColor: RGB[categoryIndex % RGB.length] }}
-                />
-                <h2 className="text-[10px] font-medium uppercase tracking-[0.17em] text-white/70">
+
+        <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4">
+          {categories.map(([slug, category]) => (
+            <section key={slug}>
+              <div className="mb-2 flex items-center gap-2 px-2">
+                <span className="h-1 w-1 rounded-full bg-white/40" />
+                <h2 className="text-[11px] font-medium uppercase tracking-[0.17em] text-white/70">
                   {category.title}
                 </h2>
               </div>
