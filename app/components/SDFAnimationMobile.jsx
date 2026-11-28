@@ -657,12 +657,16 @@ export default function SDFAnimation({ mode = 'home', activeHref = null, project
             const isHovered = hoveredIdxRef.current === chunk.index;
 
             if (expand < 0.01) {
-                chunk.openVal = 0;
-                chunk.hoverMix = 0;
-                chunk.mesh.position.set(0, 0, 0);
-                chunk.mesh.scale.setScalar(1);
-                chunk.material.uniforms.uHoverMix.value = 0;
-                chunk.material.uniforms.uBaseDim.value = 1.0;
+                chunk.openVal += (0 - chunk.openVal) * 0.14;
+                chunk.hoverMix += (0 - chunk.hoverMix) * 0.14;
+                chunk.mesh.position.x += (0 - chunk.mesh.position.x) * 0.14;
+                chunk.mesh.position.y += (0 - chunk.mesh.position.y) * 0.14;
+                chunk.mesh.position.z += (0 - chunk.mesh.position.z) * 0.14;
+                const nextScale = chunk.mesh.scale.x + (1 - chunk.mesh.scale.x) * 0.14;
+                chunk.mesh.scale.setScalar(nextScale);
+                chunk.mesh.visible = true;
+                chunk.material.uniforms.uHoverMix.value = chunk.hoverMix;
+                chunk.material.uniforms.uBaseDim.value += (1.0 - chunk.material.uniforms.uBaseDim.value) * 0.14;
                 continue;
             }
 

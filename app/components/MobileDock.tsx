@@ -243,8 +243,8 @@ export default function MobileDock() {
       isProgrammaticScrollRef.current = true;
       snapTweenRef.current = gsap.to(el, {
         scrollLeft: targetLeft,
-        duration: 0.54,
-        ease: "elastic.out(1, 0.72)",
+        duration: 0.34,
+        ease: "power3.out",
         onComplete: () => {
           isProgrammaticScrollRef.current = false;
           snapTweenRef.current = null;
@@ -289,7 +289,7 @@ export default function MobileDock() {
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [mode, projectIndex, aboutIndex, contactIndex, emitSelection, getTargetScrollLeft]);
+  }, [mode]);
 
   // Listen to fractal tap/hover and category jumps from Works
   useEffect(() => {
@@ -450,8 +450,8 @@ export default function MobileDock() {
           />
 
           <div
-            className={`relative overflow-hidden rounded-t-[20px] bg-white/[0.08] backdrop-blur-xl backdrop-saturate-150 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-              mode === "contact" ? "w-[228px] p-1.5 pb-1" : "w-[168px] p-1.5 pb-1"
+            className={`relative overflow-hidden rounded-t-[20px] backdrop-blur-xl backdrop-saturate-150 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              mode === "contact" ? "w-[228px] p-1.5 pb-1 bg-[#0c0d13]/85" : "w-[168px] p-1.5 pb-1 bg-white/[0.08]"
             }`}
           >
             {mode === "project" && activeProjectEntry && (
@@ -546,7 +546,7 @@ export default function MobileDock() {
         </div>
 
         {/* Bottom Borderless Liquid Glass Scale Dock (persistent across /project, /about, /contact) */}
-        <div className="pointer-events-auto relative w-full overflow-hidden rounded-[22px] bg-white/[0.08] pb-3 pt-2.5 backdrop-blur-xl backdrop-saturate-150">
+        <div className={`pointer-events-auto relative w-full overflow-hidden rounded-[22px] pb-3 pt-2.5 backdrop-blur-xl backdrop-saturate-150 transition-colors duration-300 ${mode === "about" || mode === "contact" ? "bg-[#0c0d13]/85" : "bg-white/[0.08]"}`}>
           {/* Top-Left Category/Context Title (Blurry Reveal) + Counter */}
           <div className="relative flex items-center justify-between gap-3 px-4">
             <div

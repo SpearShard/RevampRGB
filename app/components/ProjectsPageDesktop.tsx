@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import projectsData from "../data/projects.json";
 import { projectSlug } from "../utils/projectSlugs";
 import RgbAuraBackground from "./bgwebglshaders/RgbAuraBackground";
@@ -31,6 +32,7 @@ type IndexedCategory = {
 };
 
 export default function ProjectsPage() {
+  const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mobileScaleRef = useRef<HTMLDivElement>(null);
   const mobileScrollRafRef = useRef<number | null>(null);
@@ -249,7 +251,12 @@ export default function ProjectsPage() {
         style={{ cursor: "default", pointerEvents: indexOpen ? "auto" : "none", isolation: "isolate" }}
       >
         <div className="absolute inset-0 z-0 pointer-events-none"><RgbAuraBackground contained /></div>
-        <div className="relative z-10 flex items-center justify-between border-b border-white/[0.07] px-2 pb-4 pt-5 mx-4 sm:mx-5">
+        <div className="relative z-10 flex items-center justify-between px-4 sm:px-5 pt-4 pb-1">
+          <button type="button" onClick={() => { window.dispatchEvent(new CustomEvent("rgb:leave-project")); router.push("/"); }} className="pointer-events-auto !cursor-pointer inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-3 py-1 text-[10px] font-mono uppercase tracking-[0.18em] text-white/70 transition-colors hover:bg-white/15 hover:text-white">
+            <span aria-hidden="true">←</span><span>Back</span>
+          </button>
+        </div>
+        <div className="relative z-10 flex items-center justify-between border-b border-white/[0.07] px-2 pb-4 pt-3 mx-4 sm:mx-5">
           <div className="flex items-center gap-2"><button type="button" onClick={() => { setIndexOpen(false); window.dispatchEvent(new CustomEvent("rgb:project-index-toggle", { detail: { open: false } })); }} aria-label="Hide project directory" className="pointer-events-auto !cursor-pointer grid h-7 w-7 place-items-center rounded-lg text-lg text-white/60 transition-colors hover:bg-white/10 hover:text-white">‹</button><span className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/55">Project directory</span></div>
           <span className="text-[10px] font-mono text-white/30">{String(categories.length).padStart(2, "0")} categories</span>
         </div>

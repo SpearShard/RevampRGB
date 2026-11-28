@@ -324,12 +324,6 @@ export default function Navbar() {
 
       {/* Mobile Top-Right Expanding Hamburger Menu */}
       <div ref={mobileMenuRef} className="fixed top-2.5 right-4 z-50 select-none sm:hidden">
-        <div
-          aria-hidden="true"
-          className={`pointer-events-none absolute -inset-2 rounded-[26px] bg-gradient-to-br from-[#ff2433]/20 via-[#1ff261]/12 to-[#0056e6]/22 blur-xl transition-opacity duration-300 ${
-            mobileMenuOpen ? 'opacity-100' : 'opacity-50'
-          }`}
-        />
 
         <button
           type="button"

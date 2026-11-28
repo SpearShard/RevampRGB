@@ -50,7 +50,7 @@ export default function Footer() {
     }
 
     if (wasProjectsPage) {
-      footer.style.display = "block";
+      footer.style.display = "";
       gsap.fromTo(
         footer,
         { yPercent: 100, autoAlpha: 0 },
@@ -59,7 +59,7 @@ export default function Footer() {
           autoAlpha: 1,
           duration: 0.78,
           ease: "power3.out",
-          clearProps: "transform,opacity,visibility",
+          clearProps: "transform,opacity,visibility,display",
         }
       );
     }
@@ -108,15 +108,16 @@ export default function Footer() {
 
           <div className="relative z-10 flex items-center justify-between px-5 pb-4 font-mono text-[9px] uppercase tracking-[0.22em] text-white/40">
             <span>RGB Design Studio</span>
-            <span>Roshni Gera © 2024</span>
+            <span>ROSHNI GERA © 2026</span>
           </div>
 
           <div className="relative z-10 overflow-hidden">
             <div className="translate-y-[16%]">
-              <h2 className="flex select-none justify-center text-center text-[36vw] font-[500] uppercase leading-[0.78] tracking-[-0.09em] text-white">
-                <span className="transition-colors duration-500 active:text-red-500">R</span>
-                <span className="transition-colors duration-500 active:text-green-500">G</span>
-                <span className="transition-colors duration-500 active:text-blue-500">B</span>
+              <h2 className="flex select-none justify-center text-center text-[15.5vw] font-[500] uppercase leading-[0.8] tracking-[-0.09em] text-white">
+                <span className="text-[#ff2433]">R</span>
+                <span className="text-[#1ff261]">G</span>
+                <span className="text-[#0056e6]">B</span>
+                <span className="text-white">&nbsp;Design</span>
               </h2>
             </div>
             <div className="pointer-events-none absolute bottom-0 left-0 h-20 w-full bg-gradient-to-t from-[#050505] to-transparent" />
