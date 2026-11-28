@@ -3,51 +3,6 @@
         "title": "Computational Design",
         "projects": [
             {
-                "title": "Growth Aggregations",
-                "subtitle": null,
-                "dir": null,
-                "cover": "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/growth-aggregations/01-growth-aggregation-render_ManUC1rZZ.png",
-                "images": [
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/growth-aggregations/01-growth-aggregation-render_ManUC1rZZ.png",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/growth-aggregations/02-voxel-connection-studies_HCM5JSuGk.png",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/growth-aggregations/03-rules-of-occupancy_pZvg_UVEb.png",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/growth-aggregations/04-growth-system-and-iterations_YHUgEXDZq0.png"
-                ],
-                "description": [
-                    "An academic exploration of rule-based aggregation and computational growth. Discrete voxel units are assembled through defined rules of occupancy and growth, generating complex three-dimensional organisational systems. The project investigates how simple units and local interactions can produce emergent spatial patterns and larger organisational structures.",
-                    "Team: Misbah Baig, Yunzhu Duan, Elisabet Konstantinidou, Roshni Gera",
-                    "Tutors: Theodore Spyropolous, Mustafa El Sayed, Aleksander Bursac"
-                ],
-                "video": "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/growth-aggregations/rule-based_aggregations___computational_design_&_fabrication%20(720p).mp4",
-                "slug": "growth-aggregations",
-                "year": 2019,
-                "location": "AA School of Architecture, London"
-            },
-            {
-                "title": "Infinity",
-                "subtitle": null,
-                "dir": null,
-                "cover": "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/infinity/AKH_9786_Edited_hfJWrzyHF.jpg",
-                "images": [
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/infinity/AKH_9786_Edited_hfJWrzyHF.jpg",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/infinity/16_80P1Q3mvW.jpg",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/infinity/18_qj6IlaFYc.jpg",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/infinity/08_2_u0cA6OFWU.jpg",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/infinity/ForceDiagram_1_B6tzNsMmS.jpg",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/infinity/ForceDiagram_2_8MpF9CRP3.jpg",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/infinity/ForceDiagram_3_RjE9T5z0F.jpg",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/infinity/RENDER1_9K5w-AADQ.jpg"
-                ],
-                "description": [
-                    "An academic exploration of piano wire as a versatile material for design and fabrication. Experiments were conducted across varying scales and thicknesses to investigate its material properties, flexibility and structural potential. These explorations informed the development of a complex system capable of multiple transformations, achieved through minimal variation in joint placements.",
-                    "Team: Huiyuan Li, Elisabet Konstantinidou, Michel Ghulamiyah, Roshni Gera",
-                    "Tutors: Theodore Spyropolous, Apostolus Despotidos"
-                ],
-                "slug": "infinity",
-                "year": 2018,
-                "location": "AA School of Architecture, London"
-            },
-            {
                 "title": "Orb[i]s",
                 "subtitle": "The Future Culture",
                 "dir": "Orbis",
@@ -64,15 +19,13 @@
                 "description": [
                     "Orb[i]s a groundbreaking Design Research project by Roshni Gera, Elisavet Konstantinidou, Misbah Shehreen Baig and Yunzhu Duan from the Architecture and Urbanism (Design Research Laboratory) - from Spyropoulos studio, at Architectural Association School of Architecture, London.The project reimagines the future of urban environments through adaptive spatial infrastructure. The system transcends traditional architectural boundaries by introducing a Prototypical System composed of intelligent, self-assembling units capable of dynamic reconfiguration in response to urban needs and changes. These spheroidal units, equipped with telescopic legs and electromagnets, interact and rearrange themselves into various urban elements, demonstrating collective intelligence and flexibility. Beyond mere physical structures, Orb[i]s integrates advanced sensory systems and machine learning to enhance user interaction and adaptability, offering a visionary approach to urban development that champions adaptability, responsiveness and the seamless integration of technology and architecture to foster new forms of cultural and urban spaces.",
                     "Location : London, United Kingdom"
-                ],
-                "video": "https://vimeo.com/400959787?share=copy&fl=sv&fe=ci",
-                "slug": "orb-i-s"
+                ]
             },
             {
                 "title": "Vaults of Sechseläutenplatz",
                 "subtitle": "RhinoVault experiments to achieve Structural Elegance",
                 "dir": "RhinoVault",
-                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Computational%20Design/RhinoVault/Copy%20of%203.webp?updatedAt=1793869741809",
+                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Computational%20Design/RhinoVault/Copy%20of%20Artboard%201.webp?updatedAt=1793869741807",
                 "images": [
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Computational%20Design/RhinoVault/Copy%20of%202.webp?updatedAt=1793869741799",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Computational%20Design/RhinoVault/Copy%20of%203.webp?updatedAt=1793869741809",
@@ -84,8 +37,44 @@
                 "description": [
                     "A design proposal that utilises the unreinforced masonry of compression only structures, proposing a central vaulted attraction set in the heart of Zürich's Sechseläutenplatz town square. Through extensive experiments and iterations, Rhinovault was used to rationalise the architectural form, showcasing a harmonious balance of horizontal equilibriums. This innovative design not only enhances the square's aesthetic appeal but also introduces a self-supporting and stable structure, seamlessly integrating with the urban fabric of Zürich. Explore the intersection of functionality and beauty through the study of Vaults, paving the way for a visionary approach to contemporary architecture.",
                     "Location : Zurich, Switzerland"
+                ]
+            }
+        ]
+    },
+    "material_experiments": {
+        "title": "Material Experiments",
+        "projects": [
+            {
+                "title": "Josephite Run 2025",
+                "subtitle": "",
+                "dir": "Josephite-run-2025",
+                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2025/IMG_8320.webp?updatedAt=1793869764896",
+                "images": [
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2025/IMG_8320.webp?updatedAt=1793869764896",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2025/IMG_8426.webp?updatedAt=1793869764902",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2025/IMG_8428.webp?updatedAt=1793869764912",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2025/IMG_8435.webp?updatedAt=1793869764905",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2025/IMG_8531.webp?updatedAt=1793869764908",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2025/IMG_8532.webp?updatedAt=1793869764901",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2025/IMG_8533.webp?updatedAt=1793869764900"
                 ],
-                "slug": "vaults-of-sechsela-utenplatz"
+                "description": []
+            },
+            {
+                "title": "Josephite Run 2026",
+                "subtitle": "",
+                "dir": "Josephite-run-2026",
+                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2026/IMG_0691.webp?updatedAt=1793869764913",
+                "images": [
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2026/IMG_0688.webp?updatedAt=1793869764918",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2026/IMG_0691.webp?updatedAt=1793869764913",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2026/IMG_0699.webp?updatedAt=1793869764904",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2026/IMG_0714.webp?updatedAt=1793869764922",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2026/IMG_0723.webp?updatedAt=1793869764907",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2026/IMG_0726.webp?updatedAt=1793869764916",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2026/IMG_4289.webp?updatedAt=1793869764927"
+                ],
+                "description": []
             }
         ]
     },
@@ -93,10 +82,10 @@
         "title": "Furniture Design",
         "projects": [
             {
-                "title": "Custom Furniture",
-                "subtitle": "One system. Endless configurations.",
+                "title": "High School Furniture",
+                "subtitle": "",
                 "dir": "High School Furniture",
-                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/High%20School%20Furniture/A2205618.webp?updatedAt=1793869740426",
+                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/High%20School%20Furniture/PHOTO-2023-01-27-17-45-47.webp?updatedAt=1793869740413",
                 "images": [
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/High%20School%20Furniture/A2205511.webp?updatedAt=1793869740418",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/High%20School%20Furniture/A2205618.webp?updatedAt=1793869740426",
@@ -109,20 +98,13 @@
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/High%20School%20Furniture/PHOTO-2023-01-27-17-45-47(5).webp?updatedAt=1793869740408",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/High%20School%20Furniture/PHOTO-2023-01-27-17-45-57.webp?updatedAt=1793869740402"
                 ],
-                "description": [
-                    "Designed for the High School Block at Head Start Educational Academy, the bespoke furniture system places modularity and flexibility at its core.\n\nTailored to classroom dimensions, structural requirements, and varied teaching formats, the collection brings together long collaborative desks and individual curved tables. Each table works independently or combines in multiple configurations — from pairs and groups of three or four to larger arrangements of up to twenty students.\n\nA flexible furniture system that adapts to different classroom dynamics, encouraging collaboration, individual exploration, and ever-changing ways of learning.",
-                    "Design: In collaboration with Miroslav Naskov, Mind Design",
-                    "Photography: Anand Jaju"
-                ],
-                "slug": "high-school-furniture",
-                "year": 2022,
-                "client": "Head Start Educational Academy"
+                "description": []
             },
             {
                 "title": "Custom Shoe Stands",
-                "subtitle": null,
+                "subtitle": "",
                 "dir": "High School Shoe Stands_VB",
-                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/High%20School%20Shoe%20Stands_VB/IMG_8416.webp?updatedAt=1793869741460",
+                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/High%20School%20Shoe%20Stands_VB/IMG_8410.webp?updatedAt=1793869741438",
                 "images": [
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/High%20School%20Shoe%20Stands_VB/IMG_8410.webp?updatedAt=1793869741438",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/High%20School%20Shoe%20Stands_VB/IMG_8413.webp?updatedAt=1793869740433",
@@ -147,41 +129,44 @@
                     "Material and manufacture : Merlecha Corporation",
                     "Location : Bangalore, India",
                     "Photography : Vaishali Bhatia"
-                ],
-                "slug": "custom-shoe-stands"
+                ]
             },
             {
-                "title": "High School Library",
+                "title": "Library at Head Start Educational Academy",
                 "subtitle": "A space where curves guide curiosity",
                 "dir": "Library_High School Block_AJ",
-                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2200754.webp?updatedAt=1793869741465",
+                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2200729.webp?updatedAt=1793869741159",
                 "images": [
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2205783.webp?updatedAt=1793869741153",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2205738.webp?updatedAt=1793869741457",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2200729.webp?updatedAt=1793869741159",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2200730.webp?updatedAt=1793869741156",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2200734.webp?updatedAt=1793869741365",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2200754.webp?updatedAt=1793869741465",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2200767.webp?updatedAt=1793869741345",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2200771.webp?updatedAt=1793869741335",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2200774.webp?updatedAt=1793869741464",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2200775.webp?updatedAt=1793869741169",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2200780.webp?updatedAt=1793869741522",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2200782.webp?updatedAt=1793869741164",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2205738.webp?updatedAt=1793869741457",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2205748.webp?updatedAt=1793869741429",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2205779.webp?updatedAt=1793869740451",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2205783.webp?updatedAt=1793869741153",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2205798.webp?updatedAt=1793869740448",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2205808.webp?updatedAt=1793869741375",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2205779.webp?updatedAt=1793869740451",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2200754.webp?updatedAt=1793869741465",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2205844.webp?updatedAt=1793869740456",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/Concept%20Sketch%20-%20Sinuo%20Table.webp?updatedAt=1793869741533",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2200730.webp?updatedAt=1793869741156",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2200729.webp?updatedAt=1793869741159",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2200780.webp?updatedAt=1793869741522",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/IMG_4173.webp?updatedAt=1793869741166",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/IMG_4206.webp?updatedAt=1793869741434",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/IMG_4208.webp?updatedAt=1793869741162",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/WhatsApp%20Image%202023-09-29%20at%2012.32.17%20PM.webp?updatedAt=1793869740444"
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/WhatsApp%20Image%202023-09-29%20at%2012.32.17%20PM.webp?updatedAt=1793869740444",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/WhatsApp%20Image%202023-09-29%20at%2012.32.54%20PM.webp?updatedAt=1793869741341"
                 ],
                 "description": [
                     "The library at Head Start Academy was designed as a place where imagination flows as freely as its forms. Guided by curvilinear lines and crafted details, the space integrates bookshelves, seating and work areas into a seamless environment that feels bright, open and inviting.At its heart sits the custom Sinuo Table, a versatile piece that supports solo reading, group discussions and quick browsing with its integrated storage, while curved shelves and cozy nooks encourage children to settle in with their favourite books. Every element from textures and finishes to lighting and layout was designed with intention, balancing functionality with playfulness.The result is a library that is both practical and poetic, a space where design quietly supports creativity, learning and collaboration.",
                     "Craftsmanship & Execution - Bram Woodcrafting Studio, Mysore",
                     "Photography and Videography - Anand Jaju",
                     "Location - Bangalore, India"
-                ],
-                "video": "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/The-High-School-SnapYT.App.mp4",
-                "slug": "library-at-head-start-educational-academy",
-                "year": 2023,
-                "client": "Head Start Educational Academy",
-                "location": "Bangalore"
+                ]
             },
             {
                 "title": "Circle Packing",
@@ -220,8 +205,7 @@
                     "Design team : Stavya Architects and RGB Design",
                     "Location : Bangalore, India",
                     "Photograpy : Vaishali Bhatia"
-                ],
-                "slug": "circle-packing"
+                ]
             }
         ]
     },
@@ -230,9 +214,9 @@
         "projects": [
             {
                 "title": "Aata Ooru",
-                "subtitle": "Play City",
+                "subtitle": "",
                 "dir": "Aata Ooru",
-                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Aata%20Ooru/DJI_0729.webp?updatedAt=1793869741831",
+                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Aata%20Ooru/IMG_1370.webp?updatedAt=1793869741823",
                 "images": [
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Aata%20Ooru/DJI_0729.webp?updatedAt=1793869741831",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Aata%20Ooru/DJI_0730.webp?updatedAt=1793869741828",
@@ -244,79 +228,22 @@
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Aata%20Ooru/IMG_1839.webp?updatedAt=1793869741830",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Aata%20Ooru/IMG_3222.webp?updatedAt=1793869741824"
                 ],
-                "description": [
-                    "Aata Ooru is an interactive installation designed for Makkala Hubba as part of BLR Hubba 2026 - a space created for children to gather, explore and play freely within the city. Conceived as a temporary public intervention, the installation transforms open ground into a playful landscape of movement and imagination. Scaled to children, the forms invite climbing, pausing, peeking and interaction, encouraging active engagement rather than passive use.\nLightweight and modular in assembly, the structure is designed for efficient installation and disassembly, while maintaining spatial clarity and safety. Geometry and colour work together to create a vibrant environment that feels both intuitive and immersive. Aata Ooru reimagines public space through the lens of play, where structure becomes playground and design becomes discovery.",
-                    "Design & Execution : Dasein Lab and RGB Design",
-                    "Curator : Bhawna Jaimini",
-                    "Photography, Drone, Videography : Vaishali Bhatia"
-                ],
-                "video": "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Aata%20Ooru/Play%20As%20A%20Medium.mp4",
-                "slug": "aata-ooru",
-                "year": 2026,
-                "client": "BLR Hubba, Makkala Hubba",
-                "location": "Freedom Park, Bangalore"
-            },
-            {
-                "title": "Flames of Growth & Glory",
-                "subtitle": "Notions of India - Design entry",
-                "dir": "Notions of India",
-                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Competitions/Notions%20of%20India/Copy%20of%201.webp?updatedAt=1793869740381",
-                "images": [
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Competitions/Notions%20of%20India/Copy%20of%201.webp?updatedAt=1793869740381",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Competitions/Notions%20of%20India/Copy%20of%202.webp?updatedAt=1793869740387",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Competitions/Notions%20of%20India/Copy%20of%203.webp?updatedAt=1793869740405",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Competitions/Notions%20of%20India/Copy%20of%204.webp?updatedAt=1793869740411"
-                ],
-                "description": [
-                    "The design of the installation encapsulates the cultural mosaic of India through a geometric rangoli-inspired base and ascending steel curves, symbolising the nation's robust diversity and continual ascent. Alternating panels of corten steel reflect the rich tapestry of Indian heritage, while open spaces invite periodic cultural expressions, embodying India's adaptability. Culminating in flames that represent the eternal spirit of hope and resilience, this sculpture is a timeless tribute to India's shared history and democratic ethos, a beacon of unity and progress."
-                ],
-                "slug": "flames-of-growth-glory"
-            },
-            {
-                "title": "The Shape of Play",
-                "subtitle": "Where simple modules become limitless possibilities",
-                "dir": null,
-                "cover": "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/the-shape-of-play/DJI_0472_copy_sSJ6vpewc.jpg",
-                "images": [
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/the-shape-of-play/IMG_0506_5rkgbkLUU.JPG",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/the-shape-of-play/IMG_0471-compressed_GYjwL9YUS.jpg",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/the-shape-of-play/IMG_0604_fbJu8ueSR.jpg",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/the-shape-of-play/IMG_0570-compressed_tsFUFGl_B.jpg",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/the-shape-of-play/IMG_0575-compressed_nxjxs4Gefr.jpg",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/the-shape-of-play/DJI_0472_copy_sSJ6vpewc.jpg",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/the-shape-of-play/DJI_0481_dn9ACEUGc.JPG",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/the-shape-of-play/DJI_0444_nrUf6dGil.JPG"
-                ],
-                "description": [
-                    "The Shape of Play was a hands-on design workshop exploring how simple modules can transform into unexpected spatial experiences through collective imagination and making.\n\nParticipants experimented with modularity, assembling and reconfiguring simple geometric elements and fabric to create individual structures before bringing them together into a larger, evolving installation.\n\nFrom individual explorations to collective construction, the workshop culminated in a shared playful landscape, demonstrating how simple components can unlock endless spatial possibilities.\n\nAn exploration of modularity, collaboration and the many shapes that play can take.",
-                    "Presented at: Envisage 2026, BMSCA D&P",
-                    "Research Context: An ongoing exploration of play, space and collective imagination with Dasein Lab",
-                    "Photography & Aerial Documentation: Vaishali Bhatia"
-                ],
-                "slug": "the-shape-of-play",
-                "year": 2026,
-                "location": "Envisage 2026, BMSCA D&P, Bangalore"
+                "description": []
             },
             {
                 "title": "Take a Seat",
                 "subtitle": "Recyclable Urban Furniture",
                 "dir": "Church Street_Seat",
-                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Church%20Street_Seat/Copy%20of%205.webp?updatedAt=1793869741838",
+                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Church%20Street_Seat/Copy%20of%201.webp?updatedAt=1793869741837",
                 "images": [
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Church%20Street_Seat/Copy%20of%201.webp?updatedAt=1793869741837",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Church%20Street_Seat/Copy%20of%202.webp?updatedAt=1793869741842",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Church%20Street_Seat/Copy%20of%203.webp?updatedAt=1793869741836",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Church%20Street_Seat/Copy%20of%204.webp?updatedAt=1793869741851",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Church%20Street_Seat/Copy%20of%205.webp?updatedAt=1793869741838",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Church%20Street_Seat/Copy%20of%206.webp?updatedAt=1793869741846",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/take-a-seat/5FC46AF6-FB48-44C2-9FFA-971DC868ED04_egwGJvTIR.jpg",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/take-a-seat/IMG_5010_fODbImuUz.JPG",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/take-a-seat/63542710021__BD5B4C5C-2399-4971-9146-8652F51AE422_0bwHRz66V.jpg"
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Church%20Street_Seat/Copy%20of%206.webp?updatedAt=1793869741846"
                 ],
-                "description": [],
-                "slug": "take-a-seat",
-                "year": 2021,
-                "location": "Church Street, Bangalore"
+                "description": []
             },
             {
                 "title": "TETR.IS",
@@ -336,26 +263,36 @@
                     "Material wizard : Material Library of India, Noida",
                     "Project for : Dubai Design Week, 2023",
                     "Location: Dubai, UAE"
-                ],
-                "slug": "tetr-is"
+                ]
             },
             {
                 "title": "Susegad Cube - Serendipity Arts Festival 2024",
                 "subtitle": "Building stillness, space and play",
                 "dir": "Susegad Cube_Serendipity Festival",
-                "cover": "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/susegad-cube-serendipity-arts-festival-2024/Susegad18_KlmBfdtfH.jpg",
+                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/DJI_0169.webp?updatedAt=1793869741998",
                 "images": [
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/DJI_0169.webp?updatedAt=1793869741998",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/DSC_0131.webp?updatedAt=1793869741913",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/DSC_0132.webp?updatedAt=1793869741883",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/DSC_0133.webp?updatedAt=1793869741960",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/DSC_0139.webp?updatedAt=1793869741916",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/DSC_0143.webp?updatedAt=1793869749150",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/DSC_0146.webp?updatedAt=1793869749086",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/DSC_0157.webp?updatedAt=1793869741934",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/DSC_0158.webp?updatedAt=1793869741938",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/DSC_0175.webp?updatedAt=1793869741958",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/DSC_0176.webp?updatedAt=1793869741962",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/DSC_0178.webp?updatedAt=1793869741928",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/DSC_0179.webp?updatedAt=1793869741956",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/EQNP0108.webp?updatedAt=1793869748221",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/IMG_6613.webp?updatedAt=1793869748224",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/IMG_6679.webp?updatedAt=1793869748226",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/IMG_6695.webp?updatedAt=1793869748234",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/IMG_6773.webp?updatedAt=1793869748233",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/IMG_6781.webp?updatedAt=1793869748231",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/IMG_6784.webp?updatedAt=1793869748228",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/IMG_6912.webp?updatedAt=1793869748229",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/susegad-cube-serendipity-arts-festival-2024/Susegad18_KlmBfdtfH.jpg"
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/IMG_6895.webp?updatedAt=1793869748236",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Susegad%20Cube_Serendipity%20Festival/IMG_6912.webp?updatedAt=1793869748229"
                 ],
                 "description": [
                     "The Susegad Cube, part of the Panjim Cube project, is an immersive installation designed to evoke calm, curiosity and the leisurely essence of Goan life. The Cube explores complex geometry with high structural efficiency and spatial intrigue. Its intersecting channels, meeting at precise angles, divide space into organic cocoons, offering visitors personal nooks to pause, play and engage.Every aspect of the Cube, from sketches to simulation, fabrication and final installation, was guided by experimentation, cultural context and a commitment to minimal material waste. The modular design allowed efficient assembly, seamless transport, and installation - fabricated, painted and finished in Bangalore before travelling 900 km to Panjim for the festival.At the Serendipity Arts Festival, the Susegad Cube became a vibrant yet serene space where Panjim’s culture meets interactive design. Visitors could explore, relax and define their own sense of contentment, experiencing stillness in a structure that is as playful as it is contemplative. The installation celebrates the balance between geometry, craftsmanship and the human desire for quiet moments, transforming the Cube into both a visual and experiential ode to Susegad, the art of slow living.",
@@ -364,24 +301,21 @@
                     "Curators : Thukral and Tagra",
                     "Location : Panjim, Goa",
                     "Photography, Drone Videography : Vaishali Bhatia"
-                ],
-                "slug": "susegad-cube-serendipity-arts-festival-2024",
-                "year": 2024
+                ]
             }
         ]
     },
     "interiors": {
-        "title": "Interior Design",
+        "title": "Interiors",
         "projects": [
             {
                 "title": "Conference Room",
-                "subtitle": null,
+                "subtitle": "",
                 "dir": "Conference Room",
                 "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Interiors/Conference%20Room_Primary%20Block_AJ/A2205492.webp?updatedAt=1793869748252",
                 "images": [
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Interiors/Conference%20Room_Primary%20Block_AJ/A2205492.webp?updatedAt=1793869748252",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Interiors/Conference%20Room_Primary%20Block_AJ/A2205502.webp?updatedAt=1793869748254",
-                    "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/conference-room/IMG_5700_sQf5W3Tg0.jpeg"
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Interiors/Conference%20Room_Primary%20Block_AJ/A2205502.webp?updatedAt=1793869748254"
                 ],
                 "description": [
                     "The HSEA Conference Room Renovation project revitalized a 12-year-old space, prioritizing functionality, aesthetics, and virtual meeting capabilities. A standout feature is the custom-fabricated central false ceiling, meticulously designed to optimize weight of the structure whilst being coherence with the wall panels, adding a focal point and enhancing the overall ambiance of the space for meetings and collaboration.",
@@ -389,38 +323,13 @@
                     "School name : Head Start Educational Academy, Bangalore",
                     "Location : Bangalore, India",
                     "Photography : Anand Jaju"
-                ],
-                "slug": "conference-room"
-            },
-            {
-                "title": "Monks of Method",
-                "subtitle": "Menswear Display & Sales Space",
-                "dir": "Monks of Method",
-                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/Option%201.webp?updatedAt=1793869764921",
-                "images": [
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/Option%201.webp?updatedAt=1793869764921",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/Option%201a.webp?updatedAt=1793869764930",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/Option%202.webp?updatedAt=1793869764915",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/Option%202a.webp?updatedAt=1793869764924",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/Option%203.webp?updatedAt=1793869764929",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/Option%203a.webp?updatedAt=1793869764917",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/Option%204.webp?updatedAt=1793869764932",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/Option%204a.webp?updatedAt=1793869764925",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/WhatsApp%20Image%202025-03-26%20at%2012.39.19%20PM.webp?updatedAt=1793869764920"
-                ],
-                "description": [
-                    "Designed for menswear brand Monks of Method, the project transforms a compact existing footprint into a multifunctional retail space for display, client interactions, and garment trials.\n\nA bespoke, terrazzo-base curtain rail system creates a flexible, renter-friendly intervention, while carefully considered racking maximises shirt and trouser displays without compromising circulation or spatial comfort.\n\nEvery element is designed to work harder : balancing product visibility, spatial efficiency and a welcoming setting for personalised shopping experiences.\n\nA compact retail space, designed around maximum possibility."
-                ],
-                "slug": "monks-of-method",
-                "year": 2023,
-                "client": "Monks of Method",
-                "location": "Bangalore"
+                ]
             },
             {
                 "title": "Dining Hall",
-                "subtitle": null,
+                "subtitle": "",
                 "dir": "Dining Hall",
-                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Interiors/Dining%20Hall_Middle%20School%20Block_AJ/A2200691%20copy.webp?updatedAt=1793869748285",
+                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Interiors/Dining%20Hall_Middle%20School%20Block_AJ/A2200650%20copy.webp?updatedAt=1793869748283",
                 "images": [
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Interiors/Dining%20Hall_Middle%20School%20Block_AJ/A2200650%20copy.webp?updatedAt=1793869748283",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Interiors/Dining%20Hall_Middle%20School%20Block_AJ/A2200653%20copy.webp?updatedAt=1793869748277",
@@ -434,15 +343,13 @@
                     "Design Team : Stavya Architects and RGB design",
                     "Photography and Videography : Anand Jaju",
                     "Location : Bangalore, India"
-                ],
-                "video": "https://ik.imagekit.io/bxuklxu7x/Projects/Interiors/Dining%20Hall_Middle%20School%20Block_AJ/Dining%20Hall.mp4?updatedAt=1794131721995",
-                "slug": "dining-hall"
+                ]
             },
             {
                 "title": "Prestige Oakwood Kitchen",
                 "subtitle": "Minimalist Kitchen with a Contemporary-Classical Twist",
                 "dir": "Prestige Oakwood_Kitchen",
-                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Interiors/Prestige%20Oakwood_Kitchen/DSC03149.webp?updatedAt=1793869764875",
+                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Interiors/Prestige%20Oakwood_Kitchen/DSC03137.webp?updatedAt=1793869748302",
                 "images": [
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Interiors/Prestige%20Oakwood_Kitchen/DSC03137.webp?updatedAt=1793869748302",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Interiors/Prestige%20Oakwood_Kitchen/DSC03138.webp?updatedAt=1793869748309",
@@ -471,12 +378,11 @@
                     "Execution partner : Casantro",
                     "Photography : Casantro",
                     "Location : Bangalore, India"
-                ],
-                "slug": "prestige-oakwood-kitchen"
+                ]
             },
             {
                 "title": "Terra Bites Indiranagar",
-                "subtitle": "Where curves carve character",
+                "subtitle": "",
                 "dir": "Terra Bites Indiranagar",
                 "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Interiors/Terra%20Bites%20Indiranagar/A2205392%20copy.webp?updatedAt=1793869764893",
                 "images": [
@@ -499,90 +405,106 @@
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Interiors/Terra%20Bites%20Indiranagar/TERRABITES%20ACCESSIBILITY%20diagrams-03.webp?updatedAt=1793869764867",
                     "https://ik.imagekit.io/bxuklxu7x/Projects/Interiors/Terra%20Bites%20Indiranagar/WhatsApp%20Image%202026-09-22%20at%208.50.17%20PM.webp?updatedAt=1793869764891"
                 ],
-                "description": [
-                    "Set within a 60-year-old load-bearing structure, the Terra Bites Restocafe transforms constraint into character. Existing walls are retained and reinterpreted through soft curves, strategic openings and flowing bespoke lighting. The atmosphere shifts from bright mornings to intimate evenings, mirroring a menu that blurs convention. The facade introduces a bold contemporary layer: a bespoke, self-supporting interlocking system in Relwood that creates an eye-catching identity while remaining fully demountable : designed to be disassembled and reassembled as needed. An adaptive reuse project where structure, light, system and mood evolve through the day.\n\n",
-                    "Photography and Videography : Anand Jaju"
-                ],
-                "slug": "terra-bites-indiranagar",
-                "year": 2024,
-                "location": "Bangalore"
+                "description": []
             }
         ]
     },
-    "material_experiments": {
-        "title": "Product Design",
+    "competitions": {
+        "title": "Competitions",
         "projects": [
             {
-                "title": "Josephite Run Trophy 2025",
-                "subtitle": "“Big Strides for Education”",
-                "dir": "Josephite-run-2025",
-                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2025/IMG_8435.webp?updatedAt=1793869764905",
+                "title": "Flames of Growth & Glory",
+                "subtitle": "Notions of India - Design entry",
+                "dir": "Notions of India",
+                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Competitions/Notions%20of%20India/Copy%20of%201.webp?updatedAt=1793869740381",
                 "images": [
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2025/IMG_8320.webp?updatedAt=1793869764896",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2025/IMG_8428.webp?updatedAt=1793869764912",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2025/IMG_8426.webp?updatedAt=1793869764902",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2025/IMG_8435.webp?updatedAt=1793869764905",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2025/IMG_8531.webp?updatedAt=1793869764908",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2025/IMG_8532.webp?updatedAt=1793869764901",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2025/IMG_8533.webp?updatedAt=1793869764900"
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Competitions/Notions%20of%20India/Copy%20of%201.webp?updatedAt=1793869740381",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Competitions/Notions%20of%20India/Copy%20of%202.webp?updatedAt=1793869740387",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Competitions/Notions%20of%20India/Copy%20of%203.webp?updatedAt=1793869740405",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Competitions/Notions%20of%20India/Copy%20of%204.webp?updatedAt=1793869740411"
                 ],
                 "description": [
-                    "Designed for the OBA Josephite Run 2025, the trophy translates “Big Strides for Education” into material form. A single Relwood segment is heat-bent to open like a book. A stainless-steel offcut slides in as a bookmark, carrying race and category details. No adhesives. No excess. Just two materials, precisely cut and slotted.\nStandardised dimensions reduced waste. Flat-pack assembly ensured efficient transport. Fully recyclable components allow the trophy to be disassembled when its journey ends. Waste transformed into structure. Geometry as message. Built to move - just like the run.\n ",
-                    "Material and manufacture : Merlecha Corporation"
-                ],
-                "slug": "josephite-run-2025",
-                "year": 2025,
-                "location": "St. Josephs Boys High School, Bangalore"
+                    "The design of the installation encapsulates the cultural mosaic of India through a geometric rangoli-inspired base and ascending steel curves, symbolising the nation's robust diversity and continual ascent. Alternating panels of corten steel reflect the rich tapestry of Indian heritage, while open spaces invite periodic cultural expressions, embodying India's adaptability. Culminating in flames that represent the eternal spirit of hope and resilience, this sculpture is a timeless tribute to India's shared history and democratic ethos, a beacon of unity and progress."
+                ]
             },
             {
-                "title": "Josephite Run Trophy 2026",
-                "subtitle": "Same stride. Stronger form.",
-                "dir": "Josephite-run-2026",
-                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2026/IMG_0691.webp?updatedAt=1793869764913",
+                "title": "SEA Pavilion",
+                "subtitle": "",
+                "dir": "SEA Pavilion",
+                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Competitions/SEA%20Pavilion/10by10_SEA_2024_BHARAT_ROSHNI_ASHWINI-images-0.webp?updatedAt=1793869741368",
                 "images": [
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2026/IMG_0688.webp?updatedAt=1793869764918",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2026/IMG_0691.webp?updatedAt=1793869764913",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2026/IMG_0699.webp?updatedAt=1793869764904",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2026/IMG_0714.webp?updatedAt=1793869764922",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2026/IMG_0723.webp?updatedAt=1793869764907",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2026/IMG_0726.webp?updatedAt=1793869764916",
-                    "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2026/IMG_4289.webp?updatedAt=1793869764927"
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Competitions/SEA%20Pavilion/10by10_SEA_2024_BHARAT_ROSHNI_ASHWINI-images-0.webp?updatedAt=1793869741368",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Competitions/SEA%20Pavilion/10by10_SEA_2024_BHARAT_ROSHNI_ASHWINI-images-1.webp?updatedAt=1793869740394",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Competitions/SEA%20Pavilion/10by10_SEA_2024_BHARAT_ROSHNI_ASHWINI-images-2.webp?updatedAt=1793869741355",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Competitions/SEA%20Pavilion/10by10_SEA_2024_BHARAT_ROSHNI_ASHWINI-images-3.webp?updatedAt=1793869740398",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Competitions/SEA%20Pavilion/10by10_SEA_2024_BHARAT_ROSHNI_ASHWINI-images-4.webp?updatedAt=1793869740365"
                 ],
                 "description": [
-                    "The 2026 trophy carries forward the core language of its predecessor: reclaimed material, a precise slotting system and design rooted in the greater good. What was once discarded became the vertical spine. Theb lue steel anchors and supports whilst echoing the school’s identity: Blue and white. Faith and Toil. A clear geometry with simple assembly minimised waste and maximized meaning. Designed to last beyond the podium moment - as symbol, structure and story.",
-                    "Design and manufacture : RGB Design"
+                    "The SEA Pavilion explores Mumbai's urban contrasts, where vibrant informal settlements coexist alongside towering skyscrapers, revealing both resilience and inequality. The design addresses environmental challenges through an adaptive tarpaulin roof that responds to rain, humidity, and sunlight, and amphibious retrofits that enhance flood resilience for vulnerable communities.The Speaking Walls illustrate rising sea levels, with household items at the base and solid upper sections representing water encroachment, eventually overtaken by vegetation -showcasing nature’s balance. The pavilion merges urban narrative, climate adaptation and interactive design into an immersive experience of Mumbai's evolving landscape.",
+                    "Design Team : Krantinaari, Dasein Lab, RGB Design",
+                    "Location : Mumbai, India"
+                ]
+            }
+        ]
+    },
+    "monks_of_method": {
+        "title": "Monks of Method",
+        "projects": [
+            {
+                "title": "Monks of Method",
+                "subtitle": "",
+                "dir": "Monks of Method",
+                "cover": "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/Option%201.webp?updatedAt=1793869764921",
+                "images": [
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/Option%201.webp?updatedAt=1793869764921",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/Option%201a.webp?updatedAt=1793869764930",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/Option%202.webp?updatedAt=1793869764915",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/Option%202a.webp?updatedAt=1793869764924",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/Option%203.webp?updatedAt=1793869764929",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/Option%203a.webp?updatedAt=1793869764917",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/Option%204.webp?updatedAt=1793869764932",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/Option%204a.webp?updatedAt=1793869764925",
+                    "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/WhatsApp%20Image%202025-03-26%20at%2012.39.19%20PM.webp?updatedAt=1793869764920"
                 ],
-                "slug": "josephite-run-2026",
-                "year": 2026,
-                "location": "St. Josephs Boys High School, Bangalore"
+                "description": []
             }
         ]
     },
     "projects_list": [
         {
             "title": "Computational Design",
-            "img_src": "https://ik.imagekit.io/bxuklxu7x/RGB-Projects/growth-aggregations/01-growth-aggregation-render_ManUC1rZZ.png",
+            "img_src": "https://ik.imagekit.io/bxuklxu7x/Projects/Computational%20Design/Orbis/Copy%20of%205.webp?updatedAt=1793869741212",
             "theme": "computational_design"
         },
         {
+            "title": "Material Experiments",
+            "img_src": "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2025/IMG_8320.webp?updatedAt=1793869764896",
+            "theme": "material_experiments"
+        },
+        {
             "title": "Furniture Design",
-            "img_src": "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/High%20School%20Furniture/A2205618.webp?updatedAt=1793869740426",
+            "img_src": "https://ik.imagekit.io/bxuklxu7x/Projects/Furniture%20Design/Library_High%20School%20Block_AJ/A2200729.webp?updatedAt=1793869741159",
             "theme": "furniture_design"
         },
         {
             "title": "Installation Design",
-            "img_src": "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Aata%20Ooru/DJI_0729.webp?updatedAt=1793869741831",
+            "img_src": "https://ik.imagekit.io/bxuklxu7x/Projects/Installation%20Design/Dubai%20Design%20Week%202023/Copy%20of%20Cover%20image.webp?updatedAt=1793869741876",
             "theme": "installation_design"
         },
         {
-            "title": "Interior Design",
-            "img_src": "https://ik.imagekit.io/bxuklxu7x/Projects/Interiors/Conference%20Room_Primary%20Block_AJ/A2205492.webp?updatedAt=1793869748252",
+            "title": "Interiors",
+            "img_src": "https://ik.imagekit.io/bxuklxu7x/Projects/Interiors/Prestige%20Oakwood_Kitchen/DSC03137.webp?updatedAt=1793869748302",
             "theme": "interiors"
         },
         {
-            "title": "Product Design",
-            "img_src": "https://ik.imagekit.io/bxuklxu7x/Projects/Material%20Experiments/Josephite-run-2025/IMG_8435.webp?updatedAt=1793869764905",
-            "theme": "material_experiments"
+            "title": "Competitions",
+            "img_src": "https://ik.imagekit.io/bxuklxu7x/Projects/Competitions/Notions%20of%20India/Copy%20of%201.webp?updatedAt=1793869740381",
+            "theme": "competitions"
+        },
+        {
+            "title": "Monks of Method",
+            "img_src": "https://ik.imagekit.io/bxuklxu7x/Projects/Monks%20of%20Method/Option%201.webp?updatedAt=1793869764921",
+            "theme": "monks_of_method"
         }
     ]
 }

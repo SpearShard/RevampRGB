@@ -35,6 +35,10 @@ export default function PrismInteriorSection() {
                 });
             };
 
+            const isTouch = window.matchMedia('(hover: none)').matches || window.innerWidth < 640;
+            if (isTouch) {
+                gsap.fromTo(headline, { '--prism-x': '15%' }, { '--prism-x': '85%', duration: 5, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+            }
             container.addEventListener('mousemove', handleMouseMove);
             return () => container.removeEventListener('mousemove', handleMouseMove);
         }, containerRef);
@@ -45,12 +49,8 @@ export default function PrismInteriorSection() {
     return (
         <section 
             ref={containerRef} 
-            className="relative w-full min-h-screen bg-[#080808] text-[#ffffff] flex flex-col justify-center py-24 px-8 sm:px-16 lg:px-28 overflow-hidden select-none antialiased"
+            className="relative w-full min-h-screen  text-[#ffffff] flex flex-col justify-center py-24 px-8 sm:px-16 lg:px-28 overflow-hidden select-none antialiased"
         >
-            {/* LUXURY DISPLAY TYPOGRAPHY */}
-            <link rel="preconnect" href="https://fonts.googleapis.com" />
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-            <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;800&display=swap" rel="stylesheet" />
 
             {/* UNCLUTTERED INTERIOR LAYOUT CONTAINER */}
             <div className="relative w-full max-w-[1500px] mx-auto flex flex-col space-y-24 z-10">
