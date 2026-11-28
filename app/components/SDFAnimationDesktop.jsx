@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import RgbAuraBackground from './bgwebglshaders/RgbAuraBackground';
 import { useRouter } from 'next/navigation';
 import { SDFGeometryGenerator } from './SDFGeometryGenerator';
 import {
@@ -93,12 +94,6 @@ export default function SDFAnimation({ mode = 'home', centered = false, projects
                 project: chunk.project,
                 accentHex: chunk.accentHex,
             });
-
-            if (previewRef.current) {
-                const x = Math.max(16, window.innerWidth - 244);
-                const y = Math.max(16, Math.min(window.innerHeight - 220, window.innerHeight * 0.5 - 90));
-                previewRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-            }
         };
 
         const handleIndexSelect = (event) => {
@@ -361,12 +356,6 @@ export default function SDFAnimation({ mode = 'home', centered = false, projects
             raycasterRef.current.setFromCamera(pointerNdcRef.current, cameraRef.current);
             cursorRayDirRef.current.copy(raycasterRef.current.ray.direction).normalize();
             cursorWorldTargetRef.current.copy(raycasterRef.current.ray.origin);
-
-            if (previewRef.current) {
-                const offsetX = e.clientX > window.innerWidth - 260 ? -244 : 22;
-                const offsetY = e.clientY > window.innerHeight - 230 ? -200 : 22;
-                previewRef.current.style.transform = `translate3d(${e.clientX + offsetX}px, ${e.clientY + offsetY}px, 0)`;
-            }
         };
 
         const handlePointerDown = (e) => {
@@ -842,38 +831,43 @@ export default function SDFAnimation({ mode = 'home', centered = false, projects
 
             {/* Editorial Cursor-Tracked Project Preview Card */}
             {isCenterTarget && (
-                <div
+                <aside
                     ref={previewRef}
-                    className={`pointer-events-none fixed top-0 left-0 z-30 w-56 rounded-2xl overflow-hidden bg-[#09090d]/90 backdrop-blur-2xl border shadow-[0_24px_60px_rgba(0,0,0,0.9)] transition-opacity duration-200 ${
-                        hoveredInfo ? 'opacity-100' : 'opacity-0'
+                    aria-label="Project preview"
+                    className={`pointer-events-none fixed right-0 top-1/2 z-30 w-[272px] -translate-y-1/2 rounded-l-[28px] border border-r-0 border-white/[0.16] bg-[#08080c]/90 shadow-[0_24px_60px_rgba(0,0,0,0.65)] overflow-hidden transition-[transform,opacity] duration-300 ease-out ${
+                        hoveredInfo ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
                     }`}
-                    style={{
-                        borderColor: hoveredInfo ? `${hoveredInfo.accentHex}66` : 'rgba(255,255,255,0.12)',
-                    }}
+                    style={{ isolation: 'isolate' }}
                 >
+                    <div className="absolute inset-0 z-0 pointer-events-none">
+                        <RgbAuraBackground contained />
+                    </div>
                     {hoveredInfo && (
-                        <>
-                            <div
-                                className="h-[2px] w-full"
-                                style={{ backgroundColor: hoveredInfo.accentHex }}
-                            />
-                            <div className="relative w-full aspect-[16/10] bg-neutral-950 overflow-hidden">
+                        <div className="relative z-10 p-4">
+                            <div className="flex items-center justify-between border-b border-white/[0.07] pb-3 mb-3.5">
+                                <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-white/55">
+                                    Preview
+                                </span>
+                                <span
+                                    className="text-[10px] font-mono tabular-nums text-white/75"
+                                    style={{ fontFamily: "'Space Mono', monospace" }}
+                                >
+                                    {String(hoveredInfo.index + 1).padStart(2, '0')} / {String(projects.length).padStart(2, '0')}
+                                </span>
+                            </div>
+
+                            <div className="relative w-full aspect-[16/10] rounded-[16px] bg-neutral-950 overflow-hidden border border-white/10">
                                 <Image
                                     src={hoveredInfo.project.cover}
                                     alt={hoveredInfo.project.title}
                                     fill
-                                    sizes="224px"
+                                    sizes="240px"
                                     className="object-cover"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-[#09090d] via-transparent to-black/25" />
-                                <span
-                                    className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-black/70 border border-white/10 text-[9px] tracking-[0.2em] text-white/80"
-                                    style={{ fontFamily: "'Space Mono', monospace" }}
-                                >
-                                    {String(hoveredInfo.index + 1).padStart(2, '0')}
-                                </span>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/15" />
                             </div>
-                            <div className="px-3.5 pt-2.5 pb-3">
+
+                            <div className="pt-3.5">
                                 <p
                                     className="text-[9px] uppercase tracking-[0.22em] truncate"
                                     style={{
@@ -883,24 +877,16 @@ export default function SDFAnimation({ mode = 'home', centered = false, projects
                                 >
                                     {hoveredInfo.project.categoryTitle}
                                 </p>
-                                <div className="mt-1 flex items-baseline justify-between gap-2">
-                                    <p
-                                        className="text-sm font-bold text-white leading-snug tracking-tight truncate"
-                                        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                                    >
-                                        {hoveredInfo.project.title}
-                                    </p>
-                                    <span
-                                        className="text-[10px] text-white/40 shrink-0"
-                                        style={{ fontFamily: "'Space Mono', monospace" }}
-                                    >
-                                        ↗
-                                    </span>
-                                </div>
+                                <p
+                                    className="mt-1.5 text-[15px] font-bold text-white leading-snug tracking-tight"
+                                    style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                                >
+                                    {hoveredInfo.project.title}
+                                </p>
                             </div>
-                        </>
+                        </div>
                     )}
-                </div>
+                </aside>
             )}
         </div>
     );

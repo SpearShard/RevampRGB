@@ -96,7 +96,7 @@ export default function Footer() {
       </footer>
 
       {!hideMobileFooter && (
-        <footer className="relative z-[10] w-full overflow-hidden bg-[#050505] pt-10 text-white md:hidden">
+        <footer className="relative z-[10] w-full overflow-hidden bg-[#050505] pt-14 text-white md:hidden">
           {/* Subtle Noise */}
           <div
             className="pointer-events-none absolute inset-0 opacity-[0.025]"
@@ -113,14 +113,14 @@ export default function Footer() {
 
           <div className="relative z-10 overflow-hidden">
             <div className="translate-y-[16%]">
-              <h2 className="flex select-none justify-center text-center text-[15.5vw] font-[500] uppercase leading-[0.8] tracking-[-0.09em] text-white">
+              <h2 className="flex select-none justify-center text-center text-[17.5vw] font-[500] uppercase leading-[0.8] tracking-[-0.09em] text-white">
                 <span className="text-[#ff2433]">R</span>
                 <span className="text-[#1ff261]">G</span>
                 <span className="text-[#0056e6]">B</span>
                 <span className="text-white">&nbsp;Design</span>
               </h2>
             </div>
-            <div className="pointer-events-none absolute bottom-0 left-0 h-20 w-full bg-gradient-to-t from-[#050505] to-transparent" />
+            <div className="pointer-events-none absolute bottom-0 left-0 h-24 w-full bg-gradient-to-t from-[#050505] to-transparent" />
           </div>
         </footer>
       )}
